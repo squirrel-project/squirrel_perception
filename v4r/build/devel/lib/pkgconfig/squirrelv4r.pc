@@ -1,8 +1,0 @@
-prefix=/home/mz/work/SQUIRREL/code/catkin_ws/src/object_perception/v4r/build/devel
-
-Name: squirrelv4r
-Description: Description of squirrelv4r
-Version: 0.0.0
-Cflags: -I/home/mz/work/SQUIRREL/code/catkin_ws/src/object_perception/v4r/faat_framework/3d_rec_framework/include -I/home/mz/work/SQUIRREL/code/catkin_ws/src/object_perception/v4r/faat_framework/recognition/include -I/home/mz/work/SQUIRREL/code/catkin_ws/src/object_perception/v4r/faat_framework/registration/include -I/home/mz/work/SQUIRREL/code/catkin_ws/src/object_perception/v4r/faat_framework/utils/ -I/home/mz/work/SQUIRREL/code/catkin_ws/src/object_perception/v4r/faat_framework/utils/include -I/home/mz/work/SQUIRREL/code/catkin_ws/src/object_perception/v4r/faat_framework/object_modelling/include -I/home/mz/work/SQUIRREL/code/catkin_ws/src/object_perception/v4r
-Libs: -L/home/mz/work/SQUIRREL/code/catkin_ws/src/object_perception/v4r/build/devel/lib -l:/libFAAT_PCL_utils.so -l:/libFAAT_PCL_registration.so -l:/libFAAT_PCL_recognition.so -l:/libFAAT_PCL_3d_rec_framework.so -l:/liblevmar.so -l:/libsplm.so -l:/libsiftgpu.so
-Requires: 

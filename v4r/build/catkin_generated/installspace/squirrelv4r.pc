@@ -1,8 +1,0 @@
-prefix=/usr/local
-
-Name: squirrelv4r
-Description: Description of squirrelv4r
-Version: 0.0.0
-Cflags: -I/usr/local/include
-Libs: -L/usr/local/lib -l:/libFAAT_PCL_utils.so -l:/libFAAT_PCL_registration.so -l:/libFAAT_PCL_recognition.so -l:/libFAAT_PCL_3d_rec_framework.so -l:/liblevmar.so -l:/libsplm.so -l:/libsiftgpu.so
-Requires: 

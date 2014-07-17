@@ -1,7 +1,0 @@
-set(_CATKIN_CURRENT_PACKAGE "squirrelv4r")
-set(squirrelv4r_MAINTAINER "Thomas Fäulhammer <faeulhammer@acin.tuwien.ac.at>, Aitor Aldoma <aldoma@acin.tuwien.ac.at>, Michael Zillich <zillich@acin.tuwien.ac.at>")
-set(squirrelv4r_DEPRECATED "")
-set(squirrelv4r_VERSION "0.0.0")
-set(squirrelv4r_BUILD_DEPENDS "roscpp" "rospy" "libsuitesparse-metis-dev" "libglm-dev")
-set(squirrelv4r_RUN_DEPENDS "roscpp" "rospy")
-set(squirrelv4r_BUILDTOOL_DEPENDS "catkin")
