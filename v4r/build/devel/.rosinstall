@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/mz/work/SQUIRREL/code/catkin_ws/src/object_perception/v4r/build/devel/setup.sh
