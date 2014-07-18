@@ -3,7 +3,7 @@ object_perception
 
 Repository for object perception related SQUIRREL packages.
 
-# TUW v4r library
+# TUW v4r library and PCL
 
 At the moment, TUW's v4r library needs a particular PCL version to run. This will be fixed in the future. In order to avoid conflicts with other pcl versions (i.e. the built-in ros-pcl version), please follow these steps:
 
