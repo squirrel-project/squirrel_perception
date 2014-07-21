@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<notation:Diagram xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:notation="http://www.eclipse.org/gmf/runtime/1.0.2/notation" xmlns:ros="http://ros/1.0" xmi:id="_UYNzYNz-EeOhB4RyqnkQKw" type="RosPackage" name="tuw_segmentation.ros_package_diagram" measurementUnit="Pixel">
+  <children xmi:type="notation:Shape" xmi:id="_h08z8BC0EeS5eYyAbWqJIQ" type="2001" fontName="Ubuntu">
+    <children xmi:type="notation:DecorationNode" xmi:id="_h08z8hC0EeS5eYyAbWqJIQ" type="5008"/>
+    <children xmi:type="notation:BasicCompartment" xmi:id="_h08z8xC0EeS5eYyAbWqJIQ" type="7001">
+      <styles xmi:type="notation:TitleStyle" xmi:id="_h08z9BC0EeS5eYyAbWqJIQ" showTitle="true"/>
+      <styles xmi:type="notation:SortingStyle" xmi:id="_h08z9RC0EeS5eYyAbWqJIQ"/>
+      <styles xmi:type="notation:FilteringStyle" xmi:id="_h08z9hC0EeS5eYyAbWqJIQ"/>
+    </children>
+    <children xmi:type="notation:Node" xmi:id="_h0-pIBC0EeS5eYyAbWqJIQ" type="3004">
+      <children xmi:type="notation:DecorationNode" xmi:id="_h0-pJBC0EeS5eYyAbWqJIQ" type="5004"/>
+      <styles xmi:type="notation:DescriptionStyle" xmi:id="_h0-pIRC0EeS5eYyAbWqJIQ"/>
+      <styles xmi:type="notation:FontStyle" xmi:id="_h0-pIhC0EeS5eYyAbWqJIQ" fontName="Ubuntu"/>
+      <element xmi:type="ros:Publisher" href="tuw_segmentation.ros_package#//@node.0/@publisher.0"/>
+      <layoutConstraint xmi:type="notation:Bounds" xmi:id="_h0-pIxC0EeS5eYyAbWqJIQ" x="239" y="30"/>
+    </children>
+    <children xmi:type="notation:Node" xmi:id="_h0-pJRC0EeS5eYyAbWqJIQ" type="3005">
+      <children xmi:type="notation:DecorationNode" xmi:id="_h0_QMhC0EeS5eYyAbWqJIQ" type="5005"/>
+      <styles xmi:type="notation:DescriptionStyle" xmi:id="_h0-pJhC0EeS5eYyAbWqJIQ"/>
+      <styles xmi:type="notation:FontStyle" xmi:id="_h0-pJxC0EeS5eYyAbWqJIQ" fontName="Ubuntu"/>
+      <styles xmi:type="notation:LineStyle" xmi:id="_h0_QMBC0EeS5eYyAbWqJIQ"/>
+      <element xmi:type="ros:ActionServer" href="tuw_segmentation.ros_package#//@node.0/@actionserver.0"/>
+      <layoutConstraint xmi:type="notation:Bounds" xmi:id="_h0_QMRC0EeS5eYyAbWqJIQ" x="239" y="55"/>
+    </children>
+    <children xmi:type="notation:Node" xmi:id="_h0_QMxC0EeS5eYyAbWqJIQ" type="3007">
+      <children xmi:type="notation:DecorationNode" xmi:id="_h0_QNxC0EeS5eYyAbWqJIQ" type="5007"/>
+      <styles xmi:type="notation:DescriptionStyle" xmi:id="_h0_QNBC0EeS5eYyAbWqJIQ"/>
+      <styles xmi:type="notation:FontStyle" xmi:id="_h0_QNRC0EeS5eYyAbWqJIQ" fontName="Ubuntu"/>
+      <element xmi:type="ros:Subscriber" href="tuw_segmentation.ros_package#//@node.0/@subscriber.0"/>
+      <layoutConstraint xmi:type="notation:Bounds" xmi:id="_h0_QNhC0EeS5eYyAbWqJIQ" x="-79" y="75"/>
+    </children>
+    <children xmi:type="notation:Node" xmi:id="_h0_3QBC0EeS5eYyAbWqJIQ" type="3007">
+      <children xmi:type="notation:DecorationNode" xmi:id="_h0_3RBC0EeS5eYyAbWqJIQ" type="5007"/>
+      <styles xmi:type="notation:DescriptionStyle" xmi:id="_h0_3QRC0EeS5eYyAbWqJIQ"/>
+      <styles xmi:type="notation:FontStyle" xmi:id="_h0_3QhC0EeS5eYyAbWqJIQ" fontName="Ubuntu"/>
+      <element xmi:type="ros:Subscriber" href="tuw_segmentation.ros_package#//@node.0/@subscriber.1"/>
+      <layoutConstraint xmi:type="notation:Bounds" xmi:id="_h0_3QxC0EeS5eYyAbWqJIQ" x="-79" y="45"/>
+    </children>
+    <children xmi:type="notation:Node" xmi:id="_h0_3RRC0EeS5eYyAbWqJIQ" type="3007">
+      <children xmi:type="notation:DecorationNode" xmi:id="_h0_3SRC0EeS5eYyAbWqJIQ" type="5007"/>
+      <styles xmi:type="notation:DescriptionStyle" xmi:id="_h0_3RhC0EeS5eYyAbWqJIQ"/>
+      <styles xmi:type="notation:FontStyle" xmi:id="_h0_3RxC0EeS5eYyAbWqJIQ" fontName="Ubuntu"/>
+      <element xmi:type="ros:Subscriber" href="tuw_segmentation.ros_package#//@node.0/@subscriber.2"/>
+      <layoutConstraint xmi:type="notation:Bounds" xmi:id="_h0_3SBC0EeS5eYyAbWqJIQ" x="-79" y="110"/>
+    </children>
+    <element xmi:type="ros:Node" href="tuw_segmentation.ros_package#//@node.0"/>
+    <layoutConstraint xmi:type="notation:Bounds" xmi:id="_h08z8RC0EeS5eYyAbWqJIQ" x="310" y="140"/>
+  </children>
+  <styles xmi:type="notation:DiagramStyle" xmi:id="_UYNzYdz-EeOhB4RyqnkQKw"/>
+  <element xmi:type="ros:Package" href="tuw_segmentation.ros_package#/"/>
+</notation:Diagram>

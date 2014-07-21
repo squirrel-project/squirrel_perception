@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ros:Package xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ros="http://ros/1.0" name="object_perception" author="Michael Zillich" author_email="zillich@acin.tuwien.ac.at" description="The object_perception package" license="TODO">
+<ros:Package xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ros="http://ros/1.0" name="tuw_recognition" author="Michael Zillich" author_email="zillich@acin.tuwien.ac.at" description="The object_perception package" license="TODO">
   <node name="recognition">
     <publisher name="recognized_objects"/>
     <subscriber name="point_cloud" msg="sensor_msgs::PointCloud2"/>
