@@ -11,7 +11,9 @@ At the moment, TUW's v4r library needs a particular PCL version to run. This wil
 
     git clone https://github.com/arbeitor/pcl.git ~/pcl_v4r_fork --branch reconstruction_workshop
 
-2.)  build PCL
+2.) If you have an Intel core-i processor 4th generation (Haswell) or newer you need to change the needed version of GCC from 4.2 to 4.6 in the file ~pcl_v4r_fork/cmake/pcl_find_sse.cmake on line 17.
+
+3.)  build PCL
 
     mkdir ~/pcl_v4r_fork/build
     cd ~/pcl_v4r_fork/build
@@ -20,6 +22,6 @@ At the moment, TUW's v4r library needs a particular PCL version to run. This wil
 
 **IMPORTANT: DO NOT INSTALL PCL to avoid conflicts with other versions!**
 
-3.) tell catkin to use _pcl_v4r_fork_ for packages dependent on this particular pcl version:
+4.) tell catkin to use _pcl_v4r_fork_ for packages dependent on this particular pcl version:
 
     catkin_make -DV4R_PCL_DIR=~/pcl_v4r_fork/build
