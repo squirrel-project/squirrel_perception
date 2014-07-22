@@ -301,6 +301,8 @@ private:
   bool
   segment (perception_srv_definitions::segment::Request & req, perception_srv_definitions::segment::Response & response)
   {
+    ROS_INFO("Segmenting point cloud.\n");
+
     pcl::PointCloud<PointT>::Ptr scene (new pcl::PointCloud<PointT>);
     pcl::fromROSMsg (req.cloud, *scene);
     
@@ -317,11 +319,8 @@ private:
     pcl::PointCloud<pcl::Normal>::Ptr normal_cloud (new pcl::PointCloud<pcl::Normal>);
     ROS_INFO("skipping computation of normals: NOTE only works if seg_type != 0!\n");
     /*pcl::NormalEstimationOMP<PointT, pcl::Normal> ne;
-    ROS_INFO("before compute normals() set radius\n");
     ne.setRadiusSearch(0.02f);
-    ROS_INFO("before compute normals() set input cloud\n");
     ne.setInputCloud (scene);
-    ROS_INFO("before compute normals() compute\n");
     ne.compute (*normal_cloud);*/
 
     std::vector<pcl::PointIndices> indices;

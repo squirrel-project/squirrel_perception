@@ -57,6 +57,7 @@ class ShapeClassifier
     bool classify(perception_srv_definitions::classify::Request & req,
                   perception_srv_definitions::classify::Response & response)
     {
+        ROS_INFO("Classifying %d objects\n", (int)req.clusters_indices.size());
         pcl::fromROSMsg(req.cloud, *frame_);
         classifier_->setInputCloud(frame_);
 
