@@ -27,9 +27,9 @@ if(FAAT_PCL_USE_CUDA)
   add_library(${LIB_NAME} ${FOO_LIBRARY_TYPE} ${objectness_srcs} ${objectness_incs})
   target_link_libraries(${LIB_NAME} ${PCL_LIBRARIES} ${PROJECT_NAME}_utils ${PROJECT_NAME}_cuda_segmentation)
   
-  add_executable(objectness_3d test/objectness_3d.cpp)  
-  target_link_libraries(objectness_3d ${PCL_LIBRARIES} ${PROJECT_NAME}_recognition ${PROJECT_NAME}_utils ${PROJECT_NAME}_segmentation)
+  #add_executable(objectness_3d test/objectness_3d.cpp)  
+  #target_link_libraries(objectness_3d ${PCL_LIBRARIES} ${PROJECT_NAME}_recognition ${PROJECT_NAME}_utils ${PROJECT_NAME}_segmentation)
   
-  add_executable(objectness_3d_evaluation test/objectness_evaluation.cpp)  
-  target_link_libraries(objectness_3d_evaluation ${PCL_LIBRARIES} ${PROJECT_NAME}_recognition ${PROJECT_NAME}_utils ${PROJECT_NAME}_segmentation)
+  #add_executable(objectness_3d_evaluation test/objectness_evaluation.cpp)  
+  #target_link_libraries(objectness_3d_evaluation ${PCL_LIBRARIES} ${PROJECT_NAME}_recognition ${PROJECT_NAME}_utils ${PROJECT_NAME}_segmentation)
 endif(FAAT_PCL_USE_CUDA)  

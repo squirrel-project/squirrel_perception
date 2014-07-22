@@ -42,17 +42,17 @@ if(FAAT_PCL_USE_CUDA)
     #add_executable(icp_with_gc test/icp_with_gc.cpp)
     #target_link_libraries(icp_with_gc ${PCL_LIBRARIES} faat_pcl_utils faat_pcl_registration boost_regex)
 
-    add_executable(fast_icp_with_gc test/fast_icp_with_gc.cpp)
-    target_link_libraries(fast_icp_with_gc ${PROJECT_NAME}_registration boost_regex)
+    #add_executable(fast_icp_with_gc test/fast_icp_with_gc.cpp)
+    #target_link_libraries(fast_icp_with_gc ${PROJECT_NAME}_registration boost_regex)
 
-    add_executable(icp_nl test/icp_lm.cpp)
-    target_link_libraries(icp_nl ${PCL_LIBRARIES} ${PROJECT_NAME}_utils ${PROJECT_NAME}_registration boost_regex)
+    #add_executable(icp_nl test/icp_lm.cpp)
+    #target_link_libraries(icp_nl ${PCL_LIBRARIES} ${PROJECT_NAME}_utils ${PROJECT_NAME}_registration boost_regex)
 
-    add_executable(icp_nl_multi_view test/multi_view_icp_lm.cpp)
-    target_link_libraries(icp_nl_multi_view ${PCL_LIBRARIES} ${PROJECT_NAME}_utils ${PROJECT_NAME}_registration boost_regex)
+    #add_executable(icp_nl_multi_view test/multi_view_icp_lm.cpp)
+    #target_link_libraries(icp_nl_multi_view ${PCL_LIBRARIES} ${PROJECT_NAME}_utils ${PROJECT_NAME}_registration boost_regex)
 
-    add_executable(icp_nl_multi_view_rgb test/multi_view_icp_lm_rgb.cpp)
-    target_link_libraries(icp_nl_multi_view_rgb ${PCL_LIBRARIES} ${PROJECT_NAME}_utils ${PROJECT_NAME}_registration boost_regex)
+    #add_executable(icp_nl_multi_view_rgb test/multi_view_icp_lm_rgb.cpp)
+    #target_link_libraries(icp_nl_multi_view_rgb ${PCL_LIBRARIES} ${PROJECT_NAME}_utils ${PROJECT_NAME}_registration boost_regex)
 
 else(FAAT_PCL_USE_CUDA)
 	
@@ -83,13 +83,13 @@ else(FAAT_PCL_USE_CUDA)
 	#add_executable(fast_icp_with_gc test/fast_icp_with_gc.cpp)  
 	#target_link_libraries(fast_icp_with_gc ${PCL_LIBRARIES} faat_pcl_utils faat_pcl_registration boost_regex)
 	
-	add_executable(icp_nl test/icp_lm.cpp)  
-        target_link_libraries(icp_nl ${PCL_LIBRARIES} ${PROJECT_NAME}_utils ${PROJECT_NAME}_registration boost_regex)
+	#add_executable(icp_nl test/icp_lm.cpp)  
+        #target_link_libraries(icp_nl ${PCL_LIBRARIES} ${PROJECT_NAME}_utils ${PROJECT_NAME}_registration boost_regex)
 	
-	add_executable(icp_nl_multi_view test/multi_view_icp_lm.cpp)  
-        target_link_libraries(icp_nl_multi_view ${PCL_LIBRARIES} ${PROJECT_NAME}_utils ${PROJECT_NAME}_registration boost_regex)
+	#add_executable(icp_nl_multi_view test/multi_view_icp_lm.cpp)  
+        #target_link_libraries(icp_nl_multi_view ${PCL_LIBRARIES} ${PROJECT_NAME}_utils ${PROJECT_NAME}_registration boost_regex)
 	
-	add_executable(icp_nl_multi_view_rgb test/multi_view_icp_lm_rgb.cpp)  
-        target_link_libraries(icp_nl_multi_view_rgb ${PCL_LIBRARIES} ${PROJECT_NAME}_utils ${PROJECT_NAME}_registration boost_regex)
+	#add_executable(icp_nl_multi_view_rgb test/multi_view_icp_lm_rgb.cpp)  
+        #target_link_libraries(icp_nl_multi_view_rgb ${PCL_LIBRARIES} ${PROJECT_NAME}_utils ${PROJECT_NAME}_registration boost_regex)
 	
 endif(FAAT_PCL_USE_CUDA)

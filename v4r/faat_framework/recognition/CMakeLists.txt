@@ -57,25 +57,25 @@ else(FAAT_PCL_HV_USE_GPU)
     target_link_libraries(${LIB_NAME} ${PCL_LIBRARIES} ${PROJECT_NAME}_utils)
 endif(FAAT_PCL_HV_USE_GPU)
 
-add_executable(queens_to_or_evaluator_format src/scripts/queens_to_or_evaluator_format.cpp)  
-target_link_libraries(queens_to_or_evaluator_format ${PCL_LIBRARIES})
+#add_executable(queens_to_or_evaluator_format src/scripts/queens_to_or_evaluator_format.cpp)  
+#target_link_libraries(queens_to_or_evaluator_format ${PCL_LIBRARIES})
 
-add_executable(eccv_to_or_evaluator_format src/scripts/eccv_to_or_evaluator_format.cpp)  
-target_link_libraries(eccv_to_or_evaluator_format ${PCL_LIBRARIES})
+#add_executable(eccv_to_or_evaluator_format src/scripts/eccv_to_or_evaluator_format.cpp)  
+#target_link_libraries(eccv_to_or_evaluator_format ${PCL_LIBRARIES})
 
-add_executable(mian_to_or_evaluator_format src/scripts/mian_to_or_evaluator_format.cpp)  
-target_link_libraries(mian_to_or_evaluator_format ${PCL_LIBRARIES})
+#add_executable(mian_to_or_evaluator_format src/scripts/mian_to_or_evaluator_format.cpp)  
+#target_link_libraries(mian_to_or_evaluator_format ${PCL_LIBRARIES})
 
-add_executable(willow_challenge_to_or_evaluator_format src/scripts/willow_challenge_to_or_evaluator_format.cpp)
-target_link_libraries(willow_challenge_to_or_evaluator_format ${PCL_LIBRARIES})
+#add_executable(willow_challenge_to_or_evaluator_format src/scripts/willow_challenge_to_or_evaluator_format.cpp)
+#target_link_libraries(willow_challenge_to_or_evaluator_format ${PCL_LIBRARIES})
 
 
 
-add_executable(ops_to_pcd src/scripts/ops_to_pcd.cpp)  
-target_link_libraries(ops_to_pcd ${PCL_LIBRARIES})
+#add_executable(ops_to_pcd src/scripts/ops_to_pcd.cpp)  
+#target_link_libraries(ops_to_pcd ${PCL_LIBRARIES})
 
-add_executable(vtk2ply src/scripts/vtk2ply.cpp)  
-target_link_libraries(vtk2ply ${PCL_LIBRARIES})
+#add_executable(vtk2ply src/scripts/vtk2ply.cpp)  
+#target_link_libraries(vtk2ply ${PCL_LIBRARIES})
 
 #add_executable(local_recognition_ply tests/scene_local_training_recognition.cpp)  
 #target_link_libraries(local_recognition_ply ${PCL_LIBRARIES} faat_pcl_recognition faat_pcl_utils faat_pcl_segmentation)
