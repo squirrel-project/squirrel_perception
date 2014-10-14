@@ -24,4 +24,4 @@ At the moment, TUW's v4r library needs a particular PCL version to run. This wil
 
 4.) tell catkin to use _pcl_v4r_fork_ for packages dependent on this particular pcl version:
 
-    catkin_make -DV4R_PCL_DIR=~/pcl_v4r_fork/build
+    catkin_make -DV4R_PCL_DIR=~/pcl_v4r_fork/build -j1
