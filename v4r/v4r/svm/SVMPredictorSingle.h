@@ -1,6 +1,6 @@
 /**
  *  Copyright (C) 2012  
- *    Andreas Richtsfeld, Johann Prankl, Thomas Mörwald
+ *    Ekaterina Potapova, Andreas Richtsfeld, Johann Prankl, Thomas Mörwald, Michael Zillich
  *    Automation and Control Institute
  *    Vienna University of Technology
  *    Gusshausstraße 25-29
@@ -79,8 +79,7 @@ private:
   std::vector<double> feature_min;              ///< minimum feature value for scaling
   std::vector<bool> feature_scaled;
   
-  void checkSmallPatches(int max_size);
-  double predict(std::vector<double> &val, std::vector<double> &prob);
+  void checkSmallPatches(unsigned int max_size);
   void scaleValues(std::vector<double> &val);
   
   bool have_surfaces;
@@ -103,6 +102,8 @@ public:
   
   /** Get modified relations **/
   inline std::vector<surface::Relation> getRelations();
+  
+  double predict(std::vector<double> &val, std::vector<double> &prob);
   
 };
 

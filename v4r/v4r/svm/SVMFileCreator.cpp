@@ -1,6 +1,6 @@
 /**
  *  Copyright (C) 2012  
- *    Andreas Richtsfeld, Johann Prankl, Thomas Mörwald
+ *    Ekaterina Potapova, Andreas Richtsfeld, Johann Prankl, Thomas Mörwald, Michael Zillich
  *    Automation and Control Institute
  *    Vienna University of Technology
  *    Gusshausstraße 25-29
@@ -100,7 +100,7 @@ void SVMFileCreator::process()
     std::vector<bool> usedRelations;
     usedRelations.resize(relations.size());
     //select relations for training
-    for(int i = 0; i < relations.size(); i++)
+    for(unsigned int i = 0; i < relations.size(); i++)
     {
       usedRelations.at(i) = false;
       
@@ -118,7 +118,7 @@ void SVMFileCreator::process()
       }
     }
     
-    for(int i = 0; i < relations.size(); i++)
+    for(unsigned int i = 0; i < relations.size(); i++)
     {
 
       if(!(usedRelations.at(i)))
@@ -132,7 +132,7 @@ void SVMFileCreator::process()
         //write all relations
         if(featureNumber == -1)
 	{
-	  for(int j = 0; j < relations.at(i).rel_value.size(); j++) 
+          for(unsigned int j = 0; j < relations.at(i).rel_value.size(); j++) 
 	  {
             if( std::isnan(relations.at(i).rel_value.at(j)) )
             {
@@ -160,7 +160,7 @@ void SVMFileCreator::process()
 	  
 	  if(featureNumber == -1)
 	  {
-            for(int j = 0; j < relations.at(i).rel_value.size(); j++) 
+            for(unsigned int j = 0; j < relations.at(i).rel_value.size(); j++) 
 	    {
               if( std::isnan(relations.at(i).rel_value.at(j)) )
               {
@@ -185,7 +185,7 @@ void SVMFileCreator::process()
           
 	  if(featureNumber == -1)
 	  {
-	    for(int j = 0; j < relations.at(i).rel_value.size(); j++) 
+            for(unsigned int j = 0; j < relations.at(i).rel_value.size(); j++) 
 	    {
               if( std::isnan(relations.at(i).rel_value.at(j)) )
               {
@@ -213,7 +213,7 @@ void SVMFileCreator::process()
         
 	if(featureNumber == -1)
 	{
-	  for(int j = 0; j < relations.at(i).rel_value.size(); j++) 
+          for(unsigned int j = 0; j < relations.at(i).rel_value.size(); j++) 
 	  {
             if( std::isnan(relations.at(i).rel_value.at(j)) )
             {
