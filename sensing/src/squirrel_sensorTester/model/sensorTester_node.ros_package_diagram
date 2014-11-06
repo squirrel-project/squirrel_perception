@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<notation:Diagram xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:notation="http://www.eclipse.org/gmf/runtime/1.0.2/notation" xmlns:ros="http://ros/1.0" xmi:id="_h6LW0GWmEeSXDJ71BxkJlg" type="RosPackage" name="sensorTester_node.ros_package_diagram" measurementUnit="Pixel">
+  <children xmi:type="notation:Shape" xmi:id="_jOmzIGWmEeSXDJ71BxkJlg" type="2001" fontName="Ubuntu">
+    <children xmi:type="notation:DecorationNode" xmi:id="_jOnaMGWmEeSXDJ71BxkJlg" type="5008"/>
+    <children xmi:type="notation:BasicCompartment" xmi:id="_jOnaMWWmEeSXDJ71BxkJlg" type="7001">
+      <styles xmi:type="notation:TitleStyle" xmi:id="_jOnaMmWmEeSXDJ71BxkJlg" showTitle="true"/>
+      <styles xmi:type="notation:SortingStyle" xmi:id="_jOnaM2WmEeSXDJ71BxkJlg"/>
+      <styles xmi:type="notation:FilteringStyle" xmi:id="_jOnaNGWmEeSXDJ71BxkJlg"/>
+    </children>
+    <children xmi:type="notation:Node" xmi:id="_k2k2gGWmEeSXDJ71BxkJlg" type="3007">
+      <children xmi:type="notation:DecorationNode" xmi:id="_k2ldkGWmEeSXDJ71BxkJlg" type="5007"/>
+      <styles xmi:type="notation:DescriptionStyle" xmi:id="_k2k2gWWmEeSXDJ71BxkJlg"/>
+      <styles xmi:type="notation:FontStyle" xmi:id="_k2k2gmWmEeSXDJ71BxkJlg" fontName="Ubuntu"/>
+      <element xmi:type="ros:Subscriber" href="sensorTester_node.ros_package#//@node.0/@subscriber.0"/>
+      <layoutConstraint xmi:type="notation:Bounds" xmi:id="_k2k2g2WmEeSXDJ71BxkJlg"/>
+    </children>
+    <children xmi:type="notation:Node" xmi:id="_LNVWAGWnEeSXDJ71BxkJlg" type="3002">
+      <children xmi:type="notation:DecorationNode" xmi:id="_LNV9EGWnEeSXDJ71BxkJlg" type="5002"/>
+      <styles xmi:type="notation:DescriptionStyle" xmi:id="_LNVWAWWnEeSXDJ71BxkJlg"/>
+      <styles xmi:type="notation:FontStyle" xmi:id="_LNVWAmWnEeSXDJ71BxkJlg" fontName="Ubuntu"/>
+      <styles xmi:type="notation:LineStyle" xmi:id="_LNVWA2WnEeSXDJ71BxkJlg"/>
+      <element xmi:type="ros:ServiceServer" href="sensorTester_node.ros_package#//@node.0/@serviceServer.0"/>
+      <layoutConstraint xmi:type="notation:Bounds" xmi:id="_LNVWBGWnEeSXDJ71BxkJlg"/>
+    </children>
+    <element xmi:type="ros:Node" href="sensorTester_node.ros_package#//@node.0"/>
+    <layoutConstraint xmi:type="notation:Bounds" xmi:id="_jOmzIWWmEeSXDJ71BxkJlg" x="280" y="155"/>
+  </children>
+  <styles xmi:type="notation:DiagramStyle" xmi:id="_h6LW0WWmEeSXDJ71BxkJlg"/>
+  <element xmi:type="ros:Package" href="sensorTester_node.ros_package#/"/>
+</notation:Diagram>

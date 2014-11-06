@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package>
+  <name>squirrel_sensing_deployment</name>
+  <description>The squirrel_sensing_deployment system</description>
+  <version>0.0.1</version>
+  <maintainer email="jelizaveta@todo.todo">jelizaveta</maintainer>
+  <author email="jelizaveta@todo.todo">jelizaveta</author>
+  <license>TODO</license>
+  <url></url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+    <build_depend>squirrel_sensing</build_depend>
+    <run_depend>squirrel_sensing</run_depend>
+    <build_depend>squirrel_sensorTester</build_depend>
+    <run_depend>squirrel_sensorTester</run_depend>
+    <build_depend>squirrel_sensing_coordinator</build_depend>
+    <run_depend>squirrel_sensing_coordinator</run_depend>
+
+
+  <!-- protected region additional manifest statements on begin -->
+  <!-- protected region additional manifest statements end -->
+
+
+</package>

@@ -1,0 +1,6 @@
+\subsubsection usage Usage
+\verbatim
+<node name="squirrel_sensing" pkg="squirrel_sensing" type="squirrel_sensing">
+</node>
+\endverbatim
+

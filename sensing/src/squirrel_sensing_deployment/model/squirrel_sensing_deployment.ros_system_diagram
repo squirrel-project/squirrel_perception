@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<notation:Diagram xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:notation="http://www.eclipse.org/gmf/runtime/1.0.2/notation" xmlns:ros="http://ros/1.0" xmlns:smach="http://smach/1.0" xmi:id="_E2lvAGWqEeSXDJ71BxkJlg" type="RosSystem" name="squirrel_sensing_deployment.ros_system_diagram" measurementUnit="Pixel">
+  <children xmi:type="notation:Shape" xmi:id="_KmkwoGWqEeSXDJ71BxkJlg" type="2001" fontName="Ubuntu">
+    <children xmi:type="notation:DecorationNode" xmi:id="_KmlXsGWqEeSXDJ71BxkJlg" type="5008"/>
+    <children xmi:type="notation:DecorationNode" xmi:id="_KmlXsWWqEeSXDJ71BxkJlg" type="7001">
+      <children xmi:type="notation:Shape" xmi:id="_KmnM4GWqEeSXDJ71BxkJlg" type="3001" fontName="Ubuntu">
+        <children xmi:type="notation:DecorationNode" xmi:id="_Kmnz8GWqEeSXDJ71BxkJlg" type="5007"/>
+        <children xmi:type="notation:BasicCompartment" xmi:id="_Kmnz8WWqEeSXDJ71BxkJlg" type="7002">
+          <styles xmi:type="notation:TitleStyle" xmi:id="_Kmnz8mWqEeSXDJ71BxkJlg" showTitle="true"/>
+          <styles xmi:type="notation:SortingStyle" xmi:id="_Kmnz82WqEeSXDJ71BxkJlg"/>
+          <styles xmi:type="notation:FilteringStyle" xmi:id="_Kmnz9GWqEeSXDJ71BxkJlg"/>
+        </children>
+        <children xmi:type="notation:Node" xmi:id="_KmpCEGWqEeSXDJ71BxkJlg" type="3003">
+          <children xmi:type="notation:DecorationNode" xmi:id="_KmpCFGWqEeSXDJ71BxkJlg" type="5001"/>
+          <styles xmi:type="notation:DescriptionStyle" xmi:id="_KmpCEWWqEeSXDJ71BxkJlg"/>
+          <styles xmi:type="notation:FontStyle" xmi:id="_KmpCEmWqEeSXDJ71BxkJlg" fontName="Ubuntu"/>
+          <element xmi:type="ros:Publisher" href="platform:/resource//squirrel_sensing/model/sensor_node.ros_package#//@node.0/@publisher.0"/>
+          <layoutConstraint xmi:type="notation:Bounds" xmi:id="_KmpCE2WqEeSXDJ71BxkJlg" x="239" y="63"/>
+        </children>
+        <children xmi:type="notation:Node" xmi:id="_KmppIGWqEeSXDJ71BxkJlg" type="3003">
+          <children xmi:type="notation:DecorationNode" xmi:id="_KmppJGWqEeSXDJ71BxkJlg" type="5001"/>
+          <styles xmi:type="notation:DescriptionStyle" xmi:id="_KmppIWWqEeSXDJ71BxkJlg"/>
+          <styles xmi:type="notation:FontStyle" xmi:id="_KmppImWqEeSXDJ71BxkJlg" fontName="Ubuntu"/>
+          <element xmi:type="ros:Publisher" href="platform:/resource//squirrel_sensing/model/sensor_node.ros_package#//@node.0/@publisher.1"/>
+          <layoutConstraint xmi:type="notation:Bounds" xmi:id="_KmppI2WqEeSXDJ71BxkJlg" x="239" y="93"/>
+        </children>
+        <children xmi:type="notation:Node" xmi:id="_KmppJWWqEeSXDJ71BxkJlg" type="3003">
+          <children xmi:type="notation:DecorationNode" xmi:id="_KmppKWWqEeSXDJ71BxkJlg" type="5001"/>
+          <styles xmi:type="notation:DescriptionStyle" xmi:id="_KmppJmWqEeSXDJ71BxkJlg"/>
+          <styles xmi:type="notation:FontStyle" xmi:id="_KmppJ2WqEeSXDJ71BxkJlg" fontName="Ubuntu"/>
+          <element xmi:type="ros:Publisher" href="platform:/resource//squirrel_sensing/model/sensor_node.ros_package#//@node.0/@publisher.2"/>
+          <layoutConstraint xmi:type="notation:Bounds" xmi:id="_KmppKGWqEeSXDJ71BxkJlg" x="239" y="28"/>
+        </children>
+        <children xmi:type="notation:Node" xmi:id="_KmppKmWqEeSXDJ71BxkJlg" type="3005">
+          <children xmi:type="notation:DecorationNode" xmi:id="_KmqQMGWqEeSXDJ71BxkJlg" type="5003"/>
+          <styles xmi:type="notation:DescriptionStyle" xmi:id="_KmppK2WqEeSXDJ71BxkJlg"/>
+          <styles xmi:type="notation:FontStyle" xmi:id="_KmppLGWqEeSXDJ71BxkJlg" fontName="Ubuntu"/>
+          <styles xmi:type="notation:LineStyle" xmi:id="_KmppLWWqEeSXDJ71BxkJlg"/>
+          <element xmi:type="ros:ActionServer" href="platform:/resource//squirrel_sensing/model/sensor_node.ros_package#//@node.0/@actionserver.0"/>
+          <layoutConstraint xmi:type="notation:Bounds" xmi:id="_KmppLmWqEeSXDJ71BxkJlg" x="239" y="138"/>
+        </children>
+        <element xmi:type="ros:Node" href="platform:/resource//squirrel_sensing/model/sensor_node.ros_package#//@node.0"/>
+        <layoutConstraint xmi:type="notation:Bounds" xmi:id="_KmnM4WWqEeSXDJ71BxkJlg" x="-216" y="105"/>
+      </children>
+    </children>
+    <element xmi:type="ros:Package" href="platform:/resource//squirrel_sensing/model/sensor_node.ros_package#/"/>
+    <layoutConstraint xmi:type="notation:Bounds" xmi:id="_KmkwoWWqEeSXDJ71BxkJlg" x="45" y="220"/>
+  </children>
+  <children xmi:type="notation:Shape" xmi:id="_NdiWsGWqEeSXDJ71BxkJlg" type="2001" fontName="Ubuntu">
+    <children xmi:type="notation:DecorationNode" xmi:id="_Ndi9wGWqEeSXDJ71BxkJlg" type="5008"/>
+    <children xmi:type="notation:DecorationNode" xmi:id="_Ndi9wWWqEeSXDJ71BxkJlg" type="7001">
+      <children xmi:type="notation:Shape" xmi:id="_Ndky8GWqEeSXDJ71BxkJlg" type="3001" fontName="Ubuntu">
+        <children xmi:type="notation:DecorationNode" xmi:id="_NdlaAGWqEeSXDJ71BxkJlg" type="5007"/>
+        <children xmi:type="notation:BasicCompartment" xmi:id="_NdlaAWWqEeSXDJ71BxkJlg" type="7002">
+          <styles xmi:type="notation:TitleStyle" xmi:id="_NdlaAmWqEeSXDJ71BxkJlg" showTitle="true"/>
+          <styles xmi:type="notation:SortingStyle" xmi:id="_NdlaA2WqEeSXDJ71BxkJlg"/>
+          <styles xmi:type="notation:FilteringStyle" xmi:id="_NdlaBGWqEeSXDJ71BxkJlg"/>
+        </children>
+        <children xmi:type="notation:Node" xmi:id="_NdnPMGWqEeSXDJ71BxkJlg" type="3004">
+          <children xmi:type="notation:DecorationNode" xmi:id="_NdnPNGWqEeSXDJ71BxkJlg" type="5002"/>
+          <styles xmi:type="notation:DescriptionStyle" xmi:id="_NdnPMWWqEeSXDJ71BxkJlg"/>
+          <styles xmi:type="notation:FontStyle" xmi:id="_NdnPMmWqEeSXDJ71BxkJlg" fontName="Ubuntu"/>
+          <element xmi:type="ros:Subscriber" href="platform:/resource//squirrel_sensorTester/model/sensorTester_node.ros_package#//@node.0/@subscriber.0"/>
+          <layoutConstraint xmi:type="notation:Bounds" xmi:id="_NdnPM2WqEeSXDJ71BxkJlg" x="-79" y="107"/>
+        </children>
+        <children xmi:type="notation:Node" xmi:id="_NdnPNWWqEeSXDJ71BxkJlg" type="3007">
+          <children xmi:type="notation:DecorationNode" xmi:id="_NdnPOmWqEeSXDJ71BxkJlg" type="5005"/>
+          <styles xmi:type="notation:DescriptionStyle" xmi:id="_NdnPNmWqEeSXDJ71BxkJlg"/>
+          <styles xmi:type="notation:FontStyle" xmi:id="_NdnPN2WqEeSXDJ71BxkJlg" fontName="Ubuntu"/>
+          <styles xmi:type="notation:LineStyle" xmi:id="_NdnPOGWqEeSXDJ71BxkJlg"/>
+          <element xmi:type="ros:ServiceServer" href="platform:/resource//squirrel_sensorTester/model/sensorTester_node.ros_package#//@node.0/@serviceServer.0"/>
+          <layoutConstraint xmi:type="notation:Bounds" xmi:id="_NdnPOWWqEeSXDJ71BxkJlg" x="239" y="83"/>
+        </children>
+        <element xmi:type="ros:Node" href="platform:/resource//squirrel_sensorTester/model/sensorTester_node.ros_package#//@node.0"/>
+        <layoutConstraint xmi:type="notation:Bounds" xmi:id="_Ndky8WWqEeSXDJ71BxkJlg"/>
+      </children>
+    </children>
+    <element xmi:type="ros:Package" href="platform:/resource//squirrel_sensorTester/model/sensorTester_node.ros_package#/"/>
+    <layoutConstraint xmi:type="notation:Bounds" xmi:id="_NdiWsWWqEeSXDJ71BxkJlg" x="790" y="-9"/>
+  </children>
+  <children xmi:type="notation:Shape" xmi:id="_UYxDcGWqEeSXDJ71BxkJlg" type="2001" fontName="Ubuntu">
+    <children xmi:type="notation:DecorationNode" xmi:id="_UYxDcmWqEeSXDJ71BxkJlg" type="5008"/>
+    <children xmi:type="notation:DecorationNode" xmi:id="_UYxDc2WqEeSXDJ71BxkJlg" type="7001">
+      <children xmi:type="notation:Shape" xmi:id="_UYy4oGWqEeSXDJ71BxkJlg" type="3001" fontName="Ubuntu">
+        <children xmi:type="notation:DecorationNode" xmi:id="_UYy4omWqEeSXDJ71BxkJlg" type="5007"/>
+        <children xmi:type="notation:BasicCompartment" xmi:id="_UYy4o2WqEeSXDJ71BxkJlg" type="7002">
+          <styles xmi:type="notation:TitleStyle" xmi:id="_UYy4pGWqEeSXDJ71BxkJlg" showTitle="true"/>
+          <styles xmi:type="notation:SortingStyle" xmi:id="_UYy4pWWqEeSXDJ71BxkJlg"/>
+          <styles xmi:type="notation:FilteringStyle" xmi:id="_UYy4pmWqEeSXDJ71BxkJlg"/>
+        </children>
+        <children xmi:type="notation:Node" xmi:id="_UY0t0GWqEeSXDJ71BxkJlg" type="3006">
+          <children xmi:type="notation:DecorationNode" xmi:id="_UY0t1WWqEeSXDJ71BxkJlg" type="5004"/>
+          <styles xmi:type="notation:DescriptionStyle" xmi:id="_UY0t0WWqEeSXDJ71BxkJlg"/>
+          <styles xmi:type="notation:FontStyle" xmi:id="_UY0t0mWqEeSXDJ71BxkJlg" fontName="Ubuntu"/>
+          <styles xmi:type="notation:LineStyle" xmi:id="_UY0t02WqEeSXDJ71BxkJlg"/>
+          <element xmi:type="smach:ActionState" href="platform:/resource//squirrel_sensing_coordinator/model/squirrel_sensing_coordinator.ros_coordinator#//@node.0/@actionclient.0"/>
+          <layoutConstraint xmi:type="notation:Bounds" xmi:id="_UY0t1GWqEeSXDJ71BxkJlg"/>
+        </children>
+        <element xmi:type="smach:SMACHStateMachine" href="platform:/resource//squirrel_sensing_coordinator/model/squirrel_sensing_coordinator.ros_coordinator#//@node.0"/>
+        <layoutConstraint xmi:type="notation:Bounds" xmi:id="_UYy4oWWqEeSXDJ71BxkJlg"/>
+      </children>
+    </children>
+    <element xmi:type="ros:Package" href="platform:/resource//squirrel_sensing_coordinator/model/squirrel_sensing_coordinator.ros_coordinator#/"/>
+    <layoutConstraint xmi:type="notation:Bounds" xmi:id="_UYxDcWWqEeSXDJ71BxkJlg" x="675" y="500"/>
+  </children>
+  <styles xmi:type="notation:DiagramStyle" xmi:id="_E2lvAWWqEeSXDJ71BxkJlg"/>
+  <element xmi:type="ros:Architecture" href="squirrel_sensing_deployment.ros_system#/"/>
+  <edges xmi:type="notation:Edge" xmi:id="_rjfdoGWqEeSXDJ71BxkJlg" type="4001" source="_KmppIGWqEeSXDJ71BxkJlg" target="_NdnPMGWqEeSXDJ71BxkJlg">
+    <children xmi:type="notation:DecorationNode" xmi:id="_rjgEsGWqEeSXDJ71BxkJlg" type="6001">
+      <layoutConstraint xmi:type="notation:Location" xmi:id="_rjgEsWWqEeSXDJ71BxkJlg" y="40"/>
+    </children>
+    <styles xmi:type="notation:RoutingStyle" xmi:id="_rjfdoWWqEeSXDJ71BxkJlg"/>
+    <styles xmi:type="notation:FontStyle" xmi:id="_rjfdomWqEeSXDJ71BxkJlg" fontName="Ubuntu"/>
+    <element xmi:type="ros:Topic" href="squirrel_sensing_deployment.ros_system#//@topic.0"/>
+    <bendpoints xmi:type="notation:RelativeBendpoints" xmi:id="_rjfdo2WqEeSXDJ71BxkJlg" points="[30, 0, -350, 240]$[362, -240, -18, 0]"/>
+    <sourceAnchor xmi:type="notation:IdentityAnchor" xmi:id="_rjig8GWqEeSXDJ71BxkJlg" id="EAST"/>
+    <targetAnchor xmi:type="notation:IdentityAnchor" xmi:id="_rjig8WWqEeSXDJ71BxkJlg" id="WEST"/>
+  </edges>
+  <edges xmi:type="notation:Edge" xmi:id="_3OHRsGWqEeSXDJ71BxkJlg" type="4003" source="_KmppKmWqEeSXDJ71BxkJlg" target="_UY0t0GWqEeSXDJ71BxkJlg">
+    <children xmi:type="notation:DecorationNode" xmi:id="_3OHRtGWqEeSXDJ71BxkJlg" type="6003">
+      <layoutConstraint xmi:type="notation:Location" xmi:id="_3OHRtWWqEeSXDJ71BxkJlg" y="40"/>
+    </children>
+    <styles xmi:type="notation:RoutingStyle" xmi:id="_3OHRsWWqEeSXDJ71BxkJlg"/>
+    <styles xmi:type="notation:FontStyle" xmi:id="_3OHRsmWqEeSXDJ71BxkJlg" fontName="Ubuntu"/>
+    <element xmi:type="ros:Action" href="squirrel_sensing_deployment.ros_system#//@action.0"/>
+    <bendpoints xmi:type="notation:RelativeBendpoints" xmi:id="_3OHRs2WqEeSXDJ71BxkJlg" points="[30, 0, -263, -96]$[275, 96, -18, 0]"/>
+    <sourceAnchor xmi:type="notation:IdentityAnchor" xmi:id="_3OKVAGWqEeSXDJ71BxkJlg" id="EAST"/>
+    <targetAnchor xmi:type="notation:IdentityAnchor" xmi:id="_3OKVAWWqEeSXDJ71BxkJlg" id="WEST"/>
+  </edges>
+</notation:Diagram>
