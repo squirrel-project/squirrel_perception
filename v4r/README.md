@@ -1,42 +1,9 @@
 # ACIN V4R mirror
 
-This is the git mirror of ACIN's v4r library for STRANDS.
+This is the git mirror of ACIN's v4r library.
 
-It uses `git svn` to pull in the latest v4r strands branch from ACIN's svn server:
+It uses `git svn` to pull in the latest v4r stable branch from ACIN's svn server:
 https://repo.acin.tuwien.ac.at/v4r/stable/strands_v4r
-
-At the moment, these frameworks need a particular PCL version to run. In order to avoid conflicts with other pcl versions (i.e. the built-in ros-pcl version), please follow these steps:
-
-1.) install required system packages:
-
-    sudo apt-get install libsuitesparse-dev
-    sudo apt-get install libglm-dev
-    libglew1.5-dev
-
-2.) check out PCL as follows into a local directory:
-
-    git clone https://github.com/arbeitor/pcl.git ~/pcl_v4r_fork --branch reconstruction_workshop
-
-3.)  build PCL
-
-    mkdir ~/pcl_v4r_fork/build
-    cd ~/pcl_v4r_fork/build
-    cmake ..
-    make -j4
-
-**IMPORTANT: DO NOT INSTALL PCL to avoid conflicts with other versions!**
-
-4.) set V4R directory in cmake (Note: this will be fixed)
-
-    cd YOUR_CATKIN_WS
-    cd build
-    ccmake .
-
-Then set V4R_DIR to YOUR_CATKIN_WS/src/v4r
-
-5.) tell catkin to use _pcl\_v4r\_fork_ for packages dependent on this particular pcl version:
-
-    catkin_make -DV4R_PCL_DIR=~/pcl_v4r_fork/build
 
 
 ## For users
