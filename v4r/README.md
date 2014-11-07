@@ -15,6 +15,8 @@ Normal uses should never need to push to this repository.
 
 ## For maintainers
 
+!INPORTANT!: The svn repository is wrong, please contact the responsible person for further information.
+
 ### Set up the svn git bridge
 Run all this NOT from within any of your regular git work spaces.
 
