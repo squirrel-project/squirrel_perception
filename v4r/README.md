@@ -3,7 +3,7 @@
 This is the git mirror of ACIN's v4r library for STRANDS.
 
 It uses `git svn` to pull in the latest v4r strands branch from ACIN's svn server:
-https://repo.acin.tuwien.ac.at/v4r/stable/strandsv4r
+https://repo.acin.tuwien.ac.at/v4r/stable/strands_v4r
 
 At the moment, these frameworks need a particular PCL version to run. In order to avoid conflicts with other pcl versions (i.e. the built-in ros-pcl version), please follow these steps:
 
