@@ -17,10 +17,10 @@ Normal uses should never need to push to this repository.
 ### Set up the svn git bridge
 Run all this NOT from within any of your regular git work spaces.
 
-    git svn clone https://repo.acin.tuwien.ac.at/v4r/stable/strandsv4r
-    cd strandsv4r
+    git svn clone https://repo.acin.tuwien.ac.at/v4r/stable/strands_v4r
+    cd strands_v4r
     git checkout -b hydro-devel
-    git remote add origin https://github.com/strands-project/v4r.git
+    git remote add origin https://github.com/your-repo/v4r.git
     git push -u origin hydro-devel
 
 ### Update
