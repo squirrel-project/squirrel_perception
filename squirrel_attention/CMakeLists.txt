@@ -97,6 +97,13 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${V4R_INCLUDE_DIR} ${PCL_INCL
 #   src/${PROJECT_NAME}/squirrel_attention.cpp
 # )
 
+#message(STATUS "MY V4R_LIBS" ${V4R_LIBS})
+# get_cmake_property(_variableNames VARIABLES)
+# foreach (_variableName ${_variableNames})
+#     message(STATUS "MY ${_variableName}=${${_variableName}}")
+# endforeach()
+# link_directories(${V4R_LIB_DIR})
+
 ## Declare a cpp executable
 # add_executable(squirrel_attention_node src/squirrel_attention_node.cpp)
 add_executable(squirrel_attention_location src/squirrel_attention_location.cpp)
@@ -110,10 +117,10 @@ add_executable(squirrel_attention_location src/squirrel_attention_location.cpp)
 # target_link_libraries(squirrel_attention_node
 #   ${catkin_LIBRARIES}
 # )
-target_link_libraries(squirrel_attention_location ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBSS})
+target_link_libraries(squirrel_attention_location ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
 add_dependencies(squirrel_attention_location strands_v4r)
 
-#target_link_libraries(squirrel_attention_test ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBSS})
+#target_link_libraries(squirrel_attention_test ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
 #add_dependencies(squirrel_attention_test strands_v4r)
 
 #############
