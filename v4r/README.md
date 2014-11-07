@@ -26,7 +26,7 @@ Run all this NOT from within any of your regular git work spaces.
 ### Update
 Whenver the svn changed, you have to move these changes to git.
 
-    cd strandsv4r
+    cd strands_v4r
     git svn rebase
     git push
 
