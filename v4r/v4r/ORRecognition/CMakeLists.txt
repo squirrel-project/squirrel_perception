@@ -11,6 +11,7 @@ SET(SOURCE_CPP_HV
   ghv_opt.cpp
   ghv.cpp
   hv_go_3D.cpp
+#  hv_go_1.cpp
 )
 
 SET(SOURCE_H_HV
@@ -19,6 +20,8 @@ SET(SOURCE_H_HV
   ghv_opt.h
   ghv_opt.hpp
   hv_go_3D.h
+#  hv_go_1.h
+#  hv_go_1.hpp
   hypotheses_verification.h
   occlusion_reasoning.h
   occlusion_reasoning.hpp
@@ -43,7 +46,6 @@ SET(SOURCE_CPP_CG
   geometric_consistency.cpp
   hough_3d.cpp
   graph_geometric_consistency.cpp
-
 
   kmeans.cpp
 )
