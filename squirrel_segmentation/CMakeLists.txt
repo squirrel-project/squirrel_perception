@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(squirrel_attention)
+project(squirrel_segmentation)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -78,7 +78,7 @@ find_package(OpenCV 2.4 REQUIRED)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
  INCLUDE_DIRS include
-#  LIBRARIES squirrel_attention
+#  LIBRARIES squirrel_segmentation
  CATKIN_DEPENDS squirrel_object_perception_msgs strands_v4r
 #  DEPENDS system_lib
 )
@@ -93,8 +93,8 @@ catkin_package(
 include_directories(include ${catkin_INCLUDE_DIRS} ${V4R_INCLUDE_DIR} ${PCL_INCLUDE_DIRS})
 
 ## Declare a cpp library
-# add_library(squirrel_attention
-#   src/${PROJECT_NAME}/squirrel_attention.cpp
+# add_library(squirrel_segmentation
+#   src/${PROJECT_NAME}/squirrel_segmentation.cpp
 # )
 
 #message(STATUS "MY V4R_LIBS" ${V4R_LIBS})
@@ -105,23 +105,23 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${V4R_INCLUDE_DIR} ${PCL_INCL
 # link_directories(${V4R_LIB_DIR})
 
 ## Declare a cpp executable
-# add_executable(squirrel_attention_node src/squirrel_attention_node.cpp)
-add_executable(squirrel_attention_location src/squirrel_attention_location.cpp)
-#add_executable(squirrel_attention_test src/test.cpp)
+# add_executable(squirrel_segmentation_node src/squirrel_segmentation_node.cpp)
+add_executable(squirrel_segmentation_incremental src/squirrel_segmentation_incremental.cpp)
+#add_executable(squirrel_segmentation_test src/test.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(squirrel_attention_node squirrel_attention_generate_messages_cpp)
+# add_dependencies(squirrel_segmentation_node squirrel_segmentation_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(squirrel_attention_node
+# target_link_libraries(squirrel_segmentation_node
 #   ${catkin_LIBRARIES}
 # )
-target_link_libraries(squirrel_attention_location ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
-add_dependencies(squirrel_attention_location strands_v4r)
+target_link_libraries(squirrel_segmentation_incremental ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
+add_dependencies(squirrel_segmentation_incremental strands_v4r)
 
-#target_link_libraries(squirrel_attention_test ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
-#add_dependencies(squirrel_attention_test strands_v4r)
+#target_link_libraries(squirrel_segmentation_test ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
+#add_dependencies(squirrel_segmentation_test strands_v4r)
 
 #############
 ## Install ##
@@ -138,7 +138,7 @@ add_dependencies(squirrel_attention_location strands_v4r)
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS squirrel_attention squirrel_attention_node
+# install(TARGETS squirrel_segmentation squirrel_segmentation_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -163,7 +163,7 @@ add_dependencies(squirrel_attention_location strands_v4r)
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_squirrel_attention.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_squirrel_segmentation.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

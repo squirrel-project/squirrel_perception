@@ -1,15 +1,18 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(squirrel_attention)
+project(squirrel_object_perception)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs genmsg sensor_msgs cv_bridge squirrel_object_perception_msgs strands_v4r) #pcl_conversions
+find_package(catkin REQUIRED COMPONENTS
+  actionlib
+  rospy
+  sensor_msgs
+)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
-find_package(PCL 1.7 REQUIRED)
-find_package(OpenCV 2.4 REQUIRED)
+
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -77,9 +80,9 @@ find_package(OpenCV 2.4 REQUIRED)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
- INCLUDE_DIRS include
-#  LIBRARIES squirrel_attention
- CATKIN_DEPENDS squirrel_object_perception_msgs strands_v4r
+#  INCLUDE_DIRS include
+#  LIBRARIES squirrel_object_perception
+#  CATKIN_DEPENDS actionlib rospy
 #  DEPENDS system_lib
 )
 
@@ -89,39 +92,27 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-#message(STATUS "MY PCL_INCLUDE_DIRS" ${PCL_INCLUDE_DIRS})
-include_directories(include ${catkin_INCLUDE_DIRS} ${V4R_INCLUDE_DIR} ${PCL_INCLUDE_DIRS})
+# include_directories(include)
+include_directories(
+  ${catkin_INCLUDE_DIRS}
+)
 
 ## Declare a cpp library
-# add_library(squirrel_attention
-#   src/${PROJECT_NAME}/squirrel_attention.cpp
+# add_library(squirrel_object_perception
+#   src/${PROJECT_NAME}/squirrel_object_perception.cpp
 # )
 
-#message(STATUS "MY V4R_LIBS" ${V4R_LIBS})
-# get_cmake_property(_variableNames VARIABLES)
-# foreach (_variableName ${_variableNames})
-#     message(STATUS "MY ${_variableName}=${${_variableName}}")
-# endforeach()
-# link_directories(${V4R_LIB_DIR})
-
 ## Declare a cpp executable
-# add_executable(squirrel_attention_node src/squirrel_attention_node.cpp)
-add_executable(squirrel_attention_location src/squirrel_attention_location.cpp)
-#add_executable(squirrel_attention_test src/test.cpp)
+# add_executable(squirrel_object_perception_node src/squirrel_object_perception_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(squirrel_attention_node squirrel_attention_generate_messages_cpp)
+# add_dependencies(squirrel_object_perception_node squirrel_object_perception_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(squirrel_attention_node
+# target_link_libraries(squirrel_object_perception_node
 #   ${catkin_LIBRARIES}
 # )
-target_link_libraries(squirrel_attention_location ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
-add_dependencies(squirrel_attention_location strands_v4r)
-
-#target_link_libraries(squirrel_attention_test ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
-#add_dependencies(squirrel_attention_test strands_v4r)
 
 #############
 ## Install ##
@@ -138,7 +129,7 @@ add_dependencies(squirrel_attention_location strands_v4r)
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS squirrel_attention squirrel_attention_node
+# install(TARGETS squirrel_object_perception squirrel_object_perception_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -163,7 +154,7 @@ add_dependencies(squirrel_attention_location strands_v4r)
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_squirrel_attention.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_squirrel_object_perception.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
