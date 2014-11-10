@@ -1,6 +1,6 @@
 /**
- *  Copyright (C) 2014  
- *    Ekaterina Potapova
+ *  Copyright (C) 2012  
+ *    Ekaterina Potapova, Andreas Richtsfeld, Johann Prankl, Thomas Mörwald, Michael Zillich
  *    Automation and Control Institute
  *    Vienna University of Technology
  *    Gusshausstraße 25-29
@@ -38,13 +38,16 @@ namespace segmentation
 Segmenter::Segmenter()
 {
   have_cloud = false;
-//   have_normals = false;
+  have_cloud_l = false;
   have_saliencyMaps = false;
 
   use_planes = false;
 
-  model_file_name = "./ST-TrainAll.model.txt";
-  scaling_file_name = "./ST-TrainAll.scalingparams.txt";
+  model_file_name = "./ST-TrainAll.txt.model";
+  scaling_file_name = "./ST-TrainAll.txt.scalingparams";
+  
+  train_ST_file_name = "./ST-TrainAll.txt";
+  train_AS_file_name = "./AS-TrainAll.txt";
   
   ClassName = "Segmenter";
 }
@@ -59,11 +62,11 @@ void Segmenter::setPointCloud(pcl::PointCloud<pcl::PointXYZRGB>::Ptr _pcl_cloud)
   have_cloud = true;
 }
 
-// void Segmenter::setNormals(pcl::PointCloud<pcl::Normal>::Ptr _normals)
-// {
-//   normals = _normals;
-//   have_normals = true;
-// }
+void Segmenter::setPointCloud(pcl::PointCloud<pcl::PointXYZRGBL>::Ptr _pcl_cloud_l)
+{
+  pcl_cloud_l = _pcl_cloud_l;
+  have_cloud_l = true;
+}
 
 void Segmenter::setSaliencyMaps(std::vector<cv::Mat> _saliencyMaps)
 {
@@ -288,6 +291,54 @@ bool Segmenter::checkSegmentation(cv::Mat &mask, int originalIndex, int salMapNu
     
 }
 
+void Segmenter::createTrainFile()
+{
+  if( (!have_cloud) || (!have_cloud_l) )
+  {
+    char* error_message = new char[200];
+    sprintf(error_message,"[%s::segment()]: I suggest you first set the point cloud.",ClassName.c_str()); // and normals
+    throw std::runtime_error(error_message);
+  }
+
+  calculateNormals();
+  calculatePatches();
+  surface::View view;
+  view.Reset();
+  view.setPointCloud(pcl_cloud);
+  view.normals = normals;
+  view.setSurfaces(surfaces);
+  surfaces = view.surfaces;
+
+  view.createPatchImage();
+  view.computeNeighbors();
+  surfaces = view.surfaces;
+  view.calculateBorders(view.cloud);
+  ngbr3D_map = view.ngbr3D_map;
+  ngbr2D_map = view.ngbr2D_map;
+  preComputeRelations();
+  initModelSurfaces();
+  modelSurfaces();
+  
+  computeRelations();
+
+  addGroundTruth.setInputCloud(pcl_cloud_l);
+  addGroundTruth.setSurfaces(surfaces);
+  addGroundTruth.setRelations(validRelations);
+  addGroundTruth.compute(surface::STRUCTURAL_RELATIONS);
+  
+  surfaces = addGroundTruth.getSurfaces();
+  validRelations = addGroundTruth.getRelations();
+  
+  svmFileCreator.setSurfaces(surfaces);
+  svmFileCreator.setRelations(validRelations);
+  svmFileCreator.setAnalyzeOutput(false);
+  
+  svmFileCreator.setFeatureNumber(-1);
+  svmFileCreator.setFilenameBase(train_ST_file_name);
+  svmFileCreator.setFilenameAsBase(train_AS_file_name);
+  svmFileCreator.process();
+}
+
 void Segmenter::attentionSegment()
 {
   if( (!have_cloud) || (!have_saliencyMaps) )
@@ -401,10 +452,168 @@ timeEstimates.times_neigboursUpdate.at(i) = 0;
     surfaces.at(originalIndex)->isNew = true;
     view.surfaces = surfaces;
 
-    cv::Mat object_mask = cv::Mat_<uchar>::zeros(480,640);
+    cv::Mat object_mask = cv::Mat_<uchar>::zeros(pcl_cloud->height,pcl_cloud->width);
     originalIndex = attentionSegment(object_mask, originalIndex, i);
     object_mask.copyTo(masks.at(i));
     view.surfaces = surfaces;
+    }
+
+timeEstimationClass_CustomLoopSegment.countingEnd();
+timeEstimates.time_totalPerSegment.at(i) = timeEstimationClass_CustomLoopSegment.getWorkTimeInNanoseconds();
+    
+  }
+
+timeEstimationClass_All.countingEnd();
+timeEstimates.time_total = timeEstimationClass_All.getWorkTimeInNanoseconds();
+  
+}
+
+void Segmenter::attentionSegment(int &objNumber)
+{
+  if( (!have_cloud) || (!have_saliencyMaps) )
+  {
+    char* error_message = new char[200];
+    sprintf(error_message,"[%s::segment()]: I suggest you first set the point cloud.",ClassName.c_str()); // and normals
+    throw std::runtime_error(error_message);
+  }
+  
+  assert(saliencyMaps.size() == 1);
+  
+  masks.resize(objNumber);
+
+EPUtils::TimeEstimationClass timeEstimationClass_All(CLOCK_THREAD_CPUTIME_ID);//CLOCK_THREAD_CPUTIME_ID);//CLOCK_PROCESS_CPUTIME_ID
+EPUtils::TimeEstimationClass timeEstimationClass_Custom(CLOCK_THREAD_CPUTIME_ID);
+
+timeEstimationClass_All.countingStart();
+
+timeEstimationClass_Custom.countingStart();
+  calculateNormals();
+timeEstimationClass_Custom.countingEnd();
+timeEstimates.time_normalsCalculation = timeEstimationClass_Custom.getWorkTimeInNanoseconds();
+
+timeEstimationClass_Custom.countingStart();
+  calculatePatches();
+timeEstimationClass_Custom.countingEnd();
+timeEstimates.time_patchesCalculation = timeEstimationClass_Custom.getWorkTimeInNanoseconds();
+
+timeEstimationClass_Custom.countingStart();
+  surface::View view;
+  view.Reset();
+  view.setPointCloud(pcl_cloud);
+  view.normals = normals;
+  view.setSurfaces(surfaces);
+  surfaces = view.surfaces;
+  
+  view.createPatchImage();
+timeEstimationClass_Custom.countingEnd();
+timeEstimates.time_patchImageCalculation = timeEstimationClass_Custom.getWorkTimeInNanoseconds();
+
+timeEstimationClass_Custom.countingStart();  
+  view.computeNeighbors();
+timeEstimationClass_Custom.countingEnd();
+timeEstimates.time_neighborsCalculation = timeEstimationClass_Custom.getWorkTimeInNanoseconds();
+
+timeEstimationClass_Custom.countingStart();
+  surfaces = view.surfaces;
+  view.calculateBorders(view.cloud);
+  ngbr3D_map = view.ngbr3D_map;
+  ngbr2D_map = view.ngbr2D_map;
+timeEstimationClass_Custom.countingEnd();
+timeEstimates.time_borderCalculation = timeEstimationClass_Custom.getWorkTimeInNanoseconds();
+
+timeEstimationClass_Custom.countingStart();
+  preComputeRelations();
+timeEstimationClass_Custom.countingEnd();
+timeEstimates.time_relationsPreComputation = timeEstimationClass_Custom.getWorkTimeInNanoseconds();
+
+timeEstimationClass_Custom.countingStart();
+  initModelSurfaces();
+timeEstimationClass_Custom.countingEnd();
+timeEstimates.time_initModelSurfaces = timeEstimationClass_Custom.getWorkTimeInNanoseconds();
+
+timeEstimates.times_saliencySorting.resize(objNumber);
+timeEstimates.times_surfaceModelling.resize(objNumber);
+timeEstimates.times_relationsComputation.resize(objNumber);
+timeEstimates.times_graphBasedSegmentation.resize(objNumber);
+timeEstimates.times_maskCreation.resize(objNumber);
+timeEstimates.times_neigboursUpdate.resize(objNumber);
+timeEstimates.time_totalPerSegment.resize(objNumber);
+
+EPUtils::TimeEstimationClass timeEstimationClass_CustomLoopTemp(CLOCK_THREAD_CPUTIME_ID);
+timeEstimationClass_CustomLoopTemp.countingStart();
+  view.setSaliencyMap(saliencyMaps.at(0));
+//     cv::imshow("saliencyMaps.at(i)",saliencyMaps.at(i));
+//     cv::waitKey(-1);
+  view.sortPatches();
+  surfaces = view.surfaces;
+    
+  for(size_t j = 0; j < surfaces.size(); j++)
+  {
+    surfaces.at(j)->selected = false;
+    surfaces.at(j)->isNew = false;
+  }
+
+timeEstimationClass_CustomLoopTemp.countingEnd();
+unsigned long long times_saliencySorting_temp = timeEstimationClass_CustomLoopTemp.getWorkTimeInNanoseconds();
+
+  for(int i = 0; i < objNumber; ++i)
+  {
+EPUtils::TimeEstimationClass timeEstimationClass_CustomLoop(CLOCK_THREAD_CPUTIME_ID);
+timeEstimationClass_CustomLoop.countingStart();
+    
+    int originalIndex = -1;
+    for(size_t j = 0; j < view.sortedSurfaces.size(); j++)
+    {
+      int originalIndex_temp = view.sortedSurfaces.at(j);
+      if(surfaces.at(originalIndex_temp)->valid)
+      {
+	originalIndex = originalIndex_temp;
+	break;
+      }
+    }
+    
+    if(originalIndex == -1)
+    {
+      objNumber = i;
+      return;
+    }
+    
+    //std::cerr << "originalIndex " << originalIndex << std::endl;
+    
+timeEstimationClass_CustomLoop.countingEnd();
+timeEstimates.times_saliencySorting.at(i) = timeEstimationClass_CustomLoop.getWorkTimeInNanoseconds();
+
+if(i==0)
+{
+  timeEstimates.times_saliencySorting.at(i) += times_saliencySorting_temp;
+}
+
+EPUtils::TimeEstimationClass timeEstimationClass_CustomLoopSegment(CLOCK_THREAD_CPUTIME_ID);
+timeEstimationClass_CustomLoopSegment.countingStart();
+
+    if(surfaces.at(originalIndex)->segmented_number != -1)
+    {
+
+timeEstimates.times_surfaceModelling.at(i) = 0;
+timeEstimates.times_relationsComputation.at(i) = 0;
+timeEstimates.times_graphBasedSegmentation.at(i) = 0;
+timeEstimates.times_maskCreation.at(i) = 0;
+timeEstimates.times_neigboursUpdate.at(i) = 0;
+
+      masks.at(surfaces.at(originalIndex)->segmented_number).copyTo(masks.at(i));
+      //continue;
+    }
+    else
+    {
+
+      surfaces.at(originalIndex)->selected = true;
+      surfaces.at(originalIndex)->isNew = true;
+      view.surfaces = surfaces;
+
+      cv::Mat object_mask = cv::Mat_<uchar>::zeros(pcl_cloud->height,pcl_cloud->width);
+      originalIndex = attentionSegment(object_mask, originalIndex, i);
+      object_mask.copyTo(masks.at(i));
+      view.surfaces = surfaces;
     }
 
 timeEstimationClass_CustomLoopSegment.countingEnd();
@@ -633,6 +842,116 @@ void Segmenter::createMasks()
   }
   
   masks.push_back(mask);
+}
+
+void Segmenter::attentionSegmentInit()
+{
+  if( (!have_cloud) || (!have_saliencyMaps) )
+  {
+    char* error_message = new char[200];
+    sprintf(error_message,"[%s::segment()]: I suggest you first set the point cloud.",ClassName.c_str()); // and normals
+    throw std::runtime_error(error_message);
+  }
+  
+  assert(saliencyMaps.size() == 1);
+  
+timeEstimates.times_saliencySorting.resize(1);
+timeEstimates.times_surfaceModelling.resize(1);
+timeEstimates.times_relationsComputation.resize(1);
+timeEstimates.times_graphBasedSegmentation.resize(1);
+timeEstimates.times_maskCreation.resize(1);
+timeEstimates.times_neigboursUpdate.resize(1);
+timeEstimates.time_totalPerSegment.resize(1);
+  
+  calculateNormals();
+  calculatePatches();
+//   surface::View view_incremental;
+  view_incremental.Reset();
+  view_incremental.setPointCloud(pcl_cloud);
+  view_incremental.normals = normals;
+  view_incremental.setSurfaces(surfaces);
+  surfaces = view_incremental.surfaces;
+  
+  view_incremental.createPatchImage();
+  view_incremental.computeNeighbors();
+
+  surfaces = view_incremental.surfaces;
+  view_incremental.calculateBorders(view_incremental.cloud);
+  ngbr3D_map = view_incremental.ngbr3D_map;
+  ngbr2D_map = view_incremental.ngbr2D_map;
+
+  preComputeRelations();
+
+  initModelSurfaces();
+
+  view_incremental.setSaliencyMap(saliencyMaps.at(0));
+//     cv::imshow("saliencyMaps.at(i)",saliencyMaps.at(i));
+//     cv::waitKey(-1);
+  view_incremental.sortPatches();
+  surfaces = view_incremental.surfaces;
+    
+  for(size_t j = 0; j < surfaces.size(); j++)
+  {
+    surfaces.at(j)->selected = false;
+    surfaces.at(j)->isNew = false;
+  }
+}
+
+void Segmenter::attentionSegmentNext()
+{
+  masks.resize(1);
+  masks.at(0) = cv::Mat_<uchar>::zeros(pcl_cloud->height,pcl_cloud->width);
+    
+  int originalIndex = -1;
+  for(size_t j = 0; j < view_incremental.sortedSurfaces.size(); j++)
+  {
+    int originalIndex_temp = view_incremental.sortedSurfaces.at(j);
+    if(surfaces.at(originalIndex_temp)->valid)
+    {
+      originalIndex = originalIndex_temp;
+      break;
+    }
+  }
+    
+  if(originalIndex == -1)
+  {
+    return;
+  }
+    
+  //std::cerr << "originalIndex " << originalIndex << std::endl;
+    
+  if(surfaces.at(originalIndex)->segmented_number != -1)
+  {
+    return;
+  }
+  else
+  {
+    surfaces.at(originalIndex)->selected = true;
+    surfaces.at(originalIndex)->isNew = true;
+    view_incremental.surfaces = surfaces;
+
+    cv::Mat object_mask = cv::Mat_<uchar>::zeros(pcl_cloud->height,pcl_cloud->width);
+    originalIndex = attentionSegment(object_mask, originalIndex, 0);
+    object_mask.copyTo(masks.at(0));
+    view_incremental.surfaces = surfaces;
+  }
+  
+  //create indices
+  segmentedObjectsIndices.clear();
+  segmentedObjectsIndices.resize(1);
+
+  for(int i = 0; i < masks.at(0).rows; ++i)
+  {
+    for(int j = 0; j < masks.at(0).cols; ++j)
+    {
+      int currentObject = masks.at(0).at<uchar>(i,j);
+      if(currentObject > 0)
+      {
+        int idx = i*(masks.at(0).cols) + j;
+        segmentedObjectsIndices.at(currentObject-1).push_back(idx);
+      }
+    }
+  }
 }
 
 } // end segmentation
