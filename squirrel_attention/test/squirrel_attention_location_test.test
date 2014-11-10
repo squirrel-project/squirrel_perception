@@ -1,12 +1,19 @@
 <launch> 
+  
+  <arg name="cloud_name" default="/home/ekaterina/work/catkin_ws/squirrel_ros/object_perception/squirrel_attention/data/test45.pcd" />
+  <arg name="ground_truth" default="/home/ekaterina/work/catkin_ws/squirrel_ros/object_perception/squirrel_attention/data/test45_location.png" />
+  
   <node name="squirrel_attention_location"
         pkg="squirrel_attention"
         type="squirrel_attention_location" 
-        required="true" output="screen"
+        required="true" output="screen">
   </node>
  
   <test test-name="squirrel_attention_location_test"
         pkg="squirrel_attention"
         type="squirrel_attention_location_test"
-        time-limit="6000.0"/>
+        time-limit="6000.0">
+        <param name="cloud_name" type="string" value="$(arg cloud_name)"/>
+        <param name="ground_truth" type="string" value="$(arg ground_truth)"/> 
+  </test>
 </launch>
