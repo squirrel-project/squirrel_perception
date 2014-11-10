@@ -4,7 +4,7 @@ import rospy
 import actionlib
 import squirrel_object_perception_msgs.msg
 from squirrel_object_perception_msgs.srv import ObjectRecognizer, \
-    segment_start, segment_once, get_saliency
+    segment_init, segment_once, get_saliency
 from sensor_msgs.msg import PointCloud2
 from std_msgs.msg import Empty
 
@@ -42,7 +42,7 @@ class LookForObjectsAction(object):
             rospy.wait_for_service('mp_recognition', timeout=5)
             result = recognizer(self._point_cloud)
             self.set_publish_feedback('recognition', 'done', 50)
-        except rospy.ROSException as e:
+        except (rospy.ROSException, rospy.ServiceException) as e:
             self.set_publish_feedback('recognition', 'service call failed', 11)
             rospy.logdebug('mp_recognition: %s' % str(e))
         return result
@@ -50,26 +50,25 @@ class LookForObjectsAction(object):
     def get_saliency_map(self):
         get_saliency_map = rospy.ServiceProxy(
             'squirrel_attention_location', get_saliency)
-        saliency_map = None
         try:
             rospy.wait_for_service('squirrel_attention_location', timeout=5)
-            self._saliency_map = get_saliency_map(self._point_cloud)
+            result = get_saliency_map(self._point_cloud)
+            self._saliency_map = result.saliency_map
             self.set_publish_feedback('attention', 'done', 50)
-        except rospy.ROSException as e:
+        except (rospy.ROSException, rospy.ServiceException) as e:
             self.set_publish_feedback('attention', 'service call failed', 11)
             rospy.logdebug('attention: %s' % str(e))
-        return saliency_map
 
     def setup_segmentation(self):
         init_segmenter = rospy.ServiceProxy(
-            'squirrel_segmentation_incremental_start', segment_start)
+            'squirrel_segmentation_incremental_init', segment_init)
         try:
             rospy.wait_for_service(
-                'squirrel_segmentation_incremental_start', timeout=5)
-            init_segmenter(self._point_cloud, self.saliency_map)
+                'squirrel_segmentation_incremental_init', timeout=5)
+            init_segmenter(self._point_cloud, self._saliency_map)
             self.set_publish_feedback('attention', 'done', 50)
             return True
-        except rospy.ROSException as e:
+        except (rospy.ROSException, rospy.ServiceException) as e:
             self.set_publish_feedback('attention', 'service call failed', 11)
             rospy.logdebug('attention: %s' % str(e))
             return False
@@ -80,9 +79,9 @@ class LookForObjectsAction(object):
         try:
             rospy.wait_for_service(
                 'squirrel_segmentation_incremental_once', timeout=5)
-            self.segment_result = do_segment(Empty)
+            self.segment_result = do_segment()
             self.set_publish_feedback('attention', 'done', 50)
-        except rospy.ROSException as e:
+        except (rospy.ROSException, rospy.ServiceException) as e:
             self.set_publish_feedback('attention', 'service call failed', 11)
             rospy.logdebug('attention: %s' % str(e))
 
@@ -120,7 +119,7 @@ class LookForObjectsAction(object):
         self.set_publish_feedback('attention', 'done', 60)
         self.set_publish_feedback('segmentation', 'started', 61)
         self.setup_segmentation()
-        self.run_segmenter_once()
+        # self.run_segmenter_once()
         self.set_publish_feedback('segmentation', 'done', 75)
         self.set_publish_feedback('classification', 'started', 76)
         self.set_publish_feedback('classification', 'done', 97)
