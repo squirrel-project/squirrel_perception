@@ -44,12 +44,14 @@
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>rospy</build_depend>
-  <build_depend>suitesparse</build_depend>
+  <build_depend>suitesparse</build_depend>  <!-- yes, it is suitesparse, no lib, no dev -->
+  <build_depend>libceres-dev</build_depend>
   <build_depend>libpcl-all-dev</build_depend>
   <build_depend>libopenni-dev</build_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>rospy</run_depend>
   <run_depend>suitesparse</run_depend>
+  <run_depend>libceres-dev</run_depend> <!-- yes, it is libceres-dev, there is no non-dev entry in rosdep -->
   <run_depend>libpcl-all</run_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
