@@ -12,7 +12,7 @@
 
 #include "sensor_msgs/PointCloud2.h"
 #include <pcl_conversions.h>
-#include "squirrel_object_perception_msgs/get_saliency.h"
+#include "squirrel_object_perception_msgs/get_saliency_location.h"
 #include "v4r/AttentionModule/AttentionModule.hpp"
 
 #include <cv_bridge/cv_bridge.h>
@@ -32,7 +32,7 @@ private:
   boost::shared_ptr<AttentionModule::LocationSaliencyMap> saliencyMap_;
   
   bool
-  calculate (squirrel_object_perception_msgs::get_saliency::Request & req, squirrel_object_perception_msgs::get_saliency::Response & response);
+  calculate (squirrel_object_perception_msgs::get_saliency_location::Request & req, squirrel_object_perception_msgs::get_saliency_location::Response & response);
   
 public:
   AttentionLocationService ();

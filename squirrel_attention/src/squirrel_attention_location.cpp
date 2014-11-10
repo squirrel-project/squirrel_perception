@@ -8,13 +8,27 @@
 #include <squirrel_attention_location.hpp>
 
 bool 
-AttentionLocationService::calculate (squirrel_object_perception_msgs::get_saliency::Request & req, squirrel_object_perception_msgs::get_saliency::Response & response)
+AttentionLocationService::calculate (squirrel_object_perception_msgs::get_saliency_location::Request & req, squirrel_object_perception_msgs::get_saliency_location::Response & response)
 {
   //std::cerr << "in calculate " << std::endl;
   
   pcl::PointCloud<PointT>::Ptr scene (new pcl::PointCloud<PointT>);
   pcl::fromROSMsg (req.cloud, *scene);
-
+  
+  location_ = req.location.data;
+  center_point_ = cv::Point(0,0);
+  if(AttentionModule::AM_LOCATION_CUSTOM == location_)
+  {
+    int x_ = req.center.x; 
+    int y_ = req.center.y;
+    center_point_ = cv::Point(x_,y_);
+  }
+  
+  saliencyMap_.reset(new AttentionModule::LocationSaliencyMap);
+  saliencyMap_->setLocation(location_);
+  if(AttentionModule::AM_LOCATION_CUSTOM == location_)
+    saliencyMap_->setCenter(center_point_);
+  
   saliencyMap_->setWidth(scene->width);
   saliencyMap_->setHeight(scene->height);
   saliencyMap_->calculate();
@@ -60,16 +74,6 @@ AttentionLocationService::initialize (int argc, char ** argv)
 {
   ros::init (argc, argv, "squirrel_attention_location_server");
   n_ = new ros::NodeHandle ();
-  n_->getParam ( "location", location_ );
-  int x_, y_;
-  n_->getParam ( "x", x_ );
-  n_->getParam ( "y", y_ );
-  center_point_ = cv::Point(x_,y_);
-    
-  saliencyMap_.reset(new AttentionModule::LocationSaliencyMap);
-  saliencyMap_->setLocation(location_);
-  if(AttentionModule::AM_LOCATION_CUSTOM == location_)
-    saliencyMap_->setCenter(center_point_);
     
   attention_ = n_->advertiseService ("/squirrel_attention_location", &AttentionLocationService::calculate, this);
   ROS_INFO("Ready to get service calls...");

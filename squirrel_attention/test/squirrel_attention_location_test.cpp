@@ -67,9 +67,10 @@ public:
 TEST_F(ClientAttentionLocation, testClientAttentionLocation_1) 
 {
   std::cout << "going to call service..." << std::endl;
-  ros::ServiceClient client = n_->serviceClient<squirrel_object_perception_msgs::get_saliency>("/squirrel_attention_location");
-  squirrel_object_perception_msgs::get_saliency srv;
+  ros::ServiceClient client = n_->serviceClient<squirrel_object_perception_msgs::get_saliency_location>("/squirrel_attention_location");
+  squirrel_object_perception_msgs::get_saliency_location srv;
   srv.request.cloud = msg;
+  srv.request.location.data = 0;
   
   EXPECT_TRUE(client.call(srv));
   
