@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(squirrel_segmentation)
+SET(CMAKE_BUILD_TYPE Release)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -162,11 +163,23 @@ add_dependencies(squirrel_segmentation_incremental strands_v4r)
 ## Testing ##
 #############
 
-## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_squirrel_segmentation.cpp)
-# if(TARGET ${PROJECT_NAME}-test)
-#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
-# endif()
+find_package(rostest REQUIRED)
+# find_package(gtest)
 
-## Add folders to be run by python nosetests
-# catkin_add_nosetests(test)
+if(CATKIN_ENABLE_TESTING)
+
+  catkin_add_gtest(squirrel_segmentation_incremental_test test/squirrel_segmentation_incremental_test.cpp)
+  if(TARGET squirrel_segmentation_incremental_test)
+    target_link_libraries(squirrel_segmentation_incremental_test ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS})
+  endif()
+#rosbuild_add_gtest_build_flags(squirrel_segmentation_incremental_test)
+# add_rostest(test/squirrel_segmentation_incremental_test.test)
+
+# catkin_add_gtest(squirrel_segmentation_incremental_test test/squirrel_segmentation_incremental_test.cpp) # WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
+# if(TARGET squirrel_segmentation_incremental_test)
+#   target_link_libraries(squirrel_segmentation_incremental_test ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS})# ${STRANDSV4R_LIBS}
+# endif()
+# 
+  add_rostest(test/squirrel_segmentation_incremental_test.test)
+
+endif()
