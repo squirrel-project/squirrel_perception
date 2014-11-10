@@ -20,14 +20,11 @@ set(KEYPOINT_BASE_SHADER ${KEYPOINT_BASE_SHADER}/)
 add_definitions(-DKEYPOINT_BASE_SHADER="${KEYPOINT_BASE_SHADER}")
 message( STATUS "KEYPOINT_BASE_SHADER is ${KEYPOINT_BASE_SHADER}")
 
-<<<<<<< HEAD
 find_file(OCV_NONFREE_HEADER opencv2/nonfree/features2d.hpp)
 IF(OCV_NONFREE_HEADER)
   SET(HAVE_OPENCV_NONFREE 1)
 ENDIF()
 
-=======
->>>>>>> 2d4d9080260dc20d969ee924f8c33ec620a5db8e
 PROJECT(v4rKeypointBase)
 SET(SOURCE_CPP
   ComputeImGDescOrientations.cc
@@ -46,15 +43,12 @@ SET(SOURCE_CPP
   RefinePatchLocationLK.cc
   RefineProjectedPointLocationLK.cc
 )
-<<<<<<< HEAD
 IF (HAVE_OPENCV_NONFREE)
 SET(SOURCE_CPP ${SOURCE_CPP}
   FeatureDetector_KD_CVSURF.cc
   FeatureDetector_KD_CVSIFT.cc
 )
 ENDIF(HAVE_OPENCV_NONFREE)
-=======
->>>>>>> 2d4d9080260dc20d969ee924f8c33ec620a5db8e
 IF (V4R_TOMGINE_5)
 SET(SOURCE_CPP ${SOURCE_CPP} RefineProjectedPointLocationLKGPU.cc)
 ENDIF(V4R_TOMGINE_5)
@@ -80,27 +74,10 @@ SET(SOURCE_H
   RefineProjectedPointLocationLK.hh
   RefineProjectedPointLocationLKbase.hh
 )
-<<<<<<< HEAD
 IF (HAVE_OPENCV_NONFREE)
 SET(SOURCE_H ${SOURCE_H}
   FeatureDetector_KD_CVSURF.hh
   FeatureDetector_KD_CVSIFT.hh
-=======
-IF (V4R_TOMGINE_5)
-SET(SOURCE_H ${SOURCE_H} RefineProjectedPointLocationLKGPU.hh)
-ENDIF(V4R_TOMGINE_5)
-
-set(SOURCE_SHADER
-  shader/hread.fsh
-  shader/hread.vsh
-  shader/tgtread.fsh
-  shader/tgtread.vsh
-  shader/gxyerr.fsh
-  shader/gxyerr.vsh
-  shader/ncc.fsh
-  shader/ncc.vsh
-  shader/solveTF.vsh
->>>>>>> 2d4d9080260dc20d969ee924f8c33ec620a5db8e
 )
 ENDIF(HAVE_OPENCV_NONFREE)
 
@@ -126,15 +103,6 @@ IF (V4R_TOMGINE_5)
 target_link_libraries(${PROJECT_NAME} ${OPENCV_LIBRARIES} v4rTomGine5)
 ENDIF(V4R_TOMGINE_5)
 
-<<<<<<< HEAD
-=======
-add_library(${PROJECT_NAME} SHARED ${SOURCE_H} ${SOURCE_CPP} ${SOURCE_SHADER})
-target_link_libraries(${PROJECT_NAME} ${OPENCV_LIBRARIES} siftgpu v4rKeypointTools)
-IF (V4R_TOMGINE_5)
-target_link_libraries(${PROJECT_NAME} ${OPENCV_LIBRARIES} v4rTomGine5)
-ENDIF(V4R_TOMGINE_5)
-
->>>>>>> 2d4d9080260dc20d969ee924f8c33ec620a5db8e
 v4r_add_library(${PROJECT_NAME} "${SOURCE_H}")
 
 ENDIF(V4R_KEYPOINT_BASE)
