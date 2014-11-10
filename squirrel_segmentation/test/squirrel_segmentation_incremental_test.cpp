@@ -10,13 +10,14 @@ protected:
   // Remember that SetUp() is run immediately before a test starts.
   virtual void SetUp() 
   {
-    cloud_name_ = "/home/ekaterina/work/catkin_ws/squirrel_ros/object_perception/squirrel_segmentation/data/test45.pcd";
+    n_ = new ros::NodeHandle ("~");
+    n_->getParam ( "cloud_name", cloud_name_);
     readCloud ();
     
-    saliency_name_ = "/home/ekaterina/work/catkin_ws/squirrel_ros/object_perception/squirrel_segmentation/data/test45.png";
+    n_->getParam ( "saliency_name", saliency_name_);
     readSaliency();
     
-    ground_truth_= "/home/ekaterina/work/catkin_ws/squirrel_ros/object_perception/squirrel_segmentation/data/test45_mask_0.png";
+    n_->getParam ( "ground_truth", ground_truth_);
     readGroundTruth();
     
   }
@@ -24,6 +25,8 @@ protected:
   // TearDown() is invoked immediately after a test finishes.
   virtual void TearDown() 
   {
+    if(n_)
+      delete n_;
   }
 
   //memebers
@@ -40,7 +43,8 @@ protected:
   cv::Mat groundTruth;
   
   //int service_calls_;
-  ros::NodeHandle n_;
+  //ros::NodeHandle n_;
+  ros::NodeHandle *n_;
   
   void readCloud ()
   {
@@ -88,9 +92,9 @@ public:
 };
 
 TEST_F(ClientSegmenterIncremental, testClientSegmenterIncremental_1) 
-{
+{ 
   std::cout << "going to call service..." << std::endl;
-  ros::ServiceClient client = n_.serviceClient<squirrel_object_perception_msgs::segment_init>("/squirrel_segmentation_incremental_init");
+  ros::ServiceClient client = n_->serviceClient<squirrel_object_perception_msgs::segment_init>("/squirrel_segmentation_incremental_init");
   squirrel_object_perception_msgs::segment_init srv;
   srv.request.cloud = msg;
   srv.request.saliency_map = im;
@@ -100,7 +104,7 @@ TEST_F(ClientSegmenterIncremental, testClientSegmenterIncremental_1)
 
 TEST_F(ClientSegmenterIncremental, testClientSegmenterIncremental_2) 
 {
-  ros::ServiceClient client2 = n_.serviceClient<squirrel_object_perception_msgs::segment_once>("/squirrel_segmentation_incremental_once");
+  ros::ServiceClient client2 = n_->serviceClient<squirrel_object_perception_msgs::segment_once>("/squirrel_segmentation_incremental_once");
   squirrel_object_perception_msgs::segment_once srv2;
   
   EXPECT_TRUE(client2.call(srv2));

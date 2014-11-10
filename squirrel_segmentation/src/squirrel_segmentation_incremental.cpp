@@ -73,12 +73,12 @@ void
 SegmenterIncremental::initialize (int argc, char ** argv)
 {
   ros::init (argc, argv, "squirrel_segmentation_incremental_server");
-  n_ = new ros::NodeHandle ();
+  n_ = new ros::NodeHandle ("~");
   n_->getParam ( "model_filename", model_filename_);
   n_->getParam ( "scaling_filename", scaling_filename_);
   
   //model_filename_ = "/home/ekaterina/work/catkin_ws/squirrel_ros/object_perception/squirrel_segmentation/data/ST-TrainAll.txt.model";
-  scaling_filename_ = "/home/ekaterina/work/catkin_ws/squirrel_ros/object_perception/squirrel_segmentation/data/ST-TrainAll.txt.scalingparams";
+  //scaling_filename_ = "/home/ekaterina/work/catkin_ws/squirrel_ros/object_perception/squirrel_segmentation/data/ST-TrainAll.txt.scalingparams";
   
   if (model_filename_.compare ("") == 0)
   {
