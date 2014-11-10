@@ -4,11 +4,12 @@ project(squirrel_classification)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED)
+find_package(catkin REQUIRED roscpp rospy std_msgs sensor_msgs cv_bridge squirrel_object_perception_msgs strands_v4r)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
-
+find_package(PCL 1.7 REQUIRED)
+find_package(OpenCV 2.4 REQUIRED)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -76,9 +77,9 @@ find_package(catkin REQUIRED)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
+  INCLUDE_DIRS include
 #  LIBRARIES squirrel_classification
-#  CATKIN_DEPENDS other_catkin_pkg
+  CATKIN_DEPENDS squirrel_object_perception_msgs strands_v4r
 #  DEPENDS system_lib
 )
 
@@ -88,7 +89,7 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-# include_directories(include)
+include_directories(include ${catkin_INCLUDE_DIRS} ${V4R_INCLUDE_DIR} ${PCL_INCLUDE_DIRS})
 
 ## Declare a cpp library
 # add_library(squirrel_classification
@@ -96,16 +97,14 @@ catkin_package(
 # )
 
 ## Declare a cpp executable
-# add_executable(squirrel_classification_node src/squirrel_classification_node.cpp)
+add_executable(squirrel_classification src/shape_simple_classifier_node.cpp	)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(squirrel_classification_node squirrel_classification_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(squirrel_classification_node
-#   ${catkin_LIBRARIES}
-# )
+target_link_libraries(squirrel_classification ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
 
 #############
 ## Install ##
