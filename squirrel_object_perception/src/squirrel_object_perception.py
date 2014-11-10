@@ -119,7 +119,7 @@ class LookForObjectsAction(object):
         self.set_publish_feedback('attention', 'done', 60)
         self.set_publish_feedback('segmentation', 'started', 61)
         self.setup_segmentation()
-        # self.run_segmenter_once()
+        self.run_segmenter_once()
         self.set_publish_feedback('segmentation', 'done', 75)
         self.set_publish_feedback('classification', 'started', 76)
         self.set_publish_feedback('classification', 'done', 97)
