@@ -2,6 +2,7 @@
 
 This is the git mirror of ACIN's v4r library.
 
+<<<<<<< HEAD
 It uses `git svn` to pull in the latest v4r stable branch from ACIN's svn server:
 https://repo.acin.tuwien.ac.at/v4r/stable/strands_v4r
 
@@ -35,3 +36,5 @@ Whenver the svn changed, you have to move these changes to git.
 ---
 
 This repository has been set up following (some of) the instructions at [http://git-scm.com/book/en/Git-and-Other-Systems-Git-and-Subversion]
+=======
+>>>>>>> 4c41fd4493d8745ad2bd5ee58519d97534750607
