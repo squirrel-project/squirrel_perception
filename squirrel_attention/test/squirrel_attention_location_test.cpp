@@ -10,10 +10,11 @@ protected:
   // Remember that SetUp() is run immediately before a test starts.
   virtual void SetUp() 
   {
-    cloud_name_ = "/home/ekaterina/work/catkin_ws/squirrel_ros/object_perception/squirrel_attention/data/test45.pcd";
+    n_ = new ros::NodeHandle ("~");
+    n_->getParam ( "cloud_name", cloud_name_);
     readCloud ();
     
-    ground_truth_= "/home/ekaterina/work/catkin_ws/squirrel_ros/object_perception/squirrel_attention/data/test45_location.png";
+    n_->getParam ( "ground_truth", ground_truth_);
     readGroundTruth();
     
   }
@@ -21,6 +22,8 @@ protected:
   // TearDown() is invoked immediately after a test finishes.
   virtual void TearDown() 
   {
+    if(n_)
+      delete n_;
   }
 
   //memebers
@@ -33,7 +36,8 @@ protected:
   cv::Mat groundTruth;
   
   //int service_calls_;
-  ros::NodeHandle n_;
+  //ros::NodeHandle n_;
+  ros::NodeHandle *n_;
   
   void readCloud ()
   {
@@ -63,7 +67,7 @@ public:
 TEST_F(ClientAttentionLocation, testClientAttentionLocation_1) 
 {
   std::cout << "going to call service..." << std::endl;
-  ros::ServiceClient client = n_.serviceClient<squirrel_object_perception_msgs::get_saliency>("/squirrel_attention_location");
+  ros::ServiceClient client = n_->serviceClient<squirrel_object_perception_msgs::get_saliency>("/squirrel_attention_location");
   squirrel_object_perception_msgs::get_saliency srv;
   srv.request.cloud = msg;
   
