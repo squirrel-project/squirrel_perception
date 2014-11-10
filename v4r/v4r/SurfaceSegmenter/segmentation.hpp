@@ -112,7 +112,7 @@ private:
   std::vector<cv::Mat> masks;
   std::vector<std::vector<int> > segmentedObjectsIndices;
   
-  surface::View view_incremental;
+  surface::View view;
   
   bool have_cloud;
   bool have_cloud_l;
@@ -154,10 +154,10 @@ public:
   /** Run the pre-segmenter **/
   void segment();
   void attentionSegment();
-  void attentionSegment(int &objNumber);
+  //void attentionSegment(int &objNumber);
   
   void attentionSegmentInit();
-  void attentionSegmentNext();
+  bool attentionSegmentNext();
   
   //only for training
   void createTrainFile();
