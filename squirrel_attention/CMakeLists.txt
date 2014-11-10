@@ -161,7 +161,14 @@ add_dependencies(squirrel_attention_location strands_v4r)
 #############
 ## Testing ##
 #############
-
+find_package(rostest REQUIRED)
+if(CATKIN_ENABLE_TESTING)
+  catkin_add_gtest(squirrel_attention_location_test test/squirrel_attention_location_test.cpp)
+  if(TARGET squirrel_attention_location_test)
+    target_link_libraries(squirrel_attention_location_test ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS})
+  endif()
+  add_rostest(test/squirrel_attention_location_test.test)
+endif()
 ## Add gtest based cpp test target and link libraries
 # catkin_add_gtest(${PROJECT_NAME}-test test/test_squirrel_attention.cpp)
 # if(TARGET ${PROJECT_NAME}-test)

@@ -1,0 +1,12 @@
+<launch> 
+  <node name="squirrel_segmentation_incremental"
+        pkg="squirrel_segmentation"
+        type="squirrel_segmentation_incremental" 
+        required="true" output="screen"
+  </node>
+ 
+  <test test-name="squirrel_segmentation_incremental_test"
+        pkg="squirrel_segmentation"
+        type="squirrel_segmentation_incremental_test"
+        time-limit="6000.0"/>
+</launch>
