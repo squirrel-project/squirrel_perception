@@ -1,10 +1,10 @@
 <launch>
 
-  <arg name="model_filename" default="/home/ekaterina/work/catkin_ws/squirrel_ros/object_perception/squirrel_segmentation/data/ST-TrainAll.txt.model" />
-  <arg name="scaling_filename" default="/home/ekaterina/work/catkin_ws/squirrel_ros/object_perception/squirrel_segmentation/data/ST-TrainAll.txt.scalingparams" />
-  <arg name="cloud_name" default="/home/ekaterina/work/catkin_ws/squirrel_ros/object_perception/squirrel_segmentation/data/test45.pcd" />
-  <arg name="saliency_name" default="/home/ekaterina/work/catkin_ws/squirrel_ros/object_perception/squirrel_segmentation/data/test45.png" />
-  <arg name="ground_truth" default="/home/ekaterina/work/catkin_ws/squirrel_ros/object_perception/squirrel_segmentation/data/test45_mask_0.png" />
+  <arg name="model_filename" default="$(find squirrel_segmentation)/data/ST-TrainAll.txt.model" />
+  <arg name="scaling_filename" default="$(find squirrel_segmentation)/data/ST-TrainAll.txt.scalingparams" />
+  <arg name="cloud_name" default="$(find squirrel_segmentation)/data/test45.pcd" />
+  <arg name="saliency_name" default="$(find squirrel_segmentation)/data/test45.png" />
+  <arg name="ground_truth" default="$(find squirrel_segmentation)/data/test45_mask_0.png" />
   
   <node name="squirrel_segmentation_incremental"
         pkg="squirrel_segmentation"
