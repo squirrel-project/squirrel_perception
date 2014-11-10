@@ -44,7 +44,6 @@ SET(SOURCE_CPP_CG
   hough_3d.cpp
   graph_geometric_consistency.cpp
 
-
   kmeans.cpp
 )
 
