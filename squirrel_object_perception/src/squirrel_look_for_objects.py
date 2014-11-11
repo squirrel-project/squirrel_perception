@@ -1,36 +1,42 @@
-#! /usr/bin/env python
-
+#!/usr/bin/env python
 import rospy
 import actionlib
-import squirrel_object_perception_msgs.msg
-from squirrel_object_perception_msgs.srv import ObjectRecognizer, \
-    segment_init, segment_once, get_saliency
+import dynamic_reconfigure.server
+from squirrel_object_perception.cfg import squirrel_look_for_objectsConfig as ConfigType
+from squirrel_object_perception_msgs.srv import ObjectRecognizer, segment_init, segment_once, get_saliency
+from squirrel_object_perception_msgs.msg import LookForObjectsAction, LookForObjectsFeedback, LookForObjectsResult
 from sensor_msgs.msg import PointCloud2
 
 
-class LookForObjectsAction(object):
-    # create messages that are used to publish feedback/result
-    _feedback = squirrel_object_perception_msgs.msg.LookForObjectsFeedback()
-    _result = squirrel_object_perception_msgs.msg.LookForObjectsResult()
+class squirrel_look_for_objects_impl:
+    _feedback = LookForObjectsFeedback()
+    _result = LookForObjectsResult()
     _point_cloud = None
     _objects = None
     _saliency_map = None
 
-    def __init__(self, name):
-        self._action_name = name
-        self._as = actionlib.SimpleActionServer(
-            self._action_name,
-            squirrel_object_perception_msgs.msg.LookForObjectsAction,
-            execute_cb=self.execute_cb,
-            auto_start=False
-        )
-        self._as.start()
+    def __init__(self):
+
+        # protected region initCode on begin #
+        # protected region initCode end #
+        pass
+
+    def configure(self):
+        # protected region configureCode on begin #
+        # protected region configureCode end #
+        pass
+
+    def update(self):
+        # protected region updateCode on begin #
+        # protected region updateCode end #
+        pass
 
     def set_publish_feedback(self, phase, status, percent):
         self._feedback.current_phase = phase
         self._feedback.current_status = status
         self._feedback.percent_completed = percent
-        self._as.publish_feedback(self._feedback)
+        self.as_squirrel_object_perception.publish_feedback(self._feedback)
+        print(self._feedback)
         return
 
     def do_recognition(self):
@@ -84,15 +90,24 @@ class LookForObjectsAction(object):
             self.set_publish_feedback('attention', 'service call failed', 11)
             rospy.logdebug('attention: %s' % str(e))
 
-    def execute_cb(self, goal):
+
+    def execute_squirrel_object_perception_cb(self, goal):
+        # Examples: self.as_squirrel_object_perception.set_succeeded(_result)
+        #           self.as_squirrel_object_perception.set_aborted()
+        #           self.as_squirrel_object_perception.publish_feedback(_feedback)
+        # _feedback = LookForObjectsFeedback()
+        # _result = LookForObjectsResult()
+        # protected region user implementation of action callback for squirrel_object_perception on begin #
+        # protected region user implementation of action callback for squirrel_object_perception end #
+
         # initialize feedback
         self.set_publish_feedback('init', 'done', 5)
 
         # start executing the action
         # check that preempt has not been requested by the client
-        if self._as.is_preempt_requested():
+        if self.as_squirrel_object_perception.is_preempt_requested():
             rospy.loginfo('%s: Preempted' % self._action_name)
-            self._as.set_preempted()
+            self.as_squirrel_object_perception.set_preempted()
             return
 
         # Start getting data from /camera/depth_registered/points
@@ -106,7 +121,7 @@ class LookForObjectsAction(object):
             self.set_publish_feedback('receive_data', 'failed', 6)
             self._result.result_status = 'aborted'
             rospy.loginfo('Aborted' % self._action_name)
-            self._as.set_aborted(self._result)
+            self.as_squirrel_object_perception.set_aborted(self._result)
             return
         self.set_publish_feedback('receive_data', 'done', 10)
 
@@ -128,7 +143,7 @@ class LookForObjectsAction(object):
             self.set_publish_feedback('Pipeline results', 'empty', 99)
             self._result.result_status = 'aborted'
             rospy.loginfo('%s: Aborted' % self._action_name)
-            self._as.set_aborted(self._result)
+            self.as_squirrel_object_perception.set_aborted(self._result)
             return
 
         self.set_publish_feedback('database_update', 'started', 98)
@@ -137,10 +152,32 @@ class LookForObjectsAction(object):
         self.set_publish_feedback('finish', 'done', 100)
         self._result.result_status = 'success'
         rospy.loginfo('%s: Succeeded' % self._action_name)
-        self._as.set_succeeded(self._result)
+        self.as_squirrel_object_perception.set_succeeded(self._result)
         return
 
-if __name__ == '__main__':
-    rospy.init_node('squirrel_object_perception')
-    LookForObjectsAction(rospy.get_name())
-    rospy.spin()
+
+class squirrel_look_for_objects:
+    def __init__(self):
+        self.impl = squirrel_look_for_objects_impl()
+        self.impl._action_name = 'squirrel_object_perception'
+        self_dynrecon_server = dynamic_reconfigure.server.Server(ConfigType, self.config_callback)
+        self.impl.as_squirrel_object_perception = actionlib.SimpleActionServer('squirrel_object_perception', LookForObjectsAction, execute_cb=self.impl.execute_squirrel_object_perception_cb, auto_start=False)
+        self.impl.as_squirrel_object_perception.start()
+
+    def run(self):
+        self.impl.update()
+
+    def config_callback(self, config, level):
+        return config
+
+if __name__ == "__main__":
+    try:
+        rospy.init_node('squirrel_look_for_objects')
+        n = squirrel_look_for_objects()
+        n.impl.configure()
+        while not rospy.is_shutdown():
+            n.run()
+            rospy.sleep(10.0)
+
+    except rospy.ROSInterruptException:
+        print "Exit"
