@@ -13,8 +13,8 @@
 #include "sensor_msgs/PointCloud2.h"
 #include <pcl_conversions.h>
 
-#include "squirrel_object_perception_msgs/segment_init.h"
-#include "squirrel_object_perception_msgs/segment_once.h"
+#include "squirrel_object_perception_msgs/SegmentInit.h"
+#include "squirrel_object_perception_msgs/SegmentOnce.h"
 
 #include "v4r/PCLAddOns/PCLUtils.h"
 #include "v4r/SurfaceSegmenter/segmentation.hpp"
@@ -31,17 +31,17 @@ class SegmenterIncremental
 {
 private:
   typedef pcl::PointXYZRGB PointT;
-  ros::ServiceServer segment_init_;
-  ros::ServiceServer segment_once_;
+  ros::ServiceServer SegmentInit_;
+  ros::ServiceServer SegmentOnce_;
   ros::NodeHandle *n_;
   boost::shared_ptr<segmentation::Segmenter> segmenter_;
   std::string model_filename_, scaling_filename_;
 
   bool
-  segmentInit (squirrel_object_perception_msgs::segment_init::Request & req, squirrel_object_perception_msgs::segment_init::Response & response);
+  segmentInit (squirrel_object_perception_msgs::SegmentInit::Request & req, squirrel_object_perception_msgs::SegmentInit::Response & response);
   
   bool
-  segmentOnce (squirrel_object_perception_msgs::segment_once::Request & req, squirrel_object_perception_msgs::segment_once::Response & response);
+  segmentOnce (squirrel_object_perception_msgs::SegmentOnce::Request & req, squirrel_object_perception_msgs::SegmentOnce::Response & response);
 public:
   SegmenterIncremental ();
   ~SegmenterIncremental ();
