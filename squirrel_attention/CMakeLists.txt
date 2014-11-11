@@ -107,6 +107,12 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${V4R_INCLUDE_DIR} ${PCL_INCL
 ## Declare a cpp executable
 # add_executable(squirrel_attention_node src/squirrel_attention_node.cpp)
 add_executable(squirrel_attention_location src/squirrel_attention_location.cpp)
+add_executable(squirrel_attention_color src/squirrel_attention_color.cpp)
+add_executable(squirrel_attention_itti src/squirrel_attention_itti.cpp)
+add_executable(squirrel_attention_symmetry src/squirrel_attention_symmetry.cpp)
+add_executable(squirrel_attention_3Dsymmetry src/squirrel_attention_3Dsymmetry.cpp)
+add_executable(squirrel_attention_height src/squirrel_attention_height.cpp)
+add_executable(squirrel_attention_surfaceorientation src/squirrel_attention_surfaceorientation.cpp)
 #add_executable(squirrel_attention_test src/test.cpp)
 
 ## Add cmake target dependencies of the executable/library
@@ -119,6 +125,24 @@ add_executable(squirrel_attention_location src/squirrel_attention_location.cpp)
 # )
 target_link_libraries(squirrel_attention_location ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
 add_dependencies(squirrel_attention_location strands_v4r)
+
+target_link_libraries(squirrel_attention_color ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
+add_dependencies(squirrel_attention_color strands_v4r)
+
+target_link_libraries(squirrel_attention_itti ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
+add_dependencies(squirrel_attention_itti strands_v4r)
+
+target_link_libraries(squirrel_attention_symmetry ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
+add_dependencies(squirrel_attention_symmetry strands_v4r)
+
+target_link_libraries(squirrel_attention_3Dsymmetry ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
+add_dependencies(squirrel_attention_3Dsymmetry strands_v4r)
+
+target_link_libraries(squirrel_attention_height ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
+add_dependencies(squirrel_attention_height strands_v4r)
+
+target_link_libraries(squirrel_attention_surfaceorientation ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
+add_dependencies(squirrel_attention_surfaceorientation strands_v4r)
 
 #target_link_libraries(squirrel_attention_test ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
 #add_dependencies(squirrel_attention_test strands_v4r)
@@ -162,12 +186,49 @@ add_dependencies(squirrel_attention_location strands_v4r)
 ## Testing ##
 #############
 find_package(rostest REQUIRED)
+
 if(CATKIN_ENABLE_TESTING)
   catkin_add_gtest(squirrel_attention_location_test test/squirrel_attention_location_test.cpp)
   if(TARGET squirrel_attention_location_test)
-    target_link_libraries(squirrel_attention_location_test ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS})
+    target_link_libraries(squirrel_attention_location_test ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS} ${STRANDSV4R_LIBS})
   endif()
   add_rostest(test/squirrel_attention_location_test.test)
+
+  catkin_add_gtest(squirrel_attention_color_test test/squirrel_attention_color_test.cpp)
+  if(TARGET squirrel_attention_color_test)
+    target_link_libraries(squirrel_attention_color_test ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS} ${STRANDSV4R_LIBS})
+  endif()
+  add_rostest(test/squirrel_attention_color_test.test)
+
+  catkin_add_gtest(squirrel_attention_itti_test test/squirrel_attention_itti_test.cpp)
+  if(TARGET squirrel_attention_itti_test)
+    target_link_libraries(squirrel_attention_itti_test ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS} ${STRANDSV4R_LIBS})
+  endif()
+  add_rostest(test/squirrel_attention_itti_test.test)
+  
+  catkin_add_gtest(squirrel_attention_symmetry_test test/squirrel_attention_symmetry_test.cpp)
+  if(TARGET squirrel_attention_symmetry_test)
+    target_link_libraries(squirrel_attention_symmetry_test ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS} ${STRANDSV4R_LIBS})
+  endif()
+  add_rostest(test/squirrel_attention_symmetry_test.test)
+  
+  catkin_add_gtest(squirrel_attention_3Dsymmetry_test test/squirrel_attention_3Dsymmetry_test.cpp)
+  if(TARGET squirrel_attention_3Dsymmetry_test)
+    target_link_libraries(squirrel_attention_3Dsymmetry_test ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS} ${STRANDSV4R_LIBS})
+  endif()
+  add_rostest(test/squirrel_attention_3Dsymmetry_test.test)
+  
+  catkin_add_gtest(squirrel_attention_height_test test/squirrel_attention_height_test.cpp)
+  if(TARGET squirrel_attention_height_test)
+    target_link_libraries(squirrel_attention_height_test ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS} ${STRANDSV4R_LIBS})
+  endif()
+  add_rostest(test/squirrel_attention_height_test.test)
+  
+  catkin_add_gtest(squirrel_attention_surfaceorientation_test test/squirrel_attention_surfaceorientation_test.cpp)
+  if(TARGET squirrel_attention_surfaceorientation_test)
+    target_link_libraries(squirrel_attention_surfaceorientation_test ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS} ${STRANDSV4R_LIBS})
+  endif()
+  add_rostest(test/squirrel_attention_surfaceorientation_test.test)
 endif()
 ## Add gtest based cpp test target and link libraries
 # catkin_add_gtest(${PROJECT_NAME}-test test/test_squirrel_attention.cpp)

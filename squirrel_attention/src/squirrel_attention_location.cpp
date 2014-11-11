@@ -8,7 +8,7 @@
 #include <squirrel_attention_location.hpp>
 
 bool 
-AttentionLocationService::calculate (squirrel_object_perception_msgs::get_saliency_location::Request & req, squirrel_object_perception_msgs::get_saliency_location::Response & response)
+AttentionLocationService::calculate (squirrel_object_perception_msgs::GetSaliencyLocation::Request & req, squirrel_object_perception_msgs::GetSaliencyLocation::Response & response)
 {
   //std::cerr << "in calculate " << std::endl;
   
@@ -34,12 +34,12 @@ AttentionLocationService::calculate (squirrel_object_perception_msgs::get_salien
   saliencyMap_->calculate();
     
   cv::Mat map;
-  saliencyMap_->getMap(map);
+  if(!(saliencyMap_->getMap(map)))
+    return(false);
+  
   map.convertTo(map,CV_8U,255);
-//     {
-//       cv::imshow("map",map);
-//       cv::waitKey(-1);
-//     }
+//  cv::imshow("map",map);
+//  cv::waitKey(-1);
     
   cv_bridge::CvImagePtr cv_ptr(new cv_bridge::CvImage);
   ros::Time time = ros::Time::now();
@@ -51,22 +51,7 @@ AttentionLocationService::calculate (squirrel_object_perception_msgs::get_salien
     
   //sensor_msgs::Image im;
   cv_ptr->toImageMsg(response.saliency_map);
-    
-  //std::cerr << "out calculate " << std::endl;
   return(true);
-}
-
-AttentionLocationService::AttentionLocationService ()
-{
-  //default values
-  location_ = AttentionModule::AM_CENTER;
-  center_point_ = cv::Point(0,0);
-}
-
-AttentionLocationService::~AttentionLocationService ()
-{
-  if(n_)
-    delete n_;
 }
 
 void
