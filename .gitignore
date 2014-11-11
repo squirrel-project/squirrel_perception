@@ -1,1 +1,5 @@
 .ropeproject
+.settings
+.cproject
+.project
+*.pyc
