@@ -6,7 +6,6 @@ import squirrel_object_perception_msgs.msg
 from squirrel_object_perception_msgs.srv import ObjectRecognizer, \
     segment_init, segment_once, get_saliency
 from sensor_msgs.msg import PointCloud2
-from std_msgs.msg import Empty
 
 
 class LookForObjectsAction(object):
