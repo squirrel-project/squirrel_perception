@@ -5,11 +5,11 @@ project(squirrel_object_perception)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  	rospy
+    rospy
     actionlib
-    dynamic_reconfigure 
-	squirrel_object_perception_msgs
-	sensor_msgs
+    dynamic_reconfigure
+    squirrel_object_perception_msgs
+    sensor_msgs
 )
 
 catkin_python_setup()
@@ -17,7 +17,7 @@ catkin_python_setup()
 # protected region additional user defined REQUIREMENTS on begin #
 # protected region additional user defined REQUIREMENTS end #
 
-generate_dynamic_reconfigure_options(cfg/squirrel_look_for_objects.cfg )
+generate_dynamic_reconfigure_options(cfg/squirrel_look_for_objects.cfg)
 
 ###################################
 ## catkin specific configuration ##
@@ -28,15 +28,9 @@ generate_dynamic_reconfigure_options(cfg/squirrel_look_for_objects.cfg )
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  CATKIN_DEPENDS 
-  	rospy
+  CATKIN_DEPENDS
+    rospy
     dynamic_reconfigure
-	squirrel_object_perception_msgs
-	sensor_msgs
-   
+    squirrel_object_perception_msgs
+    sensor_msgs
 )
-
-
-
-
-
