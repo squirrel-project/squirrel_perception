@@ -41,7 +41,6 @@ class ShapeClassifier
     std::string training_dir_;
     std::string desc_name_;
     int NN_;
-    double chop_at_z_;
     pcl::PointCloud<PointT>::Ptr frame_;
     std::vector<pcl::PointIndices> cluster_indices_;
     std::vector < std::string > categories_;
@@ -212,7 +211,6 @@ class ShapeClassifier
       //default values
       desc_name_ = "esf";
       NN_ = 50;
-      chop_at_z_ = 1.f;
       frame_.reset(new pcl::PointCloud<PointT>());
     }
 
@@ -224,7 +222,6 @@ class ShapeClassifier
       n_->getParam ( "training_dir", training_dir_ );
       n_->getParam ( "descriptor_name", desc_name_ );
       n_->getParam ( "nn", NN_ );
-      n_->getParam ( "chop_z", chop_at_z_ );
 
       if(!n_->getParam ( "camera_frame", camera_frame_ ))
 	camera_frame_ = "/head_xtion_depth_optical_frame";
