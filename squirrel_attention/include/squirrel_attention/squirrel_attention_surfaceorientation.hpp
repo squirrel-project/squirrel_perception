@@ -9,7 +9,7 @@
 #define SQUIRREL_ATTENTION_SURFACEORIENTATION_HPP_
 
 #include "squirrel_object_perception_msgs/GetSaliencySurfaceOrientation.h"
-#include <squirrel_attention_base.hpp>
+#include <squirrel_attention/squirrel_attention_base.hpp>
 
 class AttentionSurfaceOrientationService : public AttentionBaseService
 {

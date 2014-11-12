@@ -5,7 +5,7 @@
  *      Author: Ekaterina Potapova
  */
 
-#include <squirrel_attention_itti.hpp>
+#include <squirrel_attention/squirrel_attention_itti.hpp>
 
 bool 
 AttentionIttiService::calculate (squirrel_object_perception_msgs::GetSaliencyItti::Request & req, squirrel_object_perception_msgs::GetSaliencyItti::Response & response)

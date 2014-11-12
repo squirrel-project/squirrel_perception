@@ -5,7 +5,7 @@
  *      Author: Ekaterina Potapova
  */
 
-#include <squirrel_attention_3Dsymmetry.hpp>
+#include <squirrel_attention/squirrel_attention_3Dsymmetry.hpp>
 
 bool 
 Attention3DSymmetryService::calculate (squirrel_object_perception_msgs::GetSaliency3DSymmetry::Request & req, squirrel_object_perception_msgs::GetSaliency3DSymmetry::Response & response)

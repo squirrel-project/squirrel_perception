@@ -5,7 +5,7 @@
  *      Author: Ekaterina Potapova
  */
 
-#include <squirrel_attention_color.hpp>
+#include <squirrel_attention/squirrel_attention_color.hpp>
 
 bool 
 AttentionColorService::calculate (squirrel_object_perception_msgs::GetSaliencyColor::Request & req, squirrel_object_perception_msgs::GetSaliencyColor::Response & response)

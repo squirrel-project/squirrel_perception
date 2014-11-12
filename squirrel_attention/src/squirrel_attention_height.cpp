@@ -5,7 +5,7 @@
  *      Author: Ekaterina Potapova
  */
 
-#include <squirrel_attention_height.hpp>
+#include <squirrel_attention/squirrel_attention_height.hpp>
 
 bool 
 AttentionHeightService::calculate (squirrel_object_perception_msgs::GetSaliencyHeight::Request & req, squirrel_object_perception_msgs::GetSaliencyHeight::Response & response)

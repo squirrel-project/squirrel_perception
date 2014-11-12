@@ -14,7 +14,7 @@
 #include <sstream>
 
 #include "sensor_msgs/PointCloud2.h"
-#include <pcl_conversions.h>
+#include <squirrel_attention/pcl_conversions.h>
 #include "v4r/AttentionModule/AttentionModule.hpp"
 #include "v4r/EPUtils/EPUtils.hpp"
 

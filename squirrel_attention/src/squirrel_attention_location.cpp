@@ -5,7 +5,7 @@
  *      Author: Ekaterina Potapova
  */
 
-#include <squirrel_attention_location.hpp>
+#include <squirrel_attention/squirrel_attention_location.hpp>
 
 bool 
 AttentionLocationService::calculate (squirrel_object_perception_msgs::GetSaliencyLocation::Request & req, squirrel_object_perception_msgs::GetSaliencyLocation::Response & response)

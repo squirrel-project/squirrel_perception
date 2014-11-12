@@ -3,7 +3,7 @@
 
 // Bring in gtest
 #include <gtest/gtest.h>
-#include <squirrel_attention_base.hpp>
+#include <squirrel_attention/squirrel_attention_base.hpp>
 
 class ClientAttentionBase : public testing::Test 
 {

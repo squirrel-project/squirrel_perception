@@ -1,5 +1,5 @@
 // Bring in my package's API, which is what I'm testing
-#include <squirrel_segmentation_incremental.hpp>
+#include <squirrel_segmentation/squirrel_segmentation_incremental.hpp>
 // Bring in gtest
 #include <gtest/gtest.h>
 

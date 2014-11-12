@@ -11,7 +11,7 @@
 #include "sensor_msgs/PointCloud2.h"
 #include <pcl/common/common.h>
 #include <pcl/console/parse.h>
-#include <pcl_conversions.h>
+#include <squirrel_classification/pcl_conversions.h>
 #include <pcl/filters/passthrough.h>
 #include <pcl/visualization/pcl_visualizer.h>
 #include <v4r/ORFramework/mesh_source.h>

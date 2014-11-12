@@ -9,7 +9,7 @@
 #define SQUIRREL_ATTENTION_SYMMETRY_HPP_
 
 #include "squirrel_object_perception_msgs/GetSaliencySymmetry.h"
-#include <squirrel_attention_base.hpp>
+#include <squirrel_attention/squirrel_attention_base.hpp>
 
 class AttentionSymmetryService : public AttentionBaseService
 {
