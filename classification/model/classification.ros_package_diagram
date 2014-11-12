@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<notation:Diagram xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:notation="http://www.eclipse.org/gmf/runtime/1.0.2/notation" xmlns:ros="http://ros/1.0" xmi:id="_0DWYkN7kEeOnDbCBRqmkTg" type="RosPackage" name="classification.ros_package_diagram" measurementUnit="Pixel">
+  <children xmi:type="notation:Shape" xmi:id="_04EaEN7kEeOnDbCBRqmkTg" type="2001" fontName="Droid Sans">
+    <children xmi:type="notation:DecorationNode" xmi:id="_04FBIN7kEeOnDbCBRqmkTg" type="5008"/>
+    <children xmi:type="notation:BasicCompartment" xmi:id="_04FBId7kEeOnDbCBRqmkTg" type="7001">
+      <styles xmi:type="notation:TitleStyle" xmi:id="_04FBIt7kEeOnDbCBRqmkTg" showTitle="true"/>
+      <styles xmi:type="notation:SortingStyle" xmi:id="_04FBI97kEeOnDbCBRqmkTg"/>
+      <styles xmi:type="notation:FilteringStyle" xmi:id="_04FBJN7kEeOnDbCBRqmkTg"/>
+    </children>
+    <children xmi:type="notation:Node" xmi:id="_AD71kN7lEeOnDbCBRqmkTg" type="3007">
+      <children xmi:type="notation:DecorationNode" xmi:id="_AD9DsN7lEeOnDbCBRqmkTg" type="5007"/>
+      <styles xmi:type="notation:DescriptionStyle" xmi:id="_AD71kd7lEeOnDbCBRqmkTg"/>
+      <styles xmi:type="notation:FontStyle" xmi:id="_AD71kt7lEeOnDbCBRqmkTg" fontName="Droid Sans"/>
+      <element xmi:type="ros:Subscriber" href="classification.ros_package#//@node.0/@subscriber.0"/>
+      <layoutConstraint xmi:type="notation:Bounds" xmi:id="_AD71k97lEeOnDbCBRqmkTg"/>
+    </children>
+    <children xmi:type="notation:Node" xmi:id="_6jTXMN7nEeOnDbCBRqmkTg" type="3004">
+      <children xmi:type="notation:DecorationNode" xmi:id="_6jUlUN7nEeOnDbCBRqmkTg" type="5004"/>
+      <styles xmi:type="notation:DescriptionStyle" xmi:id="_6jTXMd7nEeOnDbCBRqmkTg"/>
+      <styles xmi:type="notation:FontStyle" xmi:id="_6jTXMt7nEeOnDbCBRqmkTg" fontName="Droid Sans"/>
+      <element xmi:type="ros:Publisher" href="classification.ros_package#//@node.0/@publisher.0"/>
+      <layoutConstraint xmi:type="notation:Bounds" xmi:id="_6jT-QN7nEeOnDbCBRqmkTg"/>
+    </children>
+    <children xmi:type="notation:Node" xmi:id="_9rqPQN7nEeOnDbCBRqmkTg" type="3005">
+      <children xmi:type="notation:DecorationNode" xmi:id="_9rrdYN7nEeOnDbCBRqmkTg" type="5005"/>
+      <styles xmi:type="notation:DescriptionStyle" xmi:id="_9rqPQd7nEeOnDbCBRqmkTg"/>
+      <styles xmi:type="notation:FontStyle" xmi:id="_9rqPQt7nEeOnDbCBRqmkTg" fontName="Droid Sans"/>
+      <styles xmi:type="notation:LineStyle" xmi:id="_9rqPQ97nEeOnDbCBRqmkTg"/>
+      <element xmi:type="ros:ActionServer" href="classification.ros_package#//@node.0/@actionserver.0"/>
+      <layoutConstraint xmi:type="notation:Bounds" xmi:id="_9rqPRN7nEeOnDbCBRqmkTg"/>
+    </children>
+    <element xmi:type="ros:Node" href="classification.ros_package#//@node.0"/>
+    <layoutConstraint xmi:type="notation:Bounds" xmi:id="_04EaEd7kEeOnDbCBRqmkTg" x="459" y="189"/>
+  </children>
+  <styles xmi:type="notation:DiagramStyle" xmi:id="_0DWYkd7kEeOnDbCBRqmkTg"/>
+  <element xmi:type="ros:Package" href="classification.ros_package#/"/>
+</notation:Diagram>
