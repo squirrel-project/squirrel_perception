@@ -5,10 +5,10 @@
  *      Author: Ekaterina Potapova
  */
 
-#include <squirrel_segmentation_incremental.hpp>
+#include <squirrel_segmentation/squirrel_segmentation_incremental.hpp>
 
 bool
-SegmenterIncremental::segmentInit (squirrel_object_perception_msgs::segment_init::Request & req, squirrel_object_perception_msgs::segment_init::Response & response)
+SegmenterIncremental::segmentInit (squirrel_object_perception_msgs::SegmentInit::Request & req, squirrel_object_perception_msgs::SegmentInit::Response & response)
 {
   //get point cloud
   pcl::PointCloud<PointT>::Ptr scene (new pcl::PointCloud<PointT>);
@@ -37,7 +37,7 @@ SegmenterIncremental::segmentInit (squirrel_object_perception_msgs::segment_init
 }
   
 bool
-SegmenterIncremental::segmentOnce (squirrel_object_perception_msgs::segment_once::Request & req, squirrel_object_perception_msgs::segment_once::Response & response)
+SegmenterIncremental::segmentOnce (squirrel_object_perception_msgs::SegmentOnce::Request & req, squirrel_object_perception_msgs::SegmentOnce::Response & response)
 {
   ROS_INFO ("Going to segment an object.");
   
@@ -96,8 +96,8 @@ SegmenterIncremental::initialize (int argc, char ** argv)
   segmenter_->setModelFilename(model_filename_);
   segmenter_->setScaling(scaling_filename_);
     
-  segment_init_ = n_->advertiseService ("/squirrel_segmentation_incremental_init", &SegmenterIncremental::segmentInit, this);
-  segment_once_ = n_->advertiseService ("/squirrel_segmentation_incremental_once", &SegmenterIncremental::segmentOnce, this);
+  SegmentInit_ = n_->advertiseService ("/squirrel_segmentation_incremental_init", &SegmenterIncremental::segmentInit, this);
+  SegmentOnce_ = n_->advertiseService ("/squirrel_segmentation_incremental_once", &SegmenterIncremental::segmentOnce, this);
   ROS_INFO ("Ready to get service calls...");
   ros::spin ();
 }

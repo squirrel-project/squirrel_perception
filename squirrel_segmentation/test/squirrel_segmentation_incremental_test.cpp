@@ -1,5 +1,5 @@
 // Bring in my package's API, which is what I'm testing
-#include <squirrel_segmentation_incremental.hpp>
+#include <squirrel_segmentation/squirrel_segmentation_incremental.hpp>
 // Bring in gtest
 #include <gtest/gtest.h>
 
@@ -94,8 +94,8 @@ public:
 TEST_F(ClientSegmenterIncremental, testClientSegmenterIncremental_1) 
 { 
   std::cout << "going to call service..." << std::endl;
-  ros::ServiceClient client = n_->serviceClient<squirrel_object_perception_msgs::segment_init>("/squirrel_segmentation_incremental_init");
-  squirrel_object_perception_msgs::segment_init srv;
+  ros::ServiceClient client = n_->serviceClient<squirrel_object_perception_msgs::SegmentInit>("/squirrel_segmentation_incremental_init");
+  squirrel_object_perception_msgs::SegmentInit srv;
   srv.request.cloud = msg;
   srv.request.saliency_map = im;
   
@@ -104,8 +104,8 @@ TEST_F(ClientSegmenterIncremental, testClientSegmenterIncremental_1)
 
 TEST_F(ClientSegmenterIncremental, testClientSegmenterIncremental_2) 
 {
-  ros::ServiceClient client2 = n_->serviceClient<squirrel_object_perception_msgs::segment_once>("/squirrel_segmentation_incremental_once");
-  squirrel_object_perception_msgs::segment_once srv2;
+  ros::ServiceClient client2 = n_->serviceClient<squirrel_object_perception_msgs::SegmentOnce>("/squirrel_segmentation_incremental_once");
+  squirrel_object_perception_msgs::SegmentOnce srv2;
   
   EXPECT_TRUE(client2.call(srv2));
   

@@ -11,7 +11,7 @@
 #include "sensor_msgs/PointCloud2.h"
 #include <pcl/common/common.h>
 #include <pcl/console/parse.h>
-#include <pcl_conversions.h>
+#include <squirrel_classification/pcl_conversions.h>
 #include <pcl/filters/passthrough.h>
 #include <pcl/visualization/pcl_visualizer.h>
 #include <v4r/ORFramework/mesh_source.h>
@@ -267,7 +267,7 @@ class ShapeClassifier
       classifier_->setNN (NN_);
       classifier_->initialize (false);
 
-      classify_service_ = n_->advertiseService("classify", &ShapeClassifier::classify, this);
+      classify_service_ = n_->advertiseService("/squirrel_classify", &ShapeClassifier::classify, this);
       vis_pub_ = n_->advertise<visualization_msgs::MarkerArray>( "visualization_marker", 0 );
       vis_pc_pub_ = n_->advertise<sensor_msgs::PointCloud2>( "clusters", 1 );
       ros::spin();
