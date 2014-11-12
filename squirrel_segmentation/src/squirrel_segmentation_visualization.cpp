@@ -1,5 +1,5 @@
 /*
- * squirrel_segmentation_incremental.cpp
+ * squirrel_segmentation_visualization.cpp
  *
  *  Created on: Nov 7, 2014
  *      Author: Ekaterina Potapova
