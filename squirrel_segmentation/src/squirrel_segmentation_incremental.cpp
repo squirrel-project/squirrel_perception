@@ -41,7 +41,10 @@ SegmenterIncremental::segmentOnce (squirrel_object_perception_msgs::SegmentOnce:
 {
   ROS_INFO ("Going to segment an object.");
   
-  segmenter_->attentionSegmentNext();
+  if(!(segmenter_->attentionSegmentNext()))
+  {
+    ROS_INFO("The object that is going to be returned is emty. There can be two reasons for that: 1) the whole scene was segmented; 2) the object you are trying segment was already segmented from this view.");
+  }
    
   std::vector<std::vector<int> > clusters = segmenter_->getSegmentedObjectsIndices();
     
