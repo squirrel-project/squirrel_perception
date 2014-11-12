@@ -80,20 +80,6 @@ SegmenterVisualization::segmentVisualizationOnce (squirrel_object_perception_msg
   sensor_msgs::Image im;
   cv_ptr->toImageMsg(im);
   SegmentationPub_.publish(im);
-  
-/*  segmenter_->attentionSegmentNext();
-   
-  std::vector<std::vector<int> > clusters = segmenter_->getSegmentedObjectsIndices();
-    
-  ROS_INFO ("Number of segmented objects: %ld",clusters.size());
-  assert(clusters.size() == 1);
-  
-  std_msgs::Int32MultiArray indx;
-  for(size_t k=0; k < clusters[0].size(); k++)
-  {
-    indx.data.push_back(clusters[0][k]);
-  }
-  response.cluster_indices = indx;*/
     
   return true;
 }
