@@ -7,29 +7,31 @@
  */
 
 #include <sstream>
-#include "ros/ros.h"
-#include "sensor_msgs/PointCloud2.h"
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/lexical_cast.hpp>
+#include <Eigen/Eigenvalues>
 #include <pcl/common/common.h>
 #include <pcl/console/parse.h>
-#include <squirrel_classification/pcl_conversions.h>
-#include <pcl/filters/passthrough.h>
 #include <pcl/visualization/pcl_visualizer.h>
+
+#include <ros/ros.h>
+#include <sensor_msgs/PointCloud2.h>
+#include <std_msgs/String.h>
+#include <std_msgs/Int32MultiArray.h>
+#include <geometry_msgs/Point32.h>
+#include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
+
 #include <v4r/ORFramework/mesh_source.h>
 #include <v4r/ORFramework/vfh_estimator.h>
 #include <v4r/ORFramework/esf_estimator.h>
 #include <v4r/ORFramework/cvfh_estimator.h>
 #include <v4r/ORFramework/metrics.h>
 #include <v4r/ORFramework/global_nn_classifier.h>
-#include "squirrel_object_perception_msgs/classify.h"
-#include "squirrel_object_perception_msgs/Classification.h"
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/lexical_cast.hpp>
-#include <Eigen/Eigenvalues>
-#include "std_msgs/String.h"
-#include "std_msgs/Int32MultiArray.h"
-#include "geometry_msgs/Point32.h"
-#include "visualization_msgs/Marker.h"
-#include "visualization_msgs/MarkerArray.h"
+
+#include <squirrel_object_perception_msgs/Classify.h>
+#include <squirrel_object_perception_msgs/Classification.h>
+#include <squirrel_classification/pcl_conversions.h>
 
 class ShapeClassifier
 {
@@ -59,8 +61,8 @@ class ShapeClassifier
      * TODO: clean up comments
      * TODO: clean up formatting
      */
-    bool classify(squirrel_object_perception_msgs::classify::Request & req,
-                  squirrel_object_perception_msgs::classify::Response & response)
+    bool classify(squirrel_object_perception_msgs::Classify::Request & req,
+                  squirrel_object_perception_msgs::Classify::Response & response)
     {
       ROS_INFO("Classifying %d objects\n", (int)req.clusters_indices.size());
       pcl::fromROSMsg(req.cloud, *frame_);
