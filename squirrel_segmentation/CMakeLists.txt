@@ -109,6 +109,7 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${V4R_INCLUDE_DIR} ${PCL_INCL
 # add_executable(squirrel_segmentation_node src/squirrel_segmentation_node.cpp)
 add_executable(squirrel_segmentation_incremental src/squirrel_segmentation_incremental.cpp)
 #add_executable(squirrel_segmentation_test src/test.cpp)
+add_executable(squirrel_segmentation_visualization src/squirrel_segmentation_visualization.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
@@ -120,6 +121,9 @@ add_executable(squirrel_segmentation_incremental src/squirrel_segmentation_incre
 # )
 target_link_libraries(squirrel_segmentation_incremental ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
 add_dependencies(squirrel_segmentation_incremental strands_v4r)
+
+target_link_libraries(squirrel_segmentation_visualization ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
+add_dependencies(squirrel_segmentation_visualization strands_v4r)
 
 #target_link_libraries(squirrel_segmentation_test ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
 #add_dependencies(squirrel_segmentation_test strands_v4r)
