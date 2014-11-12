@@ -9,7 +9,7 @@
 #define SQUIRREL_ATTENTION_LOCATION_HPP_
 
 #include "squirrel_object_perception_msgs/GetSaliencyLocation.h"
-#include <squirrel_attention_base.hpp>
+#include <squirrel_attention/squirrel_attention_base.hpp>
 
 class AttentionLocationService: public AttentionBaseService
 {

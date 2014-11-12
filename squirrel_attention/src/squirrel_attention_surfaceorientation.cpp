@@ -5,7 +5,7 @@
  *      Author: Ekaterina Potapova
  */
 
-#include <squirrel_attention_surfaceorientation.hpp>
+#include <squirrel_attention/squirrel_attention_surfaceorientation.hpp>
 
 bool 
 AttentionSurfaceOrientationService::calculate (squirrel_object_perception_msgs::GetSaliencySurfaceOrientation::Request & req, squirrel_object_perception_msgs::GetSaliencySurfaceOrientation::Response & response)

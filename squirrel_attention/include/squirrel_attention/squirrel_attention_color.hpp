@@ -9,7 +9,7 @@
 #define SQUIRREL_ATTENTION_COLOR_HPP_
 
 #include "squirrel_object_perception_msgs/GetSaliencyColor.h"
-#include <squirrel_attention_base.hpp>
+#include <squirrel_attention/squirrel_attention_base.hpp>
 
 class AttentionColorService : public AttentionBaseService
 {

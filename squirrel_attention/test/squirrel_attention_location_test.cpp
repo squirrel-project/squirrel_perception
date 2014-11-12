@@ -1,6 +1,6 @@
 #include "squirrel_attention_base_test.hpp"
 // Bring in my package's API, which is what I'm testing
-#include <squirrel_attention_location.hpp>
+#include <squirrel_attention/squirrel_attention_location.hpp>
 
 TEST_F(ClientAttentionBase, testClientAttentionLocation_1) 
 {

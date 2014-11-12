@@ -9,7 +9,7 @@
 #define SQUIRREL_ATTENTION_HEIGHT_HPP_
 
 #include "squirrel_object_perception_msgs/GetSaliencyHeight.h"
-#include <squirrel_attention_base.hpp>
+#include <squirrel_attention/squirrel_attention_base.hpp>
 
 class AttentionHeightService : public AttentionBaseService
 {

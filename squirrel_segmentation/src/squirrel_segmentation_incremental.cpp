@@ -5,7 +5,7 @@
  *      Author: Ekaterina Potapova
  */
 
-#include <squirrel_segmentation_incremental.hpp>
+#include <squirrel_segmentation/squirrel_segmentation_incremental.hpp>
 
 bool
 SegmenterIncremental::segmentInit (squirrel_object_perception_msgs::SegmentInit::Request & req, squirrel_object_perception_msgs::SegmentInit::Response & response)
