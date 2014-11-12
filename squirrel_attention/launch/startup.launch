@@ -1,0 +1,7 @@
+<launch> 
+  <node name="squirrel_attention_location"
+        pkg="squirrel_attention"
+        type="squirrel_attention_location" 
+        required="true" output="screen">
+  </node>
+</launch>

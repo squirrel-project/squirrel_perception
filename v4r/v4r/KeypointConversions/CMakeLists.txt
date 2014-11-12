@@ -1,11 +1,10 @@
 SET(V4R_KEYPOINT_CONVERTIONS 1 CACHE BOOL "Convertions of pcl/ opencv/ keypoint data types" )
 IF(V4R_KEYPOINT_CONVERTIONS)
 
-FIND_PACKAGE (OpenCV)
+#FIND_PACKAGE (OpenCV)
 include_directories(${OPENCV_INCLUDE_DIRS})
 link_directories(${OPENCV_LIBRARY_DIRS})
 
-find_package(PCL 1.5 REQUIRED)
 include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
@@ -24,7 +23,7 @@ SET(SOURCE_CPP
 )
 
 SET(SOURCE_H
-  getImagePCLtoCV.hpp
+  convertImage.hpp
   convertCloudKP.hpp
 )
 

@@ -1,7 +1,7 @@
 SET(V4R_KEYPOINT_TOOLS 1 CACHE BOOL "Some general tools needed for modelling, tracking and recognition" )
 IF(V4R_KEYPOINT_TOOLS)
 
-FIND_PACKAGE(OpenCV)
+#FIND_PACKAGE(OpenCV)
 include_directories(${OPENCV_INCLUDE_DIRS})
 link_directories(${OPENCV_LIBRARY_DIRS})
 
@@ -18,6 +18,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 
 PROJECT(v4rKeypointTools)
 SET(SOURCE_CPP
+  Circle3D.cc
   ClusteringMeanShift.cc
   ClusteringRNN.cc
   EuclideanClustering3f.cc
@@ -26,27 +27,36 @@ SET(SOURCE_CPP
   RigidTransformationRANSAC.cc
   SearchKdTreeFLANN2f.cc
   SearchKdTreeFLANN3f.cc
+  ZAdaptiveNormals.cc
 )
 
 SET(SOURCE_H
+  Circle3D.hh
   Clustering.hh
   ClusteringMeanShift.hh
   ClusteringRNN.hh
   convertDataMatrix.hpp
-  getImageKPtoCV.hpp
+  convertPose.hpp
+  convertImage.hpp
   DataContainer.hh
   DataMatrix2D.hpp
+  eigen.h
+  eigen.hpp
+  eigen_boost_serialization.hpp
   EuclideanClustering3f.hh
   Histogram.hpp
   Histogram2D.hpp
   ImageTransformRANSAC.hh
   invPose.hpp
+  io_file.h
   Matrix.hpp
   normalizedCrossCorrelation.hpp
+  opencv_serialization.hpp
   PointTypes.hpp
   PoseIO.hpp
   PlaneEstimationRANSAC.hh
   projectPointToImage.hpp
+  RandomNumbers.hpp
   RigidTransformationRANSAC.hh
   rotation.h
   ScopeTime.hpp
@@ -57,8 +67,10 @@ SET(SOURCE_H
   SphereHistogram.hpp
   toString.hpp
   triple.hpp
+  triple_serialization.hpp
   Vector.hpp
   warpPatchHomography.hpp
+  ZAdaptiveNormals.hh
 )
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_H} ${SOURCE_CPP})
