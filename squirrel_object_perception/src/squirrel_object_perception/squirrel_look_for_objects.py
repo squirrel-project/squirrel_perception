@@ -1,34 +1,33 @@
 #!/usr/bin/env python
+
 import rospy
 import actionlib
 import dynamic_reconfigure.server
-from squirrel_object_perception.cfg import squirrel_look_for_objectsConfig as ConfigType
-from squirrel_object_perception_msgs.srv import ObjectRecognizer, segment_init, segment_once, get_saliency
-from squirrel_object_perception_msgs.msg import LookForObjectsAction, LookForObjectsFeedback, LookForObjectsResult
+from squirrel_object_perception.cfg import \
+    squirrel_look_for_objectsConfig as ConfigType
+from squirrel_object_perception_msgs.srv import \
+    ObjectRecognizer, SegmentInit, SegmentOnce, GetSaliency3DSymmetry,\
+    SegmentVisualizationInit, SegmentVisualizationOnce
+from squirrel_object_perception_msgs.msg import \
+    LookForObjectsAction, LookForObjectsFeedback, LookForObjectsResult
 from sensor_msgs.msg import PointCloud2
 
 
-class squirrel_look_for_objects_impl:
+class SquirrelLookForObjectsImpl:
     _feedback = LookForObjectsFeedback()
     _result = LookForObjectsResult()
     _point_cloud = None
     _objects = None
     _saliency_map = None
+    _segment_result = []
 
     def __init__(self):
-
-        # protected region initCode on begin #
-        # protected region initCode end #
         pass
 
     def configure(self):
-        # protected region configureCode on begin #
-        # protected region configureCode end #
         pass
 
     def update(self):
-        # protected region updateCode on begin #
-        # protected region updateCode end #
         pass
 
     def set_publish_feedback(self, phase, status, percent):
@@ -49,61 +48,80 @@ class squirrel_look_for_objects_impl:
             self.set_publish_feedback('recognition', 'done', 50)
         except (rospy.ROSException, rospy.ServiceException) as e:
             self.set_publish_feedback('recognition', 'service call failed', 11)
-            rospy.logdebug('mp_recognition: %s' % str(e))
+            rospy.logdebug('mp_recognition: failed')
         return result
 
     def get_saliency_map(self):
         get_saliency_map = rospy.ServiceProxy(
-            'squirrel_attention_location', get_saliency)
+            '/squirrel_attention_3Dsymmetry', GetSaliency3DSymmetry)
         try:
-            rospy.wait_for_service('squirrel_attention_location', timeout=5)
+            rospy.wait_for_service('/squirrel_attention_3Dsymmetry', timeout=5)
             result = get_saliency_map(self._point_cloud)
             self._saliency_map = result.saliency_map
             self.set_publish_feedback('attention', 'done', 50)
         except (rospy.ROSException, rospy.ServiceException) as e:
             self.set_publish_feedback('attention', 'service call failed', 11)
-            rospy.logdebug('attention: %s' % str(e))
+            rospy.logdebug('attention failed')
+
+    def setup_visualization(self):
+        init_segmenter = rospy.ServiceProxy(
+            'squirrel_segmentation_visualization_init',
+            SegmentVisualizationInit)
+        try:
+            rospy.wait_for_service(
+                'squirrel_segmentation_visualization_init', timeout=5)
+            init_segmenter(self._point_cloud, self._saliency_map)
+            self.set_publish_feedback('setup_visualization', 'done', 50)
+            return True
+        except (rospy.ROSException, rospy.ServiceException) as e:
+            self.set_publish_feedback('setup_visualization',
+                                      'service call failed', 11)
+            rospy.logdebug('setup_visualization failed')
+            return False
 
     def setup_segmentation(self):
         init_segmenter = rospy.ServiceProxy(
-            'squirrel_segmentation_incremental_init', segment_init)
+            'squirrel_segmentation_incremental_init', SegmentVisualizationInit)
         try:
             rospy.wait_for_service(
                 'squirrel_segmentation_incremental_init', timeout=5)
             init_segmenter(self._point_cloud, self._saliency_map)
-            self.set_publish_feedback('attention', 'done', 50)
+            self.set_publish_feedback('setup_segmentation', 'done', 50)
             return True
         except (rospy.ROSException, rospy.ServiceException) as e:
-            self.set_publish_feedback('attention', 'service call failed', 11)
-            rospy.logdebug('attention: %s' % str(e))
+            self.set_publish_feedback('setup_segmentation', 'service call failed', 11)
+            rospy.logdebug('setup_segmentation failed')
             return False
 
     def run_segmenter_once(self):
         do_segment = rospy.ServiceProxy(
-            'squirrel_segmentation_incremental_once', segment_once)
+            'squirrel_segmentation_incremental_once', SegmentOnce)
         try:
             rospy.wait_for_service(
                 'squirrel_segmentation_incremental_once', timeout=5)
-            self.segment_result = do_segment()
-            self.set_publish_feedback('attention', 'done', 50)
+            result = do_segment()
+            self._segment_result.append(result)
+            self.set_publish_feedback('segment_once', 'done', 50)
         except (rospy.ROSException, rospy.ServiceException) as e:
-            self.set_publish_feedback('attention', 'service call failed', 11)
-            rospy.logdebug('attention: %s' % str(e))
+            self.set_publish_feedback('segment_once', 'service call failed', 11)
+            rospy.logdebug('segment_once failed')
 
+    def run_visualization_once(self):
+        do_segment = rospy.ServiceProxy(
+            'squirrel_segmentation_visualization_once', SegmentVisualizationOnce)
+        try:
+            rospy.wait_for_service(
+                'squirrel_segmentation_visualization_once', timeout=5)
+            result = do_segment(self._segment_result[-1].cluster_indices)
+            self.set_publish_feedback('segment_visualization_once', 'done', 50)
+        except (rospy.ROSException, rospy.ServiceException) as e:
+            self.set_publish_feedback('segment_visualization_once', 'service call failed', 11)
+            rospy.logdebug('segment_visualization_once failed')
 
     def execute_squirrel_object_perception_cb(self, goal):
-        # Examples: self.as_squirrel_object_perception.set_succeeded(_result)
-        #           self.as_squirrel_object_perception.set_aborted()
-        #           self.as_squirrel_object_perception.publish_feedback(_feedback)
-        # _feedback = LookForObjectsFeedback()
-        # _result = LookForObjectsResult()
-        # protected region user implementation of action callback for squirrel_object_perception on begin #
-        # protected region user implementation of action callback for squirrel_object_perception end #
-
         # initialize feedback
         self.set_publish_feedback('init', 'done', 5)
 
-        # start executing the action
         # check that preempt has not been requested by the client
         if self.as_squirrel_object_perception.is_preempt_requested():
             rospy.loginfo('%s: Preempted' % self._action_name)
@@ -112,18 +130,19 @@ class squirrel_look_for_objects_impl:
 
         # Start getting data from /camera/depth_registered/points
         # Set feedback to data acquisition succeeded and set percentage
-        self._point_cloud = rospy.wait_for_message(
-            '/camera/depth_registered/points',
-            PointCloud2,
-            timeout=5
-        )
-        if not self._point_cloud:
+        try:
+            self._point_cloud = rospy.wait_for_message(
+                '/camera/depth_registered/points',
+                PointCloud2,
+                timeout=5
+            )
+            self.set_publish_feedback('receive_data', 'done', 10)
+        except rospy.ROSException as e:
             self.set_publish_feedback('receive_data', 'failed', 6)
             self._result.result_status = 'aborted'
-            rospy.loginfo('Aborted' % self._action_name)
             self.as_squirrel_object_perception.set_aborted(self._result)
+            rospy.logdebug('receive_data failed')
             return
-        self.set_publish_feedback('receive_data', 'done', 10)
 
         # call Aitor's recognition service
         self.do_recognition()
@@ -133,7 +152,10 @@ class squirrel_look_for_objects_impl:
         self.set_publish_feedback('attention', 'done', 60)
         self.set_publish_feedback('segmentation', 'started', 61)
         self.setup_segmentation()
-        self.run_segmenter_once()
+        self.setup_visualization()
+        for i in xrange(1, 5):
+            self.run_segmenter_once()
+            self.run_visualization_once()
         self.set_publish_feedback('segmentation', 'done', 75)
         self.set_publish_feedback('classification', 'started', 76)
         self.set_publish_feedback('classification', 'done', 97)
@@ -156,12 +178,17 @@ class squirrel_look_for_objects_impl:
         return
 
 
-class squirrel_look_for_objects:
+class SquirrelLookForObjects:
     def __init__(self):
-        self.impl = squirrel_look_for_objects_impl()
+        self.impl = SquirrelLookForObjectsImpl()
         self.impl._action_name = 'squirrel_object_perception'
-        self_dynrecon_server = dynamic_reconfigure.server.Server(ConfigType, self.config_callback)
-        self.impl.as_squirrel_object_perception = actionlib.SimpleActionServer('squirrel_object_perception', LookForObjectsAction, execute_cb=self.impl.execute_squirrel_object_perception_cb, auto_start=False)
+        self_dynrecon_server = dynamic_reconfigure.server.Server(
+            ConfigType, self.config_callback)
+        self.impl.as_squirrel_object_perception = actionlib.SimpleActionServer(
+            'squirrel_object_perception',
+            LookForObjectsAction,
+            execute_cb=self.impl.execute_squirrel_object_perception_cb,
+            auto_start=False)
         self.impl.as_squirrel_object_perception.start()
 
     def run(self):
@@ -173,7 +200,7 @@ class squirrel_look_for_objects:
 if __name__ == "__main__":
     try:
         rospy.init_node('squirrel_look_for_objects')
-        n = squirrel_look_for_objects()
+        n = SquirrelLookForObjects()
         n.impl.configure()
         while not rospy.is_shutdown():
             n.run()
