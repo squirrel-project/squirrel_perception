@@ -110,6 +110,7 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${V4R_INCLUDE_DIR} ${PCL_INCL
 add_executable(squirrel_segmentation_incremental src/squirrel_segmentation_incremental.cpp)
 #add_executable(squirrel_segmentation_test src/test.cpp)
 add_executable(squirrel_segmentation_visualization src/squirrel_segmentation_visualization.cpp)
+add_executable(squirrel_segmentation src/squirrel_segmentation.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
@@ -124,6 +125,9 @@ add_dependencies(squirrel_segmentation_incremental strands_v4r)
 
 target_link_libraries(squirrel_segmentation_visualization ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
 add_dependencies(squirrel_segmentation_visualization strands_v4r)
+
+target_link_libraries(squirrel_segmentation ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
+add_dependencies(squirrel_segmentation strands_v4r)
 
 #target_link_libraries(squirrel_segmentation_test ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
 #add_dependencies(squirrel_segmentation_test strands_v4r)
@@ -185,5 +189,11 @@ if(CATKIN_ENABLE_TESTING)
 # endif()
 # 
   add_rostest(test/squirrel_segmentation_incremental_test.test)
+  
+  catkin_add_gtest(squirrel_segmentation_test test/squirrel_segmentation_test.cpp)
+  if(TARGET squirrel_segmentation_test)
+    target_link_libraries(squirrel_segmentation_test ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS})
+  endif()
+  add_rostest(test/squirrel_segmentation_test.test)
 
 endif()
