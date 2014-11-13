@@ -43,8 +43,8 @@ AttentionSurfaceOrientationService::calculate (squirrel_object_perception_msgs::
     return(false);
   }
 
-  cv::imshow("map",map);
-  cv::waitKey(-1);
+  //cv::imshow("map",map);
+  //cv::waitKey(-1);
   
   resize(map,map,cv::Size(scene->width,scene->height));
   map.convertTo(map,CV_8U,255);
