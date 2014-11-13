@@ -20,19 +20,47 @@ SegmenterVisualization::segmentVisualizationInit (squirrel_object_perception_msg
   EPUtils::pointCloudXYZRGB_2_cloudXYZimageRGB(scene,scene_xyz,RGB,scene->width,scene->height);
 
   //publish saliency map
-  SaliencyPub_.publish(req.saliency_map);
-
-//   //get saliency map
-//   cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(req.saliency_map, sensor_msgs::image_encodings::MONO8);
-//   cv::Mat salMap = cv_ptr->image;
-//   salMap.convertTo(salMap,CV_32F,1.0/255);
-
-//   cv::imshow("salMap",salMap);
+  //get saliency map
+  cv_bridge::CvImagePtr cv_ptr_sal = cv_bridge::toCvCopy(req.saliency_map, sensor_msgs::image_encodings::MONO8);
+  cv::Mat salMapMono = cv_ptr_sal->image;
+  salMapMono.convertTo(salMap,CV_32F,1.0/255);
+//   cv::imshow("salMapMono",salMapMono);
 //   cv::waitKey(-1);
+  //create color image with saliency 
+  RGB.copyTo(salMap);
+  for(int i = 0; i < salMap.rows; ++i)
+  {
+    for(int j = 0; j < salMap.cols; ++j)
+    {
+      cv::Vec3b &cvp = salMap.at<cv::Vec3b> (i,j);
+      
+      // this can and should be done better
+      float salVal = 0.7 * salMapMono.at<float>(i,j) + 0.3;
+      
+      cvp[0] = cvp[0] * (salVal);
+      cvp[1] = cvp[1] * (salVal);
+      cvp[2] = cvp[2] * (salVal);
+    }
+  }
+  
+  ros::Time time = ros::Time::now();
+  
+  //convert back to image
+  cv_bridge::CvImagePtr cv_ptr_salRGB(new cv_bridge::CvImage);
+  // convert OpenCV image to ROS message
+  cv_ptr_salRGB->header.stamp = time;
+  cv_ptr_salRGB->header.frame_id = "image";
+  cv_ptr_salRGB->encoding = "bgr8";
+  cv_ptr_salRGB->image = salMap;
 
+  sensor_msgs::Image im_sal;
+  cv_ptr_salRGB->toImageMsg(im_sal);
+  SaliencyPub_.publish(im_sal);
+  //SaliencyPub_.publish(req.saliency_map);
+
+  
   //publish color image
   cv_bridge::CvImagePtr cv_ptr(new cv_bridge::CvImage);
-  ros::Time time = ros::Time::now();
   // convert OpenCV image to ROS message
   cv_ptr->header.stamp = time;
   cv_ptr->header.frame_id = "image";
