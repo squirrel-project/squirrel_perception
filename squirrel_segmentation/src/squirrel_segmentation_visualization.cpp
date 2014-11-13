@@ -58,9 +58,10 @@ SegmenterVisualization::segmentVisualizationOnce (squirrel_object_perception_msg
   uchar g = std::rand()%255;
   uchar b = std::rand()%255;
 
-  for(size_t k=0; k < req.cluster_indices.data.size(); k++)
+  assert(req.clusters_indices.size() == 1);
+  for(size_t k=0; k < req.clusters_indices[0].data.size(); k++)
   {
-    int idx = req.cluster_indices.data[k];
+    int idx = req.clusters_indices[0].data[k];
 
     cv::Vec3b &cvp = RGB.at<cv::Vec3b> (idx/RGB.cols,idx%RGB.cols);
     cvp[0] = r;
