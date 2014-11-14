@@ -23,9 +23,10 @@ SegmenterVisualization::segmentVisualizationInit (squirrel_object_perception_msg
   //get saliency map
   cv_bridge::CvImagePtr cv_ptr_sal = cv_bridge::toCvCopy(req.saliency_map, sensor_msgs::image_encodings::MONO8);
   cv::Mat salMapMono = cv_ptr_sal->image;
-  salMapMono.convertTo(salMap,CV_32F,1.0/255);
+  salMapMono.convertTo(salMapMono,CV_32F,1.0/255);
 //   cv::imshow("salMapMono",salMapMono);
 //   cv::waitKey(-1);
+  RGB.copyTo(salMap);
   //create color image with saliency 
   RGB.copyTo(salMap);
   for(int i = 0; i < salMap.rows; ++i)
