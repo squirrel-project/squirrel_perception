@@ -28,7 +28,6 @@ SegmenterVisualization::segmentVisualizationInit (squirrel_object_perception_msg
 //   cv::waitKey(-1);
   RGB.copyTo(salMap);
   //create color image with saliency 
-  RGB.copyTo(salMap);
   for(int i = 0; i < salMap.rows; ++i)
   {
     for(int j = 0; j < salMap.cols; ++j)
