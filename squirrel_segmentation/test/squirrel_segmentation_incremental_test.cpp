@@ -109,10 +109,12 @@ TEST_F(ClientSegmenterIncremental, testClientSegmenterIncremental_2)
   
   EXPECT_TRUE(client2.call(srv2));
   
+  EXPECT_TRUE(srv2.response.clusters_indices.size() == 1);
+
 //   cv::Mat segmented_object = cv::Mat_<uchar>::zeros(groundTruth.rows,groundTruth.cols);
-  for(size_t k=0; k < srv2.response.cluster_indices.data.size(); k++)
+  for(size_t k=0; k < srv2.response.clusters_indices[0].data.size(); k++)
   {
-    int idx = srv2.response.cluster_indices.data[k];
+    int idx = srv2.response.clusters_indices[0].data[k];
     
     //segmented_object.at<uchar>(idx/groundTruth.cols,idx%groundTruth.cols) = 255;
     EXPECT_EQ(255,groundTruth.at<uchar>(idx/groundTruth.cols,idx%groundTruth.cols));
