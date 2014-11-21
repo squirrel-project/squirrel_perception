@@ -34,6 +34,7 @@ private:
   ros::Publisher SegmentationPub_;
   ros::NodeHandle *n_;
   cv::Mat RGB;
+  cv::Mat salMap;
 
   bool
   segmentVisualizationInit (squirrel_object_perception_msgs::SegmentVisualizationInit::Request & req, squirrel_object_perception_msgs::SegmentVisualizationInit::Response & response);
