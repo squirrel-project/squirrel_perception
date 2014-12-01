@@ -4,7 +4,7 @@ project(squirrel_classification)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED roscpp rospy std_msgs sensor_msgs cv_bridge squirrel_object_perception_msgs strands_v4r)
+find_package(catkin REQUIRED roscpp rospy std_msgs sensor_msgs cv_bridge squirrel_object_perception_msgs v4r)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -79,7 +79,7 @@ find_package(OpenCV 2.4 REQUIRED)
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES squirrel_classification
-  CATKIN_DEPENDS squirrel_object_perception_msgs strands_v4r
+  CATKIN_DEPENDS squirrel_object_perception_msgs v4r
 #  DEPENDS system_lib
 )
 
