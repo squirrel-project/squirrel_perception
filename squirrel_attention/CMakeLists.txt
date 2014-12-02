@@ -4,7 +4,7 @@ project(squirrel_attention)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs genmsg sensor_msgs geometry_msgs cv_bridge squirrel_object_perception_msgs strands_v4r) #pcl_conversions
+find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs genmsg sensor_msgs geometry_msgs cv_bridge squirrel_object_perception_msgs v4r) #pcl_conversions
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -79,7 +79,7 @@ find_package(OpenCV 2.4 REQUIRED)
 catkin_package(
  INCLUDE_DIRS include
 #  LIBRARIES squirrel_attention
- CATKIN_DEPENDS squirrel_object_perception_msgs strands_v4r
+ CATKIN_DEPENDS squirrel_object_perception_msgs v4r
 #  DEPENDS system_lib
 )
 
@@ -124,28 +124,28 @@ add_executable(squirrel_attention_surfaceorientation src/squirrel_attention_surf
 #   ${catkin_LIBRARIES}
 # )
 target_link_libraries(squirrel_attention_location ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
-add_dependencies(squirrel_attention_location strands_v4r)
+add_dependencies(squirrel_attention_location v4r)
 
 target_link_libraries(squirrel_attention_color ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
-add_dependencies(squirrel_attention_color strands_v4r)
+add_dependencies(squirrel_attention_color v4r)
 
 target_link_libraries(squirrel_attention_itti ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
-add_dependencies(squirrel_attention_itti strands_v4r)
+add_dependencies(squirrel_attention_itti v4r)
 
 target_link_libraries(squirrel_attention_symmetry ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
-add_dependencies(squirrel_attention_symmetry strands_v4r)
+add_dependencies(squirrel_attention_symmetry v4r)
 
 target_link_libraries(squirrel_attention_3Dsymmetry ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
-add_dependencies(squirrel_attention_3Dsymmetry strands_v4r)
+add_dependencies(squirrel_attention_3Dsymmetry v4r)
 
 target_link_libraries(squirrel_attention_height ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
-add_dependencies(squirrel_attention_height strands_v4r)
+add_dependencies(squirrel_attention_height v4r)
 
 target_link_libraries(squirrel_attention_surfaceorientation ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
-add_dependencies(squirrel_attention_surfaceorientation strands_v4r)
+add_dependencies(squirrel_attention_surfaceorientation v4r)
 
 #target_link_libraries(squirrel_attention_test ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
-#add_dependencies(squirrel_attention_test strands_v4r)
+#add_dependencies(squirrel_attention_test v4r)
 
 #############
 ## Install ##

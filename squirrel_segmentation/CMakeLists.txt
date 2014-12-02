@@ -5,7 +5,7 @@ SET(CMAKE_BUILD_TYPE Release)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs genmsg sensor_msgs cv_bridge squirrel_object_perception_msgs strands_v4r) #pcl_conversions
+find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs genmsg sensor_msgs cv_bridge squirrel_object_perception_msgs v4r) #pcl_conversions
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -80,7 +80,7 @@ find_package(OpenCV 2.4 REQUIRED)
 catkin_package(
  INCLUDE_DIRS include
 #  LIBRARIES squirrel_segmentation
- CATKIN_DEPENDS squirrel_object_perception_msgs strands_v4r
+ CATKIN_DEPENDS squirrel_object_perception_msgs v4r
 #  DEPENDS system_lib
 )
 
@@ -121,16 +121,16 @@ add_executable(squirrel_segmentation src/squirrel_segmentation.cpp)
 #   ${catkin_LIBRARIES}
 # )
 target_link_libraries(squirrel_segmentation_incremental ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
-add_dependencies(squirrel_segmentation_incremental strands_v4r)
+add_dependencies(squirrel_segmentation_incremental v4r)
 
 target_link_libraries(squirrel_segmentation_visualization ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
-add_dependencies(squirrel_segmentation_visualization strands_v4r)
+add_dependencies(squirrel_segmentation_visualization v4r)
 
 target_link_libraries(squirrel_segmentation ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
-add_dependencies(squirrel_segmentation strands_v4r)
+add_dependencies(squirrel_segmentation v4r)
 
 #target_link_libraries(squirrel_segmentation_test ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
-#add_dependencies(squirrel_segmentation_test strands_v4r)
+#add_dependencies(squirrel_segmentation_test v4r)
 
 #############
 ## Install ##
