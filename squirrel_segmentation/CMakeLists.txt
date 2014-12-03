@@ -5,7 +5,7 @@ SET(CMAKE_BUILD_TYPE Release)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs genmsg sensor_msgs cv_bridge squirrel_object_perception_msgs strands_v4r) #pcl_conversions
+find_package(catkin REQUIRED COMPONENTS roscpp rospy cv_bridge squirrel_object_perception_msgs v4r) #pcl_conversions
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -80,7 +80,7 @@ find_package(OpenCV 2.4 REQUIRED)
 catkin_package(
  INCLUDE_DIRS include
 #  LIBRARIES squirrel_segmentation
- CATKIN_DEPENDS squirrel_object_perception_msgs strands_v4r
+ CATKIN_DEPENDS squirrel_object_perception_msgs v4r
 #  DEPENDS system_lib
 )
 
@@ -109,6 +109,8 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${V4R_INCLUDE_DIR} ${PCL_INCL
 # add_executable(squirrel_segmentation_node src/squirrel_segmentation_node.cpp)
 add_executable(squirrel_segmentation_incremental src/squirrel_segmentation_incremental.cpp)
 #add_executable(squirrel_segmentation_test src/test.cpp)
+add_executable(squirrel_segmentation_visualization src/squirrel_segmentation_visualization.cpp)
+add_executable(squirrel_segmentation src/squirrel_segmentation.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
@@ -119,10 +121,16 @@ add_executable(squirrel_segmentation_incremental src/squirrel_segmentation_incre
 #   ${catkin_LIBRARIES}
 # )
 target_link_libraries(squirrel_segmentation_incremental ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
-add_dependencies(squirrel_segmentation_incremental strands_v4r)
+add_dependencies(squirrel_segmentation_incremental v4r)
+
+target_link_libraries(squirrel_segmentation_visualization ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
+add_dependencies(squirrel_segmentation_visualization v4r)
+
+target_link_libraries(squirrel_segmentation ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
+add_dependencies(squirrel_segmentation v4r)
 
 #target_link_libraries(squirrel_segmentation_test ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
-#add_dependencies(squirrel_segmentation_test strands_v4r)
+#add_dependencies(squirrel_segmentation_test v4r)
 
 #############
 ## Install ##
@@ -181,5 +189,11 @@ if(CATKIN_ENABLE_TESTING)
 # endif()
 # 
   add_rostest(test/squirrel_segmentation_incremental_test.test)
+  
+  catkin_add_gtest(squirrel_segmentation_test test/squirrel_segmentation_test.cpp)
+  if(TARGET squirrel_segmentation_test)
+    target_link_libraries(squirrel_segmentation_test ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS})
+  endif()
+  add_rostest(test/squirrel_segmentation_test.test)
 
 endif()

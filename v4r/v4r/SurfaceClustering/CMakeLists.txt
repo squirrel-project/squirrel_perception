@@ -4,9 +4,9 @@ IF(V4R_SURFACE_CLUSTERING)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp")
 
-IF(V4R_EPUTILS)
-IF(V4R_SURFACE_UTILS)
-IF(V4R_ON_NURBS)
+#IF(V4R_EPUTILS)
+#IF(V4R_SURFACE_UTILS)
+#IF(V4R_ON_NURBS)
 
 PROJECT(v4rSurfaceClustering)
 
@@ -34,17 +34,17 @@ ELSE (${PCL_FOUND})
   MESSAGE("\nERROR: SurfaceClustering: Could not locate PCL. Skip V4R_SURFACE_CLUSTERING\n")
 ENDIF(${PCL_FOUND})
   
-ELSE(V4R_ON_NURBS)
-  MESSAGE(STATUS "********************************************\n v4r/SurfaceClustering: missing V4R_ON_NURBS\n   ********************************************\n")
-ENDIF(V4R_ON_NURBS)
-
-ELSE(V4R_SURFACE_UTILS)
-  MESSAGE(STATUS "********************************************\n   v4r/SurfaceClustering: missing V4R_SURFACE_UTILS\n   ********************************************\n")
-ENDIF(V4R_SURFACE_UTILS)
-
-ELSE(V4R_EPUTILS)
-  MESSAGE(STATUS "********************************************\n   v4r/SurfaceClustering: missing V4R_EPUTILS\n   ********************************************\n")
-ENDIF(V4R_EPUTILS)
+#ELSE(V4R_ON_NURBS)
+#  MESSAGE(STATUS "********************************************\n v4r/SurfaceClustering: missing V4R_ON_NURBS\n   ********************************************\n")
+#ENDIF(V4R_ON_NURBS)
+#
+#ELSE(V4R_SURFACE_UTILS)
+#  MESSAGE(STATUS "********************************************\n   v4r/SurfaceClustering: missing V4R_SURFACE_UTILS\n   ********************************************\n")
+#ENDIF(V4R_SURFACE_UTILS)
+#
+#ELSE(V4R_EPUTILS)
+#  MESSAGE(STATUS "********************************************\n   v4r/SurfaceClustering: missing V4R_EPUTILS\n   ********************************************\n")
+#ENDIF(V4R_EPUTILS)
 
 ENDIF(V4R_SURFACE_CLUSTERING)
 
