@@ -5,7 +5,7 @@ SET(CMAKE_BUILD_TYPE Release)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp rospy std_msgs genmsg sensor_msgs cv_bridge squirrel_object_perception_msgs v4r) #pcl_conversions
+find_package(catkin REQUIRED COMPONENTS roscpp rospy cv_bridge squirrel_object_perception_msgs v4r) #pcl_conversions
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
