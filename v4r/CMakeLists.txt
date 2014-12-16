@@ -1,6 +1,8 @@
 cmake_minimum_required ( VERSION 2.6 )
 PROJECT(v4r)
 find_package(catkin REQUIRED)
+find_package(GLEW REQUIRED)
+find_package(GLUT REQUIRED)
 SET(CMAKE_BUILD_TYPE Release)
 
 ###########################################
