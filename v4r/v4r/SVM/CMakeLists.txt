@@ -11,8 +11,6 @@ IF(${PCL_FOUND})
   link_directories(${PCL_LIBRARY_DIRS})
   add_definitions(${PCL_DEFINITIONS})
 
-MESSAGE( STATUS "opencv include dirs: " ${OpenCV_INCLUDE_DIRS} )
-
   SET(SOURCE_CPP
     svm.cpp
 #    SVMFileCreator.cpp
