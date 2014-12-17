@@ -147,11 +147,11 @@ class SquirrelLookForObjectsImpl:
             self.as_squirrel_object_perception.set_preempted()
             return
 
-        # Start getting data from /camera/depth_registered/points
+        # Start getting data from /kinect/depth_registered/points
         # Set feedback to data acquisition succeeded and set percentage
         try:
             self._point_cloud = rospy.wait_for_message(
-                '/camera/depth_registered/points',
+                '/kinect/depth_registered/points',
                 PointCloud2,
                 timeout=5
             )
