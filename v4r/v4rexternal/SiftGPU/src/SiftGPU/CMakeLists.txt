@@ -7,6 +7,8 @@ ADD_DEFINITIONS(-fPIC)
 ADD_DEFINITIONS(-march=native)
 ADD_DEFINITIONS(-mfpmath=sse)
 
+SET(CMAKE_CXX_FLAGS "-ggdb -O3 -fPIC -std=c++0x -march=native -mno-avx")
+
 
 SET(SOURCE_CPP
   CLTexImage.cpp
