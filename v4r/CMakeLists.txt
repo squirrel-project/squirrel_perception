@@ -2,7 +2,7 @@ cmake_minimum_required ( VERSION 2.6 )
 PROJECT(v4r)
 find_package(catkin REQUIRED)
 SET(CMAKE_BUILD_TYPE Release)
-
+SET(CMAKE_CXX_FLAGS "-ggdb -O3 -fPIC -march=native -mno-avx")
 ###########################################
 ## Do not waste the top level cmake !!! ###
 ###########################################
