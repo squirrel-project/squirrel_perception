@@ -3,7 +3,7 @@ PROJECT(v4r)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 find_package(catkin REQUIRED)
-find_package(GLEW REQUIRED)
+#find_package(GLEW REQUIRED)
 find_package(GLUT REQUIRED)
 SET(CMAKE_BUILD_TYPE Release)
 
