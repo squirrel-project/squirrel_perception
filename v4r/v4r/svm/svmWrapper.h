@@ -3,7 +3,8 @@
 
 #include "svm.h"
 #include <vector>
-#include <cv.h>
+//#include <cv.h>
+#include <opencv/cv.h>
 
 struct data
 {
