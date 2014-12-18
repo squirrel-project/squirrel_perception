@@ -3,4 +3,4 @@
 .cproject
 .project
 *.pyc
-v4r/bin/
+*/bin/
