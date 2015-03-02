@@ -1,5 +1,5 @@
 <package>
-  <name>object_perception</name>
+  <name>squirrel_perception</name>
   <version>0.0.1</version>
   <description>meta-package for object perception components</description>
   <maintainer email="michael.cashmore@kcl.ac.uk">michael</maintainer>
