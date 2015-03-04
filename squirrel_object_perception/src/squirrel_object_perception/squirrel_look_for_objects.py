@@ -6,7 +6,7 @@ import dynamic_reconfigure.server
 from squirrel_object_perception.cfg import \
     squirrel_look_for_objectsConfig as ConfigType
 from squirrel_object_perception_msgs.srv import \
-    ObjectRecognizer, SegmentInit, SegmentOnce, GetSaliency3DSymmetry,\
+    Recognize, SegmentInit, SegmentOnce, GetSaliency3DSymmetry,\
     SegmentVisualizationInit, SegmentVisualizationOnce, Classify
 from squirrel_object_perception_msgs.msg import \
     LookForObjectsAction, LookForObjectsFeedback, LookForObjectsResult
@@ -15,6 +15,13 @@ from squirrel_planning_knowledge.srv import AddObjectService, \
     AddObjectServiceRequest, UpdateObjectService, UpdateObjectServiceRequest
 
 
+class Object:
+    _id = None
+    _category = None
+    _pose = None
+    _points = []
+    _point_indices = []
+  
 class SquirrelLookForObjectsImpl:
     _feedback = LookForObjectsFeedback()
     _result = LookForObjectsResult()
@@ -22,6 +29,7 @@ class SquirrelLookForObjectsImpl:
     _objects = []
     _saliency_map = None
     _segment_result = []
+    _id_cnt = 1
 
     def __init__(self):
         pass
@@ -31,6 +39,11 @@ class SquirrelLookForObjectsImpl:
 
     def update(self):
         pass
+
+    def get_unique_object_id():
+        id = _id_cnt
+        _id_cnt = _id_cnt + 1
+        return str(id)
 
     def set_publish_feedback(self, phase, status, percent):
         self._feedback.current_phase = phase
@@ -99,11 +112,22 @@ class SquirrelLookForObjectsImpl:
     def run_segmenter_once(self):
         do_segment = rospy.ServiceProxy(
             'squirrel_segmentation_incremental_once', SegmentOnce)
+        do_objects = rospy.ServiceProxy(
+            'squirrel_segments_to_objects', SegmentsToObjects)
         try:
             rospy.wait_for_service(
                 'squirrel_segmentation_incremental_once', timeout=5)
-            result = do_segment()
-            self._segment_result.append(result)
+            seg_result = do_segment()
+            rospy.wait_for_service(
+                'squirrel_segments_to_objects', timeout=5)
+            obj_result = do_objects(self._point_cloud, seg_result.clusters_indices)
+            obj = Object()
+            obj._id = self.get_unique_object_id()
+            obj._category = "thing"
+            obj._point_indices = seg_result.clusters_indices
+            obj._points = obj_result.points
+            obj._pose = obj_result.pose
+            self._objects.append(obj)
             self.set_publish_feedback('segment_once', 'done', 50)
         except (rospy.ROSException, rospy.ServiceException):
             self.set_publish_feedback('segment_once',
@@ -124,16 +148,28 @@ class SquirrelLookForObjectsImpl:
                                       'service call failed', 11)
             rospy.logdebug('segment_visualization_once failed')
 
+    def most_confident_class(classification):
+        max_conf = max(classification.confidence)
+        max_index = object.classification.confidence.index(max_conf)
+        return classification.class_type[max_index].data
+
     def run_classifier(self):
         do_classify = rospy.ServiceProxy(
             'squirrel_classify', Classify)
         try:
             rospy.wait_for_service(
                 'squirrel_classify', timeout=5)
+            # classify the last segmented object
             result = do_classify(self._point_cloud,
-                                 self._segment_result[-1].clusters_indices)
-            #TODO: store result, point cloud cluster and pose in self._objects
-            #TODO: Do we actually get the pose from classification?
+                                 self._objects[-1].point_indices)
+            # NOTE: Classify outputs a list of classifications. In our case this should
+            # be of size 1, as we only input one cluster.
+            if len(res) == 1:
+                # NOTE: At this point we just take the most confident class and ignore the rest.
+                #At a later stage we might use the actual probability distribution over class labels.
+                obj._category = most_confident_class(result.class_results)
+            else:
+                rospy.logdebug('classification error: one object in, more than one (or 0) objects out')
             print(result)
             self.set_publish_feedback('classification', 'done', 50)
         except (rospy.ROSException, rospy.ServiceException):
@@ -142,8 +178,8 @@ class SquirrelLookForObjectsImpl:
             rospy.logdebug('classification failed')
 
     def add_object_to_db(self, category):
-        rospy.wait_for_service('new_object')
-        new_object = rospy.ServiceProxy('new_object', AddObjectService, timeout=3)
+        rospy.wait_for_service('/kcl_rosplan/add_object')
+        new_object = rospy.ServiceProxy('/kcl_rosplan/add_object', AddObjectService, timeout=3)
         request = AddObjectServiceRequest()
         request.id = category
         request.category = category
@@ -157,8 +193,8 @@ class SquirrelLookForObjectsImpl:
         return resp
 
     def update_object_in_db(self, category):
-        rospy.wait_for_service('update_object')
-        update_object = rospy.ServiceProxy('update_object', UpdateObjectService, timeout=3)
+        rospy.wait_for_service('/kcl_rosplan/update_object')
+        update_object = rospy.ServiceProxy('/kcl_rosplan/update_object', UpdateObjectService, timeout=3)
         request = UpdateObjectServiceRequest()
         request.id = category
         request.category = category
@@ -225,11 +261,7 @@ class SquirrelLookForObjectsImpl:
 
         self.set_publish_feedback('database_update', 'started', 98)
         for object in self._objects:
-            #TODO: check at which level we get the actual array of results
-            max_value = max(object.class_results.confidence)
-            max_index = object.class_results.confidence.index(max_value)
-            #TODO: id or category, what to use?
-            category = object.class_results.class_type[max_index].data
+            # TODO: the semantics of this check vs. explore is not clear yet!
             if goal.look_for_object == 0:# check
                 if not goal.category.lower() == category.lower():
                     break
