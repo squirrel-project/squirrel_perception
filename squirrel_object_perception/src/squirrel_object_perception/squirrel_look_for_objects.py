@@ -280,11 +280,11 @@ class SquirrelLookForObjectsImpl:
 class SquirrelLookForObjects:
     def __init__(self):
         self.impl = SquirrelLookForObjectsImpl()
-        self.impl._action_name = 'squirrel_object_perception'
+        self.impl._action_name = 'look_for_objects'
         self_dynrecon_server = dynamic_reconfigure.server.Server(
             ConfigType, self.config_callback)
         self.impl.as_squirrel_object_perception = actionlib.SimpleActionServer(
-            'squirrel_object_perception',
+            'look_for_objects',
             LookForObjectsAction,
             execute_cb=self.impl.execute_squirrel_object_perception_cb,
             auto_start=False)
