@@ -11,7 +11,7 @@ from squirrel_object_perception_msgs.srv import \
 from squirrel_object_perception_msgs.msg import \
     LookForObjectsAction, LookForObjectsFeedback, LookForObjectsResult
 from sensor_msgs.msg import PointCloud2
-from squirrel_planning_knowledge.srv import AddObjectService, \
+from squirrel_planning_knowledge_msgs.srv import AddObjectService, \
     AddObjectServiceRequest, UpdateObjectService, UpdateObjectServiceRequest
 
 
