@@ -65,6 +65,15 @@ class ShapeClassifier
     {
       ROS_INFO("Classifying %d objects\n", (int)req.clusters_indices.size());
       pcl::fromROSMsg(req.cloud, *frame_);
+      // HACK: The gezebo somilated kinect seems to output a non-orgnized point cloud. Just fix that here.
+      if(frame_->height == 1)
+      {
+        if(frame_->points.size() == 640*480)
+        {
+          frame_->height = 480;
+          frame_->width = 640;
+        }
+      }
       classifier_->setInputCloud(frame_);
 
       pcl::PointCloud<pcl::PointXYZRGB>::Ptr pClusteredPCl (new pcl::PointCloud<pcl::PointXYZRGB>());
