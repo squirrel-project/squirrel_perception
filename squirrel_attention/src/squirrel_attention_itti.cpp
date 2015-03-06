@@ -13,6 +13,15 @@ AttentionIttiService::calculate (squirrel_object_perception_msgs::GetSaliencyItt
   pcl::PointCloud<PointT>::Ptr scene (new pcl::PointCloud<PointT>);
   pcl::fromROSMsg (req.cloud, *scene);
   
+  // HACK: The gezebo somilated kinect seems to output a non-orgnized point cloud. Just fix that here.
+  if(scene->height == 1)
+  {
+    if(scene->points.size() == 640*480)
+    {
+      scene->height = 480;
+      scene->width = 640;
+    }
+  }
   //get pimage from point cloud
   cv::Mat RGB;
   getImageFromPointCloud(scene,RGB);
