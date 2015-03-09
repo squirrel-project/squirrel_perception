@@ -271,16 +271,16 @@ void normals_2_channels(cv::Mat &xnormals, cv::Mat &ynormals, cv::Mat &znormals,
   {
     int idx = indices->indices.at(i);
     
-    float x_n = normals->points.at(i).normal[0];
-    float y_n = normals->points.at(i).normal[1];
-    float z_n = normals->points.at(i).normal[2];
+    float x_n = normals->points.at(idx).normal[0];
+    float y_n = normals->points.at(idx).normal[1];
+    float z_n = normals->points.at(idx).normal[2];
     
     int r = idx / width;
     int c = idx % width;
     xnormals.at<float>(r,c) = x_n;
     ynormals.at<float>(r,c) = y_n;
     znormals.at<float>(r,c) = z_n;
-  }  
+  }
 }
 
 void pointCloud_2_disparity(cv::Mat &disparity, pcl::PointCloud<pcl::PointXYZRGB>::ConstPtr cloud, 
