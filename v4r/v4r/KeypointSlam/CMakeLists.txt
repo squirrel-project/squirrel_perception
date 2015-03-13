@@ -18,7 +18,9 @@ ENDIF(${Ceres_FOUND})
 find_package(PkgConfig REQUIRED)
 pkg_search_module(EIGEN3 REQUIRED eigen3)
 include_directories(${EIGEN3_INCLUDE_DIRS})
+#include_directories(/usr/local/include/eigen3)
 
+add_definitions(-DEIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET)
 
 PROJECT(v4rKeypointSlam)
 
