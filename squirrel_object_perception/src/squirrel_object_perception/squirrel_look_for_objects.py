@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+#
+# Implements the whole look for objects action:
+#
+# @author Markus Bajones bajones@acin.tuwien.ac.at, Michael Zillich zillich@æcin.tuwien.ac.at
+#
 
 import rospy
 import actionlib
