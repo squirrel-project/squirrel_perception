@@ -8,7 +8,7 @@
 #ifndef ARTICULATED_OBJECT_BOOST_SERIALIZATION
 #define ARTICULATED_OBJECT_BOOST_SERIALIZATION
 
-#include <Eigen/Sparse>
+//#include <Eigen/Sparse>
 #include <Eigen/Dense>
 #include <boost/serialization/split_free.hpp>
 #include <boost/serialization/vector.hpp>
