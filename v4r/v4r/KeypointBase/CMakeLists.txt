@@ -31,7 +31,6 @@ SET(SOURCE_CPP
   ComputeImGradientDescriptors.cc
   Feature.cc
   FeatureDetector_K_HARRIS.cc
-  FeatureDetector_KD_SIFTGPU.cc
   FeatureDetector_D_FREAK.cc
   FeatureDetector_KD_ORB.cc
   FeatureDetector_KD_FAST_IMGD.cc
@@ -39,7 +38,6 @@ SET(SOURCE_CPP
   ImGDescOrientation.cc
   LinkedKeypoint.cc
   OptimizePointsMultiViewGD.cc
-  PSiftGPU.cc
   RefinePatchLocationLK.cc
   RefineProjectedPointLocationLK.cc
 )
@@ -49,9 +47,16 @@ SET(SOURCE_CPP ${SOURCE_CPP}
   FeatureDetector_KD_CVSIFT.cc
 )
 ENDIF(HAVE_OPENCV_NONFREE)
-IF (V4R_TOMGINE_5)
-SET(SOURCE_CPP ${SOURCE_CPP} RefineProjectedPointLocationLKGPU.cc)
-ENDIF(V4R_TOMGINE_5)
+# HACK
+#IF (V4R_TOMGINE_5)
+#SET(SOURCE_CPP ${SOURCE_CPP} RefineProjectedPointLocationLKGPU.cc)
+#ENDIF(V4R_TOMGINE_5)
+IF(EXT_SIFTGPU)
+SET(SOURCE_CPP ${SOURCE_CPP}
+  FeatureDetector_KD_SIFTGPU.cc
+  PSiftGPU.cc
+)
+ENDIF(EXT_SIFTGPU)
 
 SET(SOURCE_H
   ComputeImGDescOrientations.hh
@@ -60,7 +65,6 @@ SET(SOURCE_H
   FeatureMatch.hh
   FeatureDetector.hh
   FeatureDetector_K_HARRIS.hh
-  FeatureDetector_KD_SIFTGPU.hh
   FeatureDetector_D_FREAK.hh
   FeatureDetector_KD_ORB.hh
   FeatureDetector_KD_FAST_IMGD.hh
@@ -69,7 +73,6 @@ SET(SOURCE_H
   LinkedKeypoint.hh
   MultiViewPatchError.hpp
   OptimizePointsMultiViewGD.hh
-  PSiftGPU.hh
   RefinePatchLocationLK.hh
   RefineProjectedPointLocationLK.hh
   RefineProjectedPointLocationLKbase.hh
@@ -80,10 +83,16 @@ SET(SOURCE_H ${SOURCE_H}
   FeatureDetector_KD_CVSIFT.hh
 )
 ENDIF(HAVE_OPENCV_NONFREE)
+IF(EXT_SIFTGPU)
+SET(SOURCE_H ${SOURCE_H}
+  FeatureDetector_KD_SIFTGPU.hh
+  PSiftGPU.hh
+)
+ENDIF(EXT_SIFTGPU)
 
-IF (V4R_TOMGINE_5)
-SET(SOURCE_H ${SOURCE_H} RefineProjectedPointLocationLKGPU.hh)
-ENDIF(V4R_TOMGINE_5)
+#IF (V4R_TOMGINE_5)
+#SET(SOURCE_H ${SOURCE_H} RefineProjectedPointLocationLKGPU.hh)
+#ENDIF(V4R_TOMGINE_5)
 
 set(SOURCE_SHADER
   shader/hread.fsh
@@ -98,10 +107,14 @@ set(SOURCE_SHADER
 )
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_H} ${SOURCE_CPP} ${SOURCE_SHADER})
-target_link_libraries(${PROJECT_NAME} ${OPENCV_LIBRARIES} siftgpu v4rKeypointTools)
-IF (V4R_TOMGINE_5)
-target_link_libraries(${PROJECT_NAME} ${OPENCV_LIBRARIES} v4rTomGine5)
-ENDIF(V4R_TOMGINE_5)
+target_link_libraries(${PROJECT_NAME} ${OPENCV_LIBRARIES} v4rKeypointTools)
+IF(EXT_SIFTGPU)
+target_link_libraries(${PROJECT_NAME} siftgpu)
+ENDIF(EXT_SIFTGPU)
+
+#IF (V4R_TOMGINE_5)
+#target_link_libraries(${PROJECT_NAME} ${OPENCV_LIBRARIES} v4rTomGine5)
+#ENDIF(V4R_TOMGINE_5)
 
 v4r_add_library(${PROJECT_NAME} "${SOURCE_H}")
 

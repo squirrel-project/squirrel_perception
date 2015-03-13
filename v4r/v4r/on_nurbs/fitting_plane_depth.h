@@ -1,9 +1,7 @@
 /*
  * Software License Agreement (BSD License)
  *
- *  Point Cloud Library (PCL) - www.pointclouds.org
- *  Copyright (c) 2010-2011, Willow Garage, Inc.
- *
+ *  Copyright (c) 2012-, Thomas Mörwald
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -16,7 +14,7 @@
  *     copyright notice, this list of conditions and the following
  *     disclaimer in the documentation and/or other materials provided
  *     with the distribution.
- *   * Neither the name of Willow Garage, Inc. nor the names of its
+ *   * Neither the name of the copyright holder(s) nor the names of its
  *     contributors may be used to endorse or promote products derived
  *     from this software without specific prior written permission.
  *
@@ -34,13 +32,31 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <pcl/point_types.h>
-#include <pcl/impl/instantiate.hpp>
-#include <faat_pcl/recognition/hv/hv_go_1.h>
-#include <faat_pcl/recognition/impl/hv/hv_go_1.hpp>
+#ifndef FITTING_PLANE_DEPTH_H
+#define FITTING_PLANE_DEPTH_H
 
-template<typename ModelT, typename SceneT> float faat_pcl::GlobalHypothesesVerification_1<ModelT, SceneT>::sRGB_LUT[256] = {- 1};
-template<typename ModelT, typename SceneT> float faat_pcl::GlobalHypothesesVerification_1<ModelT, SceneT>::sXYZ_LUT[4000] = {- 1};
+#include <Eigen/Core>
 
-template class FAAT_REC_API faat_pcl::GlobalHypothesesVerification_1<pcl::PointXYZ,pcl::PointXYZ>;
-template class FAAT_REC_API faat_pcl::GlobalHypothesesVerification_1<pcl::PointXYZRGB,pcl::PointXYZRGB>;
+namespace pcl
+{
+namespace on_nurbs
+{
+
+class FittingDepthPlane
+{
+protected:
+  double m_ac,m_bc,m_dc;
+
+public:
+  Eigen::Vector3d computeMean(Eigen::VectorXd& depth, Eigen::VectorXd::Index width);
+  FittingDepthPlane(Eigen::VectorXd& depth, Eigen::VectorXd::Index width);
+
+  double evaluate(double u, double v);
+
+  Eigen::VectorXd getError(Eigen::VectorXd& depth, Eigen::VectorXd::Index width);
+};
+
+} // namespace on_nurbs
+} // namespace pcl
+
+#endif // FITTING_PLANE_DEPTH_H
