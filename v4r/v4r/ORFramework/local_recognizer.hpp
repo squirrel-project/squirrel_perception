@@ -1,4 +1,5 @@
 #include "local_recognizer.h"
+#include <v4r/utils/filesystem_utils.h>
 
 //#include <pcl/visualization/pcl_visualizer.h>
 template<template<class > class Distance, typename PointInT, typename FeatureT>
@@ -51,7 +52,7 @@ template<template<class > class Distance, typename PointInT, typename FeatureT>
             dir_pose << path << "/pose_" << descr_model.view_id << ".txt";
 
             Eigen::Matrix4f pose_matrix;
-            PersistenceUtils::readMatrixFromFile2 (dir_pose.str (), pose_matrix);
+            v4r::utils::readMatrixFromFile( dir_pose.str (), pose_matrix);
             std::pair<std::string, int> pair_model_view = std::make_pair (models->at (i)->id_, descr_model.view_id);
             poses_cache_[pair_model_view] = pose_matrix;
 
@@ -237,6 +238,23 @@ template<template<class > class Distance, typename PointInT, typename FeatureT>
     index->knnSearch (p, indices, distances, k, flann::SearchParams (kdtree_splits_));
   }
 
+
+template<template<class > class Distance, typename PointInT, typename FeatureT>
+  void
+  faat_pcl::rec_3d_framework::LocalRecognitionPipeline<Distance, PointInT, FeatureT>::reinitialize ()
+  {
+      PCL_WARN("Reinitialize LocalRecognitionPipeline\n");
+
+      flann_models_.clear();
+      poses_cache_.clear();
+      keypoints_cache_.clear();
+      normals_cache_.clear();
+
+      source_->generate(training_dir_);
+
+      initialize(false);
+  }
+
 template<template<class > class Distance, typename PointInT, typename FeatureT>
   void
   faat_pcl::rec_3d_framework::LocalRecognitionPipeline<Distance, PointInT, FeatureT>::initialize (bool force_retrain)
@@ -321,12 +339,12 @@ template<template<class > class Distance, typename PointInT, typename FeatureT>
 
             std::stringstream path_pose;
             path_pose << path << "/pose_" << v << ".txt";
-            PersistenceUtils::writeMatrixToFile (path_pose.str (), models->at (i)->poses_->at (v));
+            v4r::utils::writeMatrixToFile( path_pose.str (), models->at (i)->poses_->at (v));
 
             if(v < models->at (i)->self_occlusions_->size()) {
               std::stringstream path_entropy;
               path_entropy << path << "/entropy_" << v << ".txt";
-              PersistenceUtils::writeFloatToFile (path_entropy.str (), models->at (i)->self_occlusions_->at (v));
+              v4r::utils::writeFloatToFile (path_entropy.str (), models->at (i)->self_occlusions_->at (v));
             }
 
             //save keypoints and signatures to disk
@@ -497,6 +515,11 @@ template<template<class > class Distance, typename PointInT, typename FeatureT>
         estimator_->getKeypointIndices(keypoint_indices_);
       }
       std::cout << "Number of keypoints:" << keypoints_pointcloud->points.size () << std::endl;
+
+      for(size_t i=0; i<keypoints_pointcloud->points.size(); i++)
+      {
+          assert(pcl::isFinite(keypoints_pointcloud->points[i]));
+      }
     }
 
     keypoint_cloud_ = keypoints_pointcloud;
@@ -506,14 +529,12 @@ template<template<class > class Distance, typename PointInT, typename FeatureT>
     //feature matching and object hypotheses
     typename std::map<std::string, ObjectHypothesis<PointInT> > object_hypotheses;
     {
-      //double time_nn = 0;
-      double time_pk = 0;
+//      double time_pk = 0;
 
       flann::Matrix<int> indices;
       flann::Matrix<float> distances;
-      size_t k = knn_;
-      distances = flann::Matrix<float> (new float[k], 1, k);
-      indices = flann::Matrix<int> (new int[k], 1, k);
+      distances = flann::Matrix<float> (new float[knn_], 1, knn_);
+      indices = flann::Matrix<int> (new int[knn_], 1, knn_);
 
       Eigen::Matrix4f homMatrixPose;
       typename pcl::PointCloud<PointInT>::Ptr keypoints (new pcl::PointCloud<PointInT> ());
@@ -527,14 +548,8 @@ template<template<class > class Distance, typename PointInT, typename FeatureT>
       pcl::ScopeTime t("Generating object hypotheses");
       for (size_t idx = 0; idx < signatures->points.size (); idx++)
       {
-        {
-          //boost::posix_time::ptime start_time (boost::posix_time::microsec_clock::local_time ());
-          //nearestKSearch (flann_index_, signatures->points[idx].histogram, size_feat, k, indices, distances);
-          memcpy (&p.ptr ()[0], &signatures->points[idx].histogram[0], size_feat * sizeof(float));
-          nearestKSearch (flann_index_, p, k, indices, distances);
-          //boost::posix_time::ptime end_time = boost::posix_time::microsec_clock::local_time ();
-          //time_nn += (end_time - start_time).total_microseconds ();
-        }
+        memcpy (&p.ptr ()[0], &signatures->points[idx].histogram[0], size_feat * sizeof(float));
+        nearestKSearch (flann_index_, p, knn_, indices, distances);
 
         int dist = distances[0][0];
         if(dist > max_descriptor_distance_)
@@ -554,9 +569,9 @@ template<template<class > class Distance, typename PointInT, typename FeatureT>
               model_distances.push_back(dist);
           }
         } else {
-          flann_models_indices.reserve(k);
-          model_distances.reserve(k);
-          for(size_t ii=0; ii < k; ii++)
+          flann_models_indices.reserve(knn_);
+          model_distances.reserve(knn_);
+          for(size_t ii=0; ii < knn_; ii++)
           {
             flann_models_indices.push_back(indices[0][ii]);
             model_distances.push_back(distances[0][ii]);
@@ -568,14 +583,14 @@ template<template<class > class Distance, typename PointInT, typename FeatureT>
 
         for (size_t ii = 0; ii < flann_models_indices.size(); ii++)
         {
-          {
-            boost::posix_time::ptime start_time (boost::posix_time::microsec_clock::local_time ());
-            getPose (*(flann_models_.at (flann_models_indices[ii]).model), flann_models_.at (flann_models_indices[ii]).view_id, homMatrixPose);
-            getKeypoints (*(flann_models_.at (flann_models_indices[ii]).model), flann_models_.at (flann_models_indices[ii]).view_id, keypoints);
+//          {
+//            boost::posix_time::ptime start_time (boost::posix_time::microsec_clock::local_time ());
+           getPose (*(flann_models_.at (flann_models_indices[ii]).model), flann_models_.at (flann_models_indices[ii]).view_id, homMatrixPose);
+           getKeypoints (*(flann_models_.at (flann_models_indices[ii]).model), flann_models_.at (flann_models_indices[ii]).view_id, keypoints);
 
-            boost::posix_time::ptime end_time = boost::posix_time::microsec_clock::local_time ();
-            time_pk += (end_time - start_time).total_microseconds ();
-          }
+//            boost::posix_time::ptime end_time = boost::posix_time::microsec_clock::local_time ();
+//            time_pk += (end_time - start_time).total_microseconds ();
+//          }
 
           //assert(normals_model_view_cloud->points.size() == processed->points.size());
           //homMatrixPose should go from model to view (inverse from view to model)
@@ -618,16 +633,18 @@ template<template<class > class Distance, typename PointInT, typename FeatureT>
           typename std::map<std::string, ObjectHypothesis<PointInT> >::iterator it_map;
           if ((it_map = object_hypotheses.find (flann_models_.at (flann_models_indices[ii]).model->id_)) != object_hypotheses.end ())
           {
-            (*it_map).second.correspondences_pointcloud->points.push_back(model_keypoint);
+            it_map->second.correspondences_pointcloud->points.push_back(model_keypoint);
             //if(estimator_->needNormals())
             if((cg_algorithm_ && cg_algorithm_->getRequiresNormals()) || save_hypotheses_)
             {
-              (*it_map).second.normals_pointcloud->points.push_back(model_view_normal);
+              it_map->second.normals_pointcloud->points.push_back(model_view_normal);
             }
 
-            (*(*it_map).second.correspondences_to_inputcloud).push_back(pcl::Correspondence ((*it_map).second.correspondences_pointcloud->points.size()-1, static_cast<int> (idx), dist));
+            pcl::Correspondence c ( it_map->second.correspondences_pointcloud->points.size()-1, static_cast<int> (idx), dist);
+            it_map->second.correspondences_to_inputcloud->push_back(c);
 //            (*(*it_map).second.feature_distances_).push_back(dist);
-            (*it_map).second.indices_to_flann_models_.push_back(flann_models_indices[ii]);
+            it_map->second.indices_to_flann_models_.push_back(flann_models_indices[ii]);
+            assert(it_map->second.indices_to_flann_models_.size() == it_map->second.correspondences_to_inputcloud->size());
 //            (*it_map).second.num_corr_++;
           }
           else
@@ -664,6 +681,7 @@ template<template<class > class Distance, typename PointInT, typename FeatureT>
 //            oh.num_corr_ = 1;
             oh.model_ = flann_models_.at (flann_models_indices[ii]).model;
 
+            assert(oh.indices_to_flann_models_.size() == oh.correspondences_to_inputcloud->size());
             object_hypotheses[oh.model_->id_] = oh;
           }
         }
@@ -701,7 +719,7 @@ template<template<class > class Distance, typename PointInT, typename FeatureT>
       }
 
       //std::cout << "Time nearest searches:" << time_nn / 1000.f << " ms" << std::endl;
-      std::cout << "Time pose/keypoint get:" << time_pk / 1000.f << " ms" << std::endl;
+//      std::cout << "Time pose/keypoint get:" << time_pk / 1000.f << " ms" << std::endl;
     }
 
     if(save_hypotheses_)
@@ -953,7 +971,7 @@ template<template<class > class Distance, typename PointInT, typename FeatureT>
     std::string path = source_->getModelDescriptorDir (model, training_dir_, descr_name_);
     dir << path << "/pose_" << view_id << ".txt";
 
-    PersistenceUtils::readMatrixFromFile2 (dir.str (), pose_matrix);
+    v4r::utils::readMatrixFromFile( dir.str (), pose_matrix);
   }
 
 template<template<class > class Distance, typename PointInT, typename FeatureT>
