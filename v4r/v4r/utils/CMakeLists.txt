@@ -4,7 +4,11 @@ IF(V4R_UTILS)
 PROJECT(v4rUtils)
 
 find_package(Boost REQUIRED COMPONENTS filesystem regex)
-find_package(Eigen3 REQUIRED)
+#find_package(Eigen3 REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_search_module(EIGEN3 REQUIRED eigen3)
+include_directories(${EIGEN3_INCLUDE_DIRS})
+#include_directories("/usr/include/eigen3") 
 
 set(UTILS_CPP 
  distributions.cpp 
