@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+#
+# Implements the whole look for objects action:
+#
+# author: Markus Bajones, Michael Zillich
+#
 
 import rospy
 import actionlib
@@ -71,12 +76,9 @@ class SquirrelLookForObjectsImpl:
         do_saliency = rospy.ServiceProxy(
             '/squirrel_attention_itti', GetSaliencyItti)
         try:
-            print "A"
             rospy.wait_for_service('/squirrel_attention_itti', timeout=5)
-            print "B"
             # NOTE: loccation type 0 = CENTER
             result = do_saliency(self._point_cloud)
-            print "C"
             self._saliency_map = result.saliency_map
             self.set_publish_feedback('attention', 'done', 50)
         except (rospy.ROSException, rospy.ServiceException):
@@ -255,7 +257,8 @@ class SquirrelLookForObjectsImpl:
         self.setup_segmentation()
         #self.setup_visualization()
         # TODO: find a reasonable number of times to run here
-        for i in xrange(1, 5):
+        # for now: just once
+        for i in xrange(1, 1):
             self.run_segmenter_once()
             #self.run_visualization_once()
             self.run_classifier()

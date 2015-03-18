@@ -1,0 +1,45 @@
+/**
+ * squirrel_tracking.hpp
+ *
+ * @date March 2015
+ * @author Michael Zillich zillich@acin.tuwien.ac.at
+ */
+
+#ifndef SQUIRREL_TRACKING_HPP
+#define SQUIRREL_TRACKING_HPP
+
+#include <ros/ros.h>
+#include <sensor_msgs/Image.h>
+#include <sensor_msgs/CameraInfo.h>
+#include <v4r/KeypointSlam/ObjectTrackerMono.hh>
+#include <squirrel_object_perception_msgs/StartObjectTracking.h>
+#include <squirrel_object_perception_msgs/StopObjectTracking.h>
+
+class SquirrelTrackingNode
+{
+private:
+  ros::NodeHandle *n_;
+  kp::ObjectTrackerMono::Ptr tracker;
+  ros::ServiceServer startTrackingService_;
+  ros::Subscriber imageSubscriber;
+  ros::Subscriber caminfoSubscriber;
+  bool haveCameraInfo;
+  bool startedTracking;
+  std::string modelPath;
+  tf::TransformBroadcaster tfBroadcast;
+  std::string trackedObjectId;
+
+  void receiveCameraInfo(const sensor_msgs::CameraInfo::ConstPtr &msg);
+  void receiveImage(const sensor_msgs::Image::ConstPtr &msg);
+  bool startTracking(squirrel_object_perception_msgs::StartObjectTracking::Request &req, squirrel_object_perception_msgs::StartObjectTracking::Response &response);
+  bool stopTracking(squirrel_object_perception_msgs::StopObjectTracking::Request &req, squirrel_object_perception_msgs::StopObjectTracking::Response &response);
+
+public:
+  SquirrelTrackingNode();
+  ~SquirrelTrackingNode();
+
+  void initialize(int argc, char ** argv);
+};
+
+#endif
+

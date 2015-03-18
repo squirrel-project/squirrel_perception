@@ -127,7 +127,20 @@ add_dependencies(squirrel_segmentation_incremental v4r)
 target_link_libraries(squirrel_segmentation_visualization ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
 add_dependencies(squirrel_segmentation_visualization v4r)
 
-target_link_libraries(squirrel_segmentation ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
+target_link_libraries(squirrel_segmentation ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS}
+cholmod
+amd
+klu
+btf
+spqr
+camd
+ccolamd
+cxsparse
+umfpack
+colamd
+ldl
+csparse
+)
 add_dependencies(squirrel_segmentation v4r)
 
 target_link_libraries(segments_to_objects ${catkin_LIBRARIES} ${PCL_LIBRARIES})

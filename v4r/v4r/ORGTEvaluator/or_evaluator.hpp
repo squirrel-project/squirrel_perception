@@ -9,10 +9,11 @@
 #define OR_EVALUATOR_HPP_
 
 #include "or_evaluator.h"
-#include "pcl/octree/octree.h"
-#include "pcl/registration/icp.h"
+#include <pcl/octree/octree.h>
+#include <pcl/registration/icp.h>
 #include <pcl/common/angles.h>
-#include <v4r/ORUtils/filesystem_utils.h>
+#include <sstream>
+#include <v4r/utils/filesystem_utils.h>
 
 template<typename ModelPointT, typename SceneId>
 faat_pcl::rec_3d_framework::or_evaluator::OREvaluator<ModelPointT, SceneId>::OREvaluator ()
@@ -137,7 +138,7 @@ void faat_pcl::rec_3d_framework::or_evaluator::OREvaluator<ModelPointT, SceneId>
                 //std::stringstream occ_file;
                 //occ_file << gt_dir_ << "/" << gt_data_main_iterator->first << "_occlusion_" << model_name << "_" << scene_map_iterator->second[i]->inst_  << ".txt";
                 std::cout << occ_file.str() << std::endl;
-                writeFloatToFile(occ_file.str(), scene_map_iterator->second[i]->occlusion_);
+                v4r::utils::writeFloatToFile(occ_file.str(), scene_map_iterator->second[i]->occlusion_);
 
                 /*pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> model_handler (model_aligned, 125, 125, 125);
                 vis.addPointCloud(model_aligned, model_handler, "lolo");
@@ -216,7 +217,7 @@ void faat_pcl::rec_3d_framework::or_evaluator::OREvaluator<ModelPointT, SceneId>
                 final_trans = final_trans * trans;
 
                 scene_map_iterator->second[i]->transform_ = final_trans;
-                //writeMatrixToFile(pose_file.str(),model_inst->transform_);
+                //faat_pcl::utils::writeMatrixToFile(pose_file.str(),model_inst->transform_);
                 /*pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> model_handler (model_aligned, 125, 125, 125);
                 vis.addPointCloud(model_aligned, model_handler, "lolo");
                 vis.addPointCloud(scene, "scene");
@@ -244,10 +245,8 @@ faat_pcl::rec_3d_framework::or_evaluator::OREvaluator<ModelPointT, SceneId>::loa
   std::vector<std::string> model_files_wo_extension;
 
   {
-    std::string start = "";
     std::string ext = scene_file_extension_;
-    bf::path dir = scenes_dir_;
-    getModelsInDirectory (dir, start, scene_files, ext);
+    v4r::utils::getFilesInDirectory  (scenes_dir_, scene_files, "", ext, true);
     std::cout << "Number of scenes:" << scene_files.size() << std::endl;
     for(size_t i=0; i < scene_files.size(); i++)
     {
@@ -257,10 +256,8 @@ faat_pcl::rec_3d_framework::or_evaluator::OREvaluator<ModelPointT, SceneId>::loa
 
   //get models in models_dir
   {
-    std::string start = "";
     std::string ext = model_file_extension_;
-    bf::path dir = models_dir_;
-    getModelsInDirectory (dir, start, model_files, ext);
+    v4r::utils::getFilesInDirectory (models_dir_, model_files, "", ext, true);
 
     std::stringstream model_ext;
     model_ext << "." << model_file_extension_;
@@ -292,8 +289,6 @@ faat_pcl::rec_3d_framework::or_evaluator::OREvaluator<ModelPointT, SceneId>::loa
 
   for (size_t s = 0; s < scene_files.size (); s++)
   {
-
-
     if(ignore_list_.size() > 0)
     {
         //std::cout << "ignore list is not zero, looking for:" << scene_files[s] << std::endl;
@@ -340,13 +335,10 @@ faat_pcl::rec_3d_framework::or_evaluator::OREvaluator<ModelPointT, SceneId>::loa
 
       std::stringstream ss;
       ss << gt_dir_ << "/" << dir_without_scene_name;
-      bf::path model_file_path;
-      model_file_path = ss.str();
       std::vector<std::string> paths;
       std::stringstream pattern;
       pattern << seq_id << "_" <<  model_files_wo_extension[m] << "_.*.txt";
-      //std::cout << model_file_path.string() << "-------" << pattern.str() << std::endl;
-      faat_pcl::utils::getFilesInDirectory(model_file_path, paths, pattern.str());
+      v4r::utils::getFilesInDirectory(ss.str(), paths, "", pattern.str(), true);
       size_t max_inst = paths.size();
 
       for (size_t inst = 0; inst < max_inst; inst++)
@@ -363,7 +355,7 @@ faat_pcl::rec_3d_framework::or_evaluator::OREvaluator<ModelPointT, SceneId>::loa
           if(!found)
             std::cout << "Model id not found!!!" << model_files[m] << std::endl;
 
-          readMatrixFromFile2(pose_file.str(), model_inst->transform_);
+          v4r::utils::readMatrixFromFile( pose_file.str(), model_inst->transform_ );
           //std::cout << model_inst->transform_ << std::endl;
           model_inst->inst_ = inst;
 
@@ -373,7 +365,7 @@ faat_pcl::rec_3d_framework::or_evaluator::OREvaluator<ModelPointT, SceneId>::loa
           if (bf::exists (occ_path))
           {
             std::cout << occ_file.str () << std::endl;
-            readFloatFromFile(occ_file.str(), model_inst->occlusion_);
+            v4r::utils::readFloatFromFile(occ_file.str(), model_inst->occlusion_);
           }
           else
           {
@@ -454,8 +446,8 @@ faat_pcl::rec_3d_framework::or_evaluator::OREvaluator<ModelPointT, SceneId>::loa
 //            }
 //            vis.spin();
 
-            writeFloatToFile(occ_file.str(), model_inst->occlusion_);
-            //writeMatrixToFile(pose_file.str(),model_inst->transform_);*/
+            faat_pcl::utils::writeFloatToFile(occ_file.str(), model_inst->occlusion_);
+            //faat_pcl::utils::writeMatrixToFile(pose_file.str(),model_inst->transform_);*/
           }
 
           gt_data_main_iterator = gt_data_.find(scene_path);
@@ -499,10 +491,10 @@ faat_pcl::rec_3d_framework::or_evaluator::OREvaluator<ModelPointT, SceneId>::cou
   std::vector<std::string> model_files_wo_extension;
 
   {
-    std::string start = "";
     std::string ext = scene_file_extension_;
-    bf::path dir = scenes_dir_;
-    getModelsInDirectory( dir, start, scene_files, ext);
+    std::stringstream regex_ext_ss;
+    regex_ext_ss << ".*." << ext;
+    v4r::utils::getFilesInDirectory( scenes_dir_, scene_files, "", regex_ext_ss.str(), true);
     std::cout << "Number of scenes:" << scene_files.size() << std::endl;
     for(size_t i=0; i < scene_files.size(); i++)
     {
@@ -512,10 +504,10 @@ faat_pcl::rec_3d_framework::or_evaluator::OREvaluator<ModelPointT, SceneId>::cou
 
   //get models in models_dir
   {
-    std::string start = "";
     std::string ext = model_file_extension_;
-    bf::path dir = models_dir_;
-    getModelsInDirectory (dir, start, model_files, ext);
+    std::stringstream regex_ext_ss;
+    regex_ext_ss << ".*." << ext;
+    v4r::utils::getFilesInDirectory(models_dir_, model_files, "", regex_ext_ss.str(), true);
 
     std::stringstream model_ext;
     model_ext << "." << model_file_extension_;
@@ -682,7 +674,7 @@ faat_pcl::rec_3d_framework::or_evaluator::OREvaluator<ModelPointT, SceneId>::sav
         pose_file_name << out_dir << "/" << scene_name << "_" << model_id << "_" << inst << ".txt";
         std::cout << pose_file_name.str() << std::endl;
 
-        writeMatrixToFile (pose_file_name.str (),  rtrans.second->at(idx));
+        v4r::utils::writeMatrixToFile (pose_file_name.str (),  rtrans.second->at(idx));
         //std::cout << model_id << " " << (*recog_id)->id_ << std::endl;
       }
     }
@@ -1579,7 +1571,7 @@ faat_pcl::rec_3d_framework::or_evaluator::OREvaluator<ModelPointT, SceneId>::upd
 
   std::stringstream pose_file_out;
   pose_file_out << gt_dir_ << "/" << sid << "_" << m_id << "_" << m_idx << ".txt";
-  writeMatrixToFile (pose_file_out.str (), pose);
+  v4r::utils::writeMatrixToFile (pose_file_out.str (), pose);
 }
 
 template<typename ModelPointT, typename SceneId>
@@ -1830,8 +1822,6 @@ faat_pcl::rec_3d_framework::or_evaluator::OREvaluator<ModelPointT, SceneId>::cop
           //check in directory the highest instance id for this model
           std::stringstream ss;
           ss << out_dir << "/" << seq_id;
-          bf::path model_file_path;
-          model_file_path = ss.str();
 
           if(!replace_model_ext_)
           {
@@ -1844,7 +1834,7 @@ faat_pcl::rec_3d_framework::or_evaluator::OREvaluator<ModelPointT, SceneId>::cop
           std::stringstream pattern;
           pattern << scene_id << "_" <<  model_id << "_.*.txt";
 
-          faat_pcl::utils::getFilesInDirectory(model_file_path, paths, pattern.str());
+          v4r::utils::getFilesInDirectory(ss.str(), paths, "", pattern.str(), true);
           int inst = static_cast<int>(paths.size());
           std::cout << "current instances:" << inst << std::endl;
 
@@ -1858,7 +1848,7 @@ faat_pcl::rec_3d_framework::or_evaluator::OREvaluator<ModelPointT, SceneId>::cop
             pose_file_name << out_dir << "/" << scene_name << "_" << model_id << "_" << inst << ".txt";
             //std::cout << pose_file_name.str() << std::endl;
 
-            writeMatrixToFile (pose_file_name.str (), trans);
+            v4r::utils::writeMatrixToFile (pose_file_name.str (), trans);
             inst++;
           }
           scene_map_iterator++;

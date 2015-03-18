@@ -14,6 +14,7 @@
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/visualization/pcl_visualizer.h>
 #include "faat_3d_rec_framework_defines.h"
+#include <v4r/utils/filesystem_utils.h>
 
 namespace faat_pcl
 {
@@ -40,10 +41,8 @@ namespace faat_pcl
         using SourceT::path_;
         using SourceT::models_;
         using SourceT::createTrainingDir;
-        using SourceT::getModelsInDirectory;
         using SourceT::model_scale_;
         using SourceT::load_into_memory_;
-        using SourceT::getViewsFilenames;
         using SourceT::createClassAndModelDirectories;
 
         std::string model_structure_; //directory with all the views, indices, poses, etc...
@@ -113,7 +112,7 @@ namespace faat_pcl
               std::stringstream pose_file;
               pose_file << pathmodel.str () << "/" << file_replaced1;
               Eigen::Matrix4f pose;
-              PersistenceUtils::readMatrixFromFile2 (pose_file.str (), pose);
+              v4r::utils::readMatrixFromFile( pose_file.str (), pose);
 
               //the recognizer assumes transformation from M to CC - i think!
               Eigen::Matrix4f pose_inv = pose.inverse();
@@ -178,38 +177,7 @@ namespace faat_pcl
             pcl::copyPointCloud(*modell_voxelized, *model.normals_assembled_);
 
             //load views and poses
-            getViewsFilenames(trained_dir, model.view_filenames_, "view");
-            /*bf::directory_iterator end_itr;
-            for (bf::directory_iterator itr (trained_dir); itr != end_itr; ++itr)
-            {
-              //check if its a directory, then get models in it
-              if (!(bf::is_directory (*itr)))
-              {
-                //check that it is a ply file and then add, otherwise ignore..
-                std::vector < std::string > strs;
-                std::vector < std::string > strs_;
-
-#if BOOST_FILESYSTEM_VERSION == 3
-                std::string file = (itr->path ().filename ()).string();
-#else
-                std::string file = (itr->path ()).filename ();
-#endif
-
-                boost::split (strs, file, boost::is_any_of ("."));
-                boost::split (strs_, file, boost::is_any_of ("_"));
-
-                std::string extension = strs[strs.size () - 1];
-
-                if (extension == "pcd" && strs_[0] == "view")
-                {
-#if BOOST_FILESYSTEM_VERSION == 3
-                  model.view_filenames_.push_back ((itr->path ().filename ()).string());
-#else
-                  model.view_filenames_.push_back ((itr->path ()).filename ());
-#endif
-                }
-              }
-            }*/
+            v4r::utils::getFilesInDirectory(pathmodel.str (), model.view_filenames_, "", ".*view.*.pcd", false);
 
             if(load_into_memory_)
             {
@@ -241,9 +209,13 @@ namespace faat_pcl
             std::cout << model_structure_ << std::endl;
             std::cout << direc_ms.str() << std::endl;
 
-            bf::path dirr = direc_ms.str();
-            getViewsFilenames (dirr, view_filenames, view_prefix_);
-            std::cout << view_filenames.size () << std::endl;
+            std::stringstream view_prefix;
+            view_prefix << ".*" << view_prefix_ << ".*.pcd";
+
+            std::string vp = view_prefix.str();
+
+            v4r::utils::getFilesInDirectory(direc_ms.str(), view_filenames, "", vp, false);
+            std::cout << "Number of views" << model.class_ << " " << model.id_ << view_filenames.size () << std::endl;
 
             for (size_t i = 0; i < view_filenames.size (); i++)
             {
@@ -395,10 +367,10 @@ namespace faat_pcl
               boost::replace_last (file_replaced1, ".pcd", ".txt");
 
               Eigen::Matrix4f pose;
-              PersistenceUtils::readMatrixFromFile2 (file_replaced1, pose);
+              v4r::utils::readMatrixFromFile( file_replaced1, pose);
               std::stringstream path_pose;
               path_pose << direc.str () << "/pose_" << i << ".txt";
-              faat_pcl::rec_3d_framework::PersistenceUtils::writeMatrixToFile (path_pose.str (), pose);
+              v4r::utils::writeMatrixToFile( path_pose.str (), pose);
             }
 
             loadOrGenerate (dir, model_path, model);
@@ -406,58 +378,21 @@ namespace faat_pcl
           }
         }
 
-        bool
-        isleafDirectory (bf::path & path)
-        {
-          bf::directory_iterator end_itr;
-          bool no_dirs_inside = true;
-          for (bf::directory_iterator itr (path); itr != end_itr; ++itr)
-          {
-            if (bf::is_directory (*itr))
-            {
-              no_dirs_inside = false;
-            }
-          }
+//        bool
+//        isleafDirectory (bf::path & path)
+//        {
+//          bf::directory_iterator end_itr;
+//          bool no_dirs_inside = true;
+//          for (bf::directory_iterator itr (path); itr != end_itr; ++itr)
+//          {
+//            if (bf::is_directory (*itr))
+//            {
+//              no_dirs_inside = false;
+//            }
+//          }
 
-          return no_dirs_inside;
-        }
-
-        void
-        getFilesInDirectory (bf::path & dir, std::string & rel_path_so_far, std::vector<std::string> & relative_paths, std::string & ext)
-        {
-          bf::directory_iterator end_itr;
-          for (bf::directory_iterator itr (dir); itr != end_itr; ++itr)
-          {
-            //check if its a directory, then ignore
-            if (bf::is_directory (*itr))
-            {
-
-            }
-            else
-            {
-              std::vector < std::string > strs;
-#if BOOST_FILESYSTEM_VERSION == 3
-              std::string file = (itr->path ().filename ()).string();
-#else
-              std::string file = (itr->path ()).filename ();
-#endif
-
-              boost::split (strs, file, boost::is_any_of ("."));
-              std::string extension = strs[strs.size () - 1];
-
-              if (extension.compare (ext) == 0)
-              {
-#if BOOST_FILESYSTEM_VERSION == 3
-                std::string path = rel_path_so_far + (itr->path ().filename ()).string();
-#else
-                std::string path = rel_path_so_far + (itr->path ()).filename ();
-#endif
-
-                relative_paths.push_back (path);
-              }
-            }
-          }
-        }
+//          return no_dirs_inside;
+//        }
 
         /**
          * \brief Creates the model representation of the training set, generating views if needed
@@ -471,11 +406,7 @@ namespace faat_pcl
 
           //get models in directory
           std::vector < std::string > files;
-          std::string start = "";
-          bf::path dir = path_;
-          std::string ext = "pcd";
-
-          getFilesInDirectory (dir, start, files, ext);
+          v4r::utils::getFilesInDirectory (path_, files, "", ".*.pcd",  false);
           std::cout << files.size() << std::endl;
 
           models_.reset (new std::vector<ModelTPtr>);
