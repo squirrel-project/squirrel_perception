@@ -29,8 +29,10 @@ SquirrelTrackingNode::~SquirrelTrackingNode()
 
 void SquirrelTrackingNode::initialize(int argc, char ** argv)
 {
-  ros::init(argc, argv, "squirrel_tracking");
+  ROS_INFO("initialize");
+  ROS_INFO("ros::init called");
   n_ = new ros::NodeHandle("~");
+  ROS_INFO("node handle created");
   n_->getParam("model_path", modelPath);
   startTrackingService_ = n_->advertiseService("/squirrel_start_object_tracking", &SquirrelTrackingNode::startTracking, this);
   ROS_INFO("Ready to get service calls...");
@@ -42,6 +44,7 @@ void SquirrelTrackingNode::initialize(int argc, char ** argv)
 
 bool SquirrelTrackingNode::startTracking(squirrel_object_perception_msgs::StartObjectTracking::Request &req, squirrel_object_perception_msgs::StartObjectTracking::Response &response)
 {
+  bool ret = false;
   if(haveCameraInfo)
   {
     if(!startedTracking)
@@ -49,12 +52,15 @@ bool SquirrelTrackingNode::startTracking(squirrel_object_perception_msgs::StartO
       trackedObjectId = req.object_id.data;
       // HACK: actually we hage to get the model name from the scene database
       // for now, we just take the objectId as the model name
-      trackedObjectId = modelPath + "/" + trackedObjectId + ".ao";
+      string filename = modelPath + "/" + trackedObjectId + "/" + trackedObjectId + ".ao";
+      ROS_INFO("SquirrelTrackingNode::startTracking: loading '%s'", filename.c_str());
       kp::ArticulatedObject::Ptr model(new kp::ArticulatedObject());
-      kp::io::read(trackedObjectId, model);
+      kp::io::read(filename, model);
       tracker->setObjectModel(model);
       imageSubscriber = n_->subscribe("/kinect/rgb/image_rect_color", 1, &SquirrelTrackingNode::receiveImage, this);
       startedTracking = true;
+      ret = true;
+      ROS_INFO("SquirrelTrackingNode::startTracking: started");
     }
     else
     {
@@ -65,6 +71,7 @@ bool SquirrelTrackingNode::startTracking(squirrel_object_perception_msgs::StartO
   {
     ROS_ERROR("SquirrelTrackingNode::startTracking: missing camera calibration");
   }
+  return ret;
 }
 
 bool SquirrelTrackingNode::stopTracking(squirrel_object_perception_msgs::StopObjectTracking::Request &req, squirrel_object_perception_msgs::StopObjectTracking::Response &response)
@@ -72,6 +79,7 @@ bool SquirrelTrackingNode::stopTracking(squirrel_object_perception_msgs::StopObj
   trackedObjectId = "";
   startedTracking = false;
   imageSubscriber.shutdown();
+  return true;
 }
 
 void SquirrelTrackingNode::receiveCameraInfo(const sensor_msgs::CameraInfo::ConstPtr &msg)
@@ -89,6 +97,8 @@ void SquirrelTrackingNode::receiveCameraInfo(const sensor_msgs::CameraInfo::Cons
 
   // we only need that once, so shutdown now
   caminfoSubscriber.shutdown();
+
+  ROS_INFO("SquirrelTrackingNode::receiveCameraInfo: have camera parameters");
 }
 
 void SquirrelTrackingNode::receiveImage(const sensor_msgs::Image::ConstPtr &msg)
@@ -122,6 +132,7 @@ void SquirrelTrackingNode::receiveImage(const sensor_msgs::Image::ConstPtr &msg)
 
 int main(int argc, char **argv)
 {
+  ros::init(argc, argv, "squirrel_tracking");
   SquirrelTrackingNode tracker;
   tracker.initialize(argc, argv);
 
