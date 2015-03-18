@@ -44,7 +44,7 @@ add_subdirectory(KeypointTools)
 #add_subdirectory(MultiViewModeling)
 #add_subdirectory(NURSS)
 #add_subdirectory(ObjectModeling)
-#add_subdirectory(on_nurbs)   HACK
+add_subdirectory(on_nurbs)
 #add_subdirectory(OnNurbsAddOns)
 add_subdirectory(OREdgeDetector)
 #add_subdirectory(ORGTEvaluator)
@@ -61,10 +61,10 @@ add_subdirectory(ORFramework)
 #add_subdirectory(Superquadrics)
 #add_subdirectory(SuperquadricsAri)
 #add_subdirectory(SurfaceBoundary)
-#add_subdirectory(SurfaceClustering)   HACK
-#add_subdirectory(SurfaceModeling)   HACK
-#add_subdirectory(SurfaceRelations)   HACK
-#add_subdirectory(SurfaceUtils)   HACK
+add_subdirectory(SurfaceClustering)
+add_subdirectory(SurfaceModeling)
+add_subdirectory(SurfaceRelations)
+add_subdirectory(SurfaceUtils)
 add_subdirectory(svm)
 add_subdirectory(SVM)
 add_subdirectory(TomGine)
@@ -91,5 +91,5 @@ add_subdirectory(AttentionModule)
 #add_subdirectory(EPEvaluation)
 #add_subdirectory(matas)
 #add_subdirectory(vs3)
-#add_subdirectory(SurfaceSegmenter)   HACK
+add_subdirectory(SurfaceSegmenter)
 #add_subdirectory(VoxelGridFilter)
