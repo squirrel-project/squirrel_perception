@@ -11,6 +11,8 @@ find_package(catkin REQUIRED COMPONENTS roscpp rospy cv_bridge squirrel_object_p
 # find_package(Boost REQUIRED COMPONENTS system)
 find_package(PCL 1.7 REQUIRED)
 find_package(OpenCV 2.4 REQUIRED)
+#find_package(Boost 1.54.0 EXACT REQUIRED COMPONENTS thread program_options serialization regex filesystem system)
+#MESSAGE("************++ boost version: " ${Boost_FOUND} " ver: " ${Boost_LIB_VERSION})
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -88,6 +90,8 @@ catkin_package(
 ## Build ##
 ###########
 
+add_definitions(-DEIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET)
+
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(include ${catkin_INCLUDE_DIRS} ${V4R_INCLUDE_DIR} ${PCL_INCLUDE_DIRS})
@@ -108,7 +112,23 @@ add_executable(squirrel_tracking src/squirrel_tracking.cpp)
 # target_link_libraries(squirrel_tracking_node
 #   ${catkin_LIBRARIES}
 # )
-target_link_libraries(squirrel_tracking ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
+target_link_libraries(squirrel_tracking ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS} ceres miniglog
+cholmod
+amd
+klu
+btf
+spqr
+camd
+ccolamd
+cxsparse
+umfpack
+colamd
+ldl
+csparse
+blas
+lapack
+boost_thread boost_program_options boost_serialization boost_regex boost_filesystem boost_system
+)
 add_dependencies(squirrel_tracking v4r)
 
 #############

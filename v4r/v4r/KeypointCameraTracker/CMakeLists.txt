@@ -6,6 +6,7 @@ include_directories(${OPENCV_INCLUDE_DIRS})
 link_directories(${OPENCV_LIBRARY_DIRS})
 
 
+set(EIGEN_INCLUDE_DIR "/usr/include/eigen3")
 FIND_PACKAGE(Ceres)
 IF(${Ceres_FOUND})
   INCLUDE_DIRECTORIES(${CERES_INCLUDES})
