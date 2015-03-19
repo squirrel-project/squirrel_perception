@@ -21,6 +21,7 @@ private:
   ros::NodeHandle *n_;
   kp::ObjectTrackerMono::Ptr tracker;
   ros::ServiceServer startTrackingService_;
+  ros::ServiceServer stopTrackingService_;
   ros::Subscriber imageSubscriber;
   ros::Subscriber caminfoSubscriber;
   bool haveCameraInfo;
@@ -28,6 +29,8 @@ private:
   std::string modelPath;
   tf::TransformBroadcaster tfBroadcast;
   std::string trackedObjectId;
+  cv::Mat intrinsic;
+  cv::Mat dist;
 
   void receiveCameraInfo(const sensor_msgs::CameraInfo::ConstPtr &msg);
   void receiveImage(const sensor_msgs::Image::ConstPtr &msg);

@@ -131,6 +131,7 @@ public:
   std::vector<GlobalPoint> points;  // global point array
 
   Object() {};
+  virtual ~Object() {};
 
   /** add a new global 3d point **/
   inline unsigned addPt(const Eigen::Vector3f &pt, const Eigen::Vector3f &n=Eigen::Vector3f(std::numeric_limits<double>::quiet_NaN(),std::numeric_limits<double>::quiet_NaN(),std::numeric_limits<double>::quiet_NaN())) {
