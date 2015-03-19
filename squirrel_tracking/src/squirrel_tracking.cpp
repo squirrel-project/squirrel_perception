@@ -15,11 +15,8 @@ SquirrelTrackingNode::SquirrelTrackingNode()
   n_ = 0;
   haveCameraInfo = false;
   startedTracking = false;
-
-  kp::ObjectTrackerMono::Parameter param;
-  param.kt_param.plk_param.use_ncc = true;
-  param.kt_param.plk_param.ncc_residual = .6;
-  tracker.reset(new kp::ObjectTrackerMono(param));
+  intrinsic = cv::Mat::zeros(3, 3, CV_32F);
+  dist = cv::Mat::zeros(4, 1, CV_32F);
 }
 
 SquirrelTrackingNode::~SquirrelTrackingNode()
@@ -35,6 +32,7 @@ void SquirrelTrackingNode::initialize(int argc, char ** argv)
   ROS_INFO("node handle created");
   n_->getParam("model_path", modelPath);
   startTrackingService_ = n_->advertiseService("/squirrel_start_object_tracking", &SquirrelTrackingNode::startTracking, this);
+  stopTrackingService_ = n_->advertiseService("/squirrel_stop_object_tracking", &SquirrelTrackingNode::stopTracking, this);
   ROS_INFO("Ready to get service calls...");
 
   caminfoSubscriber = n_->subscribe("/kinect/rgb/camera_info", 1, &SquirrelTrackingNode::receiveCameraInfo, this);
@@ -49,6 +47,12 @@ bool SquirrelTrackingNode::startTracking(squirrel_object_perception_msgs::StartO
   {
     if(!startedTracking)
     {
+      kp::ObjectTrackerMono::Parameter param;
+      param.kt_param.plk_param.use_ncc = true;
+      param.kt_param.plk_param.ncc_residual = .6;
+      tracker.reset(new kp::ObjectTrackerMono(param));
+      tracker->setCameraParameter(intrinsic, dist);
+
       trackedObjectId = req.object_id.data;
       // HACK: actually we hage to get the model name from the scene database
       // for now, we just take the objectId as the model name
@@ -76,23 +80,28 @@ bool SquirrelTrackingNode::startTracking(squirrel_object_perception_msgs::StartO
 
 bool SquirrelTrackingNode::stopTracking(squirrel_object_perception_msgs::StopObjectTracking::Request &req, squirrel_object_perception_msgs::StopObjectTracking::Response &response)
 {
-  trackedObjectId = "";
-  startedTracking = false;
-  imageSubscriber.shutdown();
+  if(startedTracking)
+  {
+    trackedObjectId = "";
+    startedTracking = false;
+    imageSubscriber.shutdown();
+    ROS_INFO("SquirrelTrackingNode::stopTracking: stopped");
+  }
+  else
+  {
+    ROS_ERROR("SquirrelTrackingNode::stopTracking: currently not tracking an object");
+  }
   return true;
 }
 
 void SquirrelTrackingNode::receiveCameraInfo(const sensor_msgs::CameraInfo::ConstPtr &msg)
 {
-  cv::Mat intrinsic = cv::Mat::zeros(3, 3, CV_32F);
-  cv::Mat dist = cv::Mat::zeros(4, 1, CV_32F);
   intrinsic.at<float>(0, 0) = msg->K[0];
   intrinsic.at<float>(0, 2) = msg->K[2];
   intrinsic.at<float>(1, 1) = msg->K[4];
   intrinsic.at<float>(1, 2) = msg->K[5];
   intrinsic.at<float>(2, 2) = 1.;
   // NOTE: assume kinect distortion parameters to be 0
-  tracker->setCameraParameter(intrinsic, dist);
   haveCameraInfo = true;
 
   // we only need that once, so shutdown now

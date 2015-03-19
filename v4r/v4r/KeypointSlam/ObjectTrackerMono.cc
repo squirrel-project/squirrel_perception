@@ -293,6 +293,11 @@ void ObjectTrackerMono::setObjectCameraParameter(const cv::Mat &_intrinsic, cons
  */
 void ObjectTrackerMono::setObjectModel(const Object::Ptr &_model)
 {
+  conf = 0;
+  conf_cnt = 0;
+  not_conf_cnt = 1000;
+  view.reset(new ObjectView(0));
+
   model = _model;
 
   // set camera parameter
