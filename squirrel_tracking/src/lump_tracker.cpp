@@ -105,7 +105,6 @@ void SquirrelTrackingNode::receivePointcloud(const sensor_msgs::PointCloud2::Con
   seg.setMaxIterations (100);
   seg.setDistanceThreshold (0.02);
 
-  int i=0, nr_points = (int) cloud_filtered->points.size ();
   // Segment the largest planar component from the remaining cloud
   seg.setInputCloud (cloud_filtered);
   seg.segment (*inliers, *coefficients);
@@ -148,40 +147,44 @@ void SquirrelTrackingNode::receivePointcloud(const sensor_msgs::PointCloud2::Con
   ec.extract (cluster_indices);
 
   std::list<pcl::PointCloud<pcl::PointXYZ>::Ptr> clusters;
-  int j = 0;
   for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
   {
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZ>);
     for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); ++pit)
-      cloud_cluster->points.push_back (cloud_filtered->points[*pit]); //*
+      cloud_cluster->points.push_back (cloud_filtered->points[*pit]);
     cloud_cluster->width = cloud_cluster->points.size ();
     cloud_cluster->height = 1;
     cloud_cluster->is_dense = true;
     clusters.push_back(cloud_cluster);
 
     std::cout << ros::this_node::getName() << "PointCloud representing the Cluster: " << cloud_cluster->points.size () << " data points." << std::endl;
-    j++;
   }
 
   //ROS_INFO("%s: found all clusters", ros::this_node::getName().c_str());
 
+  // transform to base, as this is more convenient to conduct sanity checks
+  for(std::list<pcl::PointCloud<pcl::PointXYZ>::Ptr>::iterator it = clusters.begin(); it != clusters.end(); it++)
+    tranformCluster2base_link(*it);
+
   // now select the cluster that is nearest (in base_link, i.e. min x)
-  j = 0;
   pcl::PointCloud<pcl::PointXYZ>::Ptr selected;
   double x_min = 1000.;
   for(std::list<pcl::PointCloud<pcl::PointXYZ>::Ptr>::iterator it = clusters.begin(); it != clusters.end(); it++)
   {
-    Eigen::Vector4f centroid;
-    Eigen::Matrix3f covariance_matrix;
-    pcl::computeMeanAndCovarianceMatrix(**it, covariance_matrix, centroid);
-    geometry_msgs::PoseStamped pose_base = kinect2base_link(centroid[0], centroid[1], centroid[2]);
-    // sanity check: only push things that are near enough
-    if(pose_base.pose.position.x < MAX_OBJECT_DIST)
+    if(isValidCluster(*it))
     {
-      if(pose_base.pose.position.x < x_min)
+      Eigen::Vector4f centroid;
+      Eigen::Matrix3f covariance_matrix;
+      pcl::computeMeanAndCovarianceMatrix(**it, covariance_matrix, centroid);
+      //geometry_msgs::PoseStamped pose_base = kinect2base_link(centroid[0], centroid[1], centroid[2]);
+      // sanity check: only push things that are near enough
+      if(centroid[0] < MAX_OBJECT_DIST)
       {
-        x_min = centroid[2];
-        selected = *it;
+        if(centroid[0] < x_min)
+        {
+          x_min = centroid[0];
+          selected = *it;
+        }
       }
     }
   }
@@ -190,14 +193,15 @@ void SquirrelTrackingNode::receivePointcloud(const sensor_msgs::PointCloud2::Con
     Eigen::Vector4f centroid;
     Eigen::Matrix3f covariance_matrix;
     pcl::computeMeanAndCovarianceMatrix(*selected, covariance_matrix, centroid);
+    geometry_msgs::PoseStamped pose = base_link2kinect(centroid[0], centroid[1], centroid[2]);
     tf::Transform transform;
-    tf::Vector3 p(centroid[0], centroid[1], centroid[2]);
+    tf::Vector3 p(pose.pose.position.x, pose.pose.position.y, pose.pose.position.z);
     tf::Quaternion q(0., 0., 0., 1.);
     transform.setOrigin(p);
     transform.setRotation(q);
     tfBroadcast.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "kinect_depth_optical_frame", "lump"));
 
-    ROS_INFO("%s: cluster %s: (%.3f %.3f %.3f)", ros::this_node::getName().c_str(), "lump",
+    ROS_INFO("%s: cluster %s (in base_link): (%.3f %.3f %.3f)", ros::this_node::getName().c_str(), "lump",
       centroid[0], centroid[1], centroid[2]);
     /*geometry_msgs::PoseStamped pose_base = kinect2base_link(centroid[0], centroid[1], centroid[2]);
     ROS_INFO("%s: cluster in base_link %s: (%.3f %.3f %.3f)", ros::this_node::getName().c_str(), "lump",
@@ -211,26 +215,80 @@ void SquirrelTrackingNode::receivePointcloud(const sensor_msgs::PointCloud2::Con
 
 geometry_msgs::PoseStamped SquirrelTrackingNode::kinect2base_link(double x, double y, double z)
 {
-  geometry_msgs::PoseStamped Ekin, Eloc;
-
-  Ekin.pose.position.x=x;
-  Ekin.pose.position.y=y;
-  Ekin.pose.position.z=z;
-  Ekin.pose.orientation.x=0;
-  Ekin.pose.orientation.y=0;
-  Ekin.pose.orientation.z=0;
-  Ekin.pose.orientation.w=1;
-  Ekin.header.frame_id="/kinect_depth_optical_frame";
-  try {
-      tf_listener.waitForTransform("/kinect_depth_optical_frame","/base_link", ros::Time::now(), ros::Duration(0.2));
-      tf_listener.transformPose("/base_link",Ekin,Eloc);
-  } catch (tf::TransformException& ex) {
-      std::string ns = ros::this_node::getNamespace();
-      std::string node_name = ros::this_node::getName();
-      ROS_ERROR("%s/%s: %s", ns.c_str(), node_name.c_str(), ex.what());
-  }
-  return Eloc;
+  return transform(x, y, z, "/kinect_depth_optical_frame", "/base_link");
 }
+
+geometry_msgs::PoseStamped SquirrelTrackingNode::base_link2kinect(double x, double y, double z)
+{
+  return transform(x, y, z, "/base_link", "/kinect_depth_optical_frame");
+}
+
+geometry_msgs::PoseStamped SquirrelTrackingNode::transform(double x, double y, double z, const std::string &from, const std::string &to)
+{
+  geometry_msgs::PoseStamped before, after;
+
+  before.pose.position.x = x;
+  before.pose.position.y = y;
+  before.pose.position.z = z;
+  before.pose.orientation.x = 0;
+  before.pose.orientation.y = 0;
+  before.pose.orientation.z = 0;
+  before.pose.orientation.w = 1;
+  before.header.frame_id = from;
+  try
+  {
+    tf_listener.waitForTransform(from, to, ros::Time::now(), ros::Duration(0.2));
+    tf_listener.transformPose(to, before, after);
+  }
+  catch (tf::TransformException& ex)
+  {
+    ROS_ERROR("%s: %s", ros::this_node::getName().c_str(), ex.what());
+  }
+  return after;
+}
+
+/**
+ * Transform a cluster from kinect to base coordinates.
+ * NOTE: I am not sure if this is really efficient.
+ */
+void SquirrelTrackingNode::tranformCluster2base_link(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_cluster)
+{
+  try
+  {
+    tf_listener.waitForTransform("/kinect_depth_optical_frame","/base_link", ros::Time::now(), ros::Duration(0.2));
+    for(size_t i = 0; i < cloud_cluster->points.size(); i++)
+    {
+      geometry_msgs::PointStamped p, pb;
+      p.point.x = cloud_cluster->points[i].x;
+      p.point.y = cloud_cluster->points[i].y;
+      p.point.z = cloud_cluster->points[i].z;
+      p.header.frame_id = "/kinect_depth_optical_frame";
+      tf_listener.transformPoint("/base_link", p, pb);
+      cloud_cluster->points[i].x = pb.point.x;
+      cloud_cluster->points[i].y = pb.point.y;
+      cloud_cluster->points[i].z = pb.point.z;
+    }
+  }
+  catch (tf::TransformException& ex)
+  {
+    ROS_ERROR("%s: %s", ros::this_node::getName().c_str(), ex.what());
+  }
+}
+
+/**
+ * Perform sanity checks to rule out stupid clusters like walls, people ..
+ */
+bool SquirrelTrackingNode::isValidCluster(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_cluster)
+{
+  double z_max = 0.;
+  for(size_t i = 0; i < cloud_cluster->points.size(); i++)
+    if(cloud_cluster->points[i].z > z_max)
+      z_max = cloud_cluster->points[i].z;
+  if(z_max > MAX_OBJECT_HEIGHT)
+    return false;
+  return true;
+}
+
 
 int main(int argc, char **argv)
 {
