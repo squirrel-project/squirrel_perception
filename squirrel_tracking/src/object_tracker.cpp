@@ -1,12 +1,16 @@
+/**
+ * This wraps the mono image object tracker from the v4r/KeypointSlam package by Hannes Prankl.
+ *
+ * @author Michael Zillich
+ * @date 2015-03
+ */
 
 #include <v4r/KeypointSlam/io.hh>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
 #include <tf/transform_broadcaster.h>
-//#include <opencv2/imgproc/imgproc.hpp>
-//#include <opencv2/highgui/highgui.hpp>
-#include <squirrel_tracking/squirrel_tracking.hpp>
+#include <squirrel_tracking/object_tracker.hpp>
 
 using namespace std;
 
@@ -59,12 +63,18 @@ bool SquirrelTrackingNode::startTracking(squirrel_object_perception_msgs::StartO
       string filename = modelPath + "/" + trackedObjectId + "/" + trackedObjectId + ".ao";
       ROS_INFO("SquirrelTrackingNode::startTracking: loading '%s'", filename.c_str());
       kp::ArticulatedObject::Ptr model(new kp::ArticulatedObject());
-      kp::io::read(filename, model);
-      tracker->setObjectModel(model);
-      imageSubscriber = n_->subscribe("/kinect/rgb/image_rect_color", 1, &SquirrelTrackingNode::receiveImage, this);
-      startedTracking = true;
-      ret = true;
-      ROS_INFO("SquirrelTrackingNode::startTracking: started");
+      if(kp::io::read(filename, model))
+      {
+        tracker->setObjectModel(model);
+        imageSubscriber = n_->subscribe("/kinect/rgb/image_rect_color", 5, &SquirrelTrackingNode::receiveImage, this);
+        startedTracking = true;
+        ret = true;
+        ROS_INFO("SquirrelTrackingNode::startTracking: started");
+      }
+      else
+      {
+        ROS_ERROR("SquirrelTrackingNode::startTracking: failed to load object model '%s'", filename.c_str());
+      }
     }
     else
     {
@@ -116,6 +126,7 @@ void SquirrelTrackingNode::receiveImage(const sensor_msgs::Image::ConstPtr &msg)
   double conf;
   cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(msg);
   cv::Mat image = cv_ptr->image;
+  // ROS_INFO("squirrel_tracking: new image");
   if(tracker->track(image, pose, conf))
   {
     ROS_INFO("squirrel_tracking: conf %.3f, pos %.3f %.3f %.3f", conf, pose(0,3), pose(1,3), pose(2,3));
@@ -136,12 +147,18 @@ void SquirrelTrackingNode::receiveImage(const sensor_msgs::Image::ConstPtr &msg)
     transform.setOrigin(p);
     transform.setRotation(q);
     tfBroadcast.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "kinect_rgb_optical_frame", trackedObjectId));
+    // for debugging
+    // cv::imwrite("tracking.jpg", image);
+  }
+  else
+  {
+    // ROS_INFO("squirrel_tracking: tracking failed for this image");
   }
 }
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "squirrel_tracking");
+  ros::init(argc, argv, "object_tracker");
   SquirrelTrackingNode tracker;
   tracker.initialize(argc, argv);
 
