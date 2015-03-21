@@ -12,7 +12,6 @@ find_package(catkin REQUIRED COMPONENTS roscpp rospy cv_bridge squirrel_object_p
 find_package(PCL 1.7 REQUIRED)
 find_package(OpenCV 2.4 REQUIRED)
 #find_package(Boost 1.54.0 EXACT REQUIRED COMPONENTS thread program_options serialization regex filesystem system)
-#MESSAGE("************++ boost version: " ${Boost_FOUND} " ver: " ${Boost_LIB_VERSION})
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -102,7 +101,8 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${V4R_INCLUDE_DIR} ${PCL_INCL
 # )
 
 ## Declare a cpp executable
-add_executable(squirrel_tracking src/squirrel_tracking.cpp)
+add_executable(object_tracker src/object_tracker.cpp)
+add_executable(lump_tracker src/lump_tracker.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
@@ -112,7 +112,7 @@ add_executable(squirrel_tracking src/squirrel_tracking.cpp)
 # target_link_libraries(squirrel_tracking_node
 #   ${catkin_LIBRARIES}
 # )
-target_link_libraries(squirrel_tracking ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS} ceres miniglog
+target_link_libraries(object_tracker ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS} ceres miniglog
 cholmod
 amd
 klu
@@ -129,7 +129,9 @@ blas
 lapack
 boost_thread boost_program_options boost_serialization boost_regex boost_filesystem boost_system
 )
-add_dependencies(squirrel_tracking v4r)
+add_dependencies(object_tracker v4r)
+
+target_link_libraries(lump_tracker ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
 
 #############
 ## Install ##
