@@ -258,7 +258,7 @@ class SquirrelLookForObjectsImpl:
         #self.setup_visualization()
         # TODO: find a reasonable number of times to run here
         # for now: just once
-        for i in xrange(1, 1):
+        for i in xrange(1, 2):
             self.run_segmenter_once()
             #self.run_visualization_once()
             self.run_classifier()
