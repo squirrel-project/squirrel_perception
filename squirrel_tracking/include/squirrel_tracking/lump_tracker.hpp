@@ -22,6 +22,7 @@ class SquirrelTrackingNode
 private:
   typedef pcl::PointXYZ PointT;
   static const double MAX_OBJECT_DIST = 0.8;
+  static const double MAX_OBJECT_HEIGHT = 0.25;
 
   ros::NodeHandle *n_;
   ros::ServiceServer startTrackingService_;
@@ -33,6 +34,11 @@ private:
   tf::TransformListener tf_listener;
 
   geometry_msgs::PoseStamped kinect2base_link(double x, double y, double z);
+  geometry_msgs::PoseStamped base_link2kinect(double x, double y, double z);
+  geometry_msgs::PoseStamped transform(double x, double y, double z, const std::string &from, const std::string &to);
+  void tranformCluster2base_link(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_cluster);
+  bool isValidCluster(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_cluster);
+
   void receivePointcloud(const sensor_msgs::PointCloud2::ConstPtr &msg);
   bool startTracking(squirrel_object_perception_msgs::StartObjectTracking::Request &req, squirrel_object_perception_msgs::StartObjectTracking::Response &response);
   bool stopTracking(squirrel_object_perception_msgs::StopObjectTracking::Request &req, squirrel_object_perception_msgs::StopObjectTracking::Response &response);
