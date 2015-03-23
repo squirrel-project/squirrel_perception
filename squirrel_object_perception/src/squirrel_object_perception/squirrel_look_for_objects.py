@@ -129,9 +129,10 @@ class SquirrelLookForObjectsImpl:
                 'squirrel_segments_to_objects', timeout=5)
             obj_result = do_objects(self._point_cloud, seg_result.clusters_indices)
             print "found " + str(len(obj_result.poses)) + " object(s)"
-            #print "object 0 has " + str(len(seg_result.clusters_indices[0].data)) + " points"
+            # print "object 0 has " + str(len(seg_result.clusters_indices[0].data)) + " points"
             # segment once always returns 1 or 0 objects
-            if len(obj_result.poses) >= 1:
+            if len(obj_result.poses) > 0:
+              print "appending object 0"
               obj = Object()
               obj._id = self.get_unique_object_id()
               obj._category = "thing"
@@ -223,6 +224,9 @@ class SquirrelLookForObjectsImpl:
         # initialize feedback
         self.set_publish_feedback('init', 'done', 5)
 
+        # clear results
+        self._objects = []
+
         # check that preempt has not been requested by the client
         if self.as_squirrel_object_perception.is_preempt_requested():
             rospy.loginfo('%s: Preempted' % self._action_name)
@@ -261,7 +265,7 @@ class SquirrelLookForObjectsImpl:
         for i in xrange(1, 2):
             self.run_segmenter_once()
             #self.run_visualization_once()
-            self.run_classifier()
+            #self.run_classifier() TODO: this fails and hangs
         self.set_publish_feedback('segmentation', 'done', 75)
         self.set_publish_feedback('classification', 'done', 97)
 

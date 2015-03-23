@@ -124,7 +124,7 @@ void SquirrelTrackingNode::receivePointcloud(const sensor_msgs::PointCloud2::Con
 
   // Get the points associated with the planar surface
   extract.filter (*cloud_plane);
-  std::cout << ros::this_node::getName() << ": PointCloud representing the planar component: " << cloud_plane->points.size () << " data points." << std::endl;
+  //std::cout << ros::this_node::getName() << ": PointCloud representing the planar component: " << cloud_plane->points.size () << " data points." << std::endl;
 
   // Remove the planar inliers, extract the rest
   extract.setNegative (true);
@@ -156,8 +156,7 @@ void SquirrelTrackingNode::receivePointcloud(const sensor_msgs::PointCloud2::Con
     cloud_cluster->height = 1;
     cloud_cluster->is_dense = true;
     clusters.push_back(cloud_cluster);
-
-    std::cout << ros::this_node::getName() << "PointCloud representing the Cluster: " << cloud_cluster->points.size () << " data points." << std::endl;
+    //std::cout << ros::this_node::getName() << "PointCloud representing the Cluster: " << cloud_cluster->points.size () << " data points." << std::endl;
   }
 
   //ROS_INFO("%s: found all clusters", ros::this_node::getName().c_str());
@@ -201,8 +200,8 @@ void SquirrelTrackingNode::receivePointcloud(const sensor_msgs::PointCloud2::Con
     transform.setRotation(q);
     tfBroadcast.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "kinect_depth_optical_frame", "lump"));
 
-    ROS_INFO("%s: cluster %s (in base_link): (%.3f %.3f %.3f)", ros::this_node::getName().c_str(), "lump",
-      centroid[0], centroid[1], centroid[2]);
+    ROS_INFO("%s: cluster %s with %d points at (in base_link): (%.3f %.3f %.3f)", ros::this_node::getName().c_str(), "lump",
+      (int)selected->points.size(), centroid[0], centroid[1], centroid[2]);
     /*geometry_msgs::PoseStamped pose_base = kinect2base_link(centroid[0], centroid[1], centroid[2]);
     ROS_INFO("%s: cluster in base_link %s: (%.3f %.3f %.3f)", ros::this_node::getName().c_str(), "lump",
       pose_base.pose.position.x, 

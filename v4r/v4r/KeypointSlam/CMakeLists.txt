@@ -8,7 +8,7 @@ link_directories(${OPENCV_LIBRARY_DIRS})
 find_package(Boost REQUIRED COMPONENTS thread program_options serialization regex filesystem system)
 INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
 
-set(EIGEN_INCLUDE_DIR "/usr/include/eigen3")
+set(EIGEN_INCLUDE_DIR "/usr/local/include/eigen3")
 FIND_PACKAGE(Ceres)
 IF(${Ceres_FOUND})
   INCLUDE_DIRECTORIES(${CERES_INCLUDES})

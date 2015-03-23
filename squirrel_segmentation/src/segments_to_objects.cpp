@@ -14,6 +14,7 @@
 #include <std_msgs/String.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <tf/transform_listener.h>
 #include <squirrel_object_perception_msgs/SegmentsToObjects.h>
 
 class SegmentsToObjectsImpl
@@ -23,7 +24,10 @@ private:
 
   ros::ServiceServer service_;
   ros::NodeHandle *nh_;
+  tf::TransformListener tf_listener;
+
   bool segmentsToObjects(squirrel_object_perception_msgs::SegmentsToObjects::Request & req, squirrel_object_perception_msgs::SegmentsToObjects::Response & response);
+  geometry_msgs::PoseStamped transform(double x, double y, double z, const std::string &from, const std::string &to);
 
 public:
   SegmentsToObjectsImpl();
@@ -41,10 +45,34 @@ SegmentsToObjectsImpl::~SegmentsToObjectsImpl()
   delete nh_;
 }
 
+geometry_msgs::PoseStamped SegmentsToObjectsImpl::transform(double x, double y, double z, const std::string &from, const std::string &to)
+{
+  geometry_msgs::PoseStamped before, after;
+
+  before.pose.position.x = x;
+  before.pose.position.y = y;
+  before.pose.position.z = z;
+  before.pose.orientation.x = 0;
+  before.pose.orientation.y = 0;
+  before.pose.orientation.z = 0;
+  before.pose.orientation.w = 1;
+  before.header.frame_id = from;
+  try
+  {
+    tf_listener.waitForTransform(from, to, ros::Time::now(), ros::Duration(1.0));
+    tf_listener.transformPose(to, before, after);
+  }
+  catch (tf::TransformException& ex)
+  {
+    ROS_ERROR("%s: %s", ros::this_node::getName().c_str(), ex.what());
+  }
+  return after;
+}
+
 bool SegmentsToObjectsImpl::segmentsToObjects(squirrel_object_perception_msgs::SegmentsToObjects::Request &req,
                                               squirrel_object_perception_msgs::SegmentsToObjects::Response &response)
 {
-  ROS_INFO ("SegmentsToObjectsImpl::segmentsToObjects called\n");
+  printf ("SegmentsToObjectsImpl::segmentsToObjects called\n");
   pcl::PointCloud<PointT>::Ptr scene(new pcl::PointCloud<PointT>);
   pcl::fromROSMsg(req.cloud, *scene);
   response.points.resize(req.clusters_indices.size());
@@ -61,15 +89,14 @@ bool SegmentsToObjectsImpl::segmentsToObjects(squirrel_object_perception_msgs::S
     Eigen::Vector4d centroid;
     pcl::compute3DCentroid(*scene, req.clusters_indices[i].data, centroid);
     response.poses[i].header.stamp = req.cloud.header.stamp;
-    response.poses[i].header.frame_id = req.cloud.header.frame_id;
-    response.poses[i].pose.position.x = centroid[0];
-    response.poses[i].pose.position.y = centroid[1];
-    response.poses[i].pose.position.z = centroid[2];
+    response.poses[i].header.frame_id = "/map";
     // note: the orientation is quite arbitrary
-    response.poses[i].pose.orientation.x = 0.;
-    response.poses[i].pose.orientation.y = 0.;
-    response.poses[i].pose.orientation.z = 0.;
-    response.poses[i].pose.orientation.w = 1.;
+    response.poses[i] = transform(centroid[0], centroid[1], centroid[2], "/kinect_depth_optical_frame", "/map");
+    printf("%s: new object for the scene database at position (/map): %.3f %.3f %.3f\n", ros::this_node::getName().c_str(),
+      centroid[0], centroid[1], centroid[2]);
+      //response.poses[i].pose.position.x,
+      //response.poses[i].pose.position.y,
+      //response.poses[i].pose.position.z);
   }
   
   return true;
@@ -77,7 +104,6 @@ bool SegmentsToObjectsImpl::segmentsToObjects(squirrel_object_perception_msgs::S
 
 void SegmentsToObjectsImpl::init(int argc, char ** argv)
 {
-  ros::init (argc, argv, "segments_to_objects");
   nh_ =  new ros::NodeHandle ("~");
   service_ = nh_->advertiseService ("/squirrel_segments_to_objects", &SegmentsToObjectsImpl::segmentsToObjects, this);
   ROS_INFO ("Ready to receive service calls...");
@@ -85,6 +111,7 @@ void SegmentsToObjectsImpl::init(int argc, char ** argv)
 
 int main (int argc, char ** argv)
 {
+  ros::init (argc, argv, "segments_to_objects");
   SegmentsToObjectsImpl s;
   s.init(argc, argv);
   ros::spin();
