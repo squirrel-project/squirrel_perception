@@ -12,6 +12,8 @@
 #include <pcl/common/common.h>
 #include <ros/ros.h>
 #include <sensor_msgs/PointCloud2.h>
+#include <tf/transform_listener.h>
+#include <tf/transform_broadcaster.h>
 #include "squirrel_object_perception_msgs/SegmentInit.h"
 #include "squirrel_object_perception_msgs/SegmentOnce.h"
 
@@ -19,7 +21,7 @@ class SegmentationPopoutNode
 {
 private:
   typedef pcl::PointXYZ PointT;
-  static const double MAX_OBJECT_DIST = 0.8;
+  static const double MAX_OBJECT_DIST = 1.5;
   static const double MAX_OBJECT_HEIGHT = 0.25;
 
   class PersistentObject
@@ -89,6 +91,7 @@ private:
 
   geometry_msgs::PoseStamped kinect2base_link(double x, double y, double z);
   geometry_msgs::PoseStamped base_link2kinect(double x, double y, double z);
+  geometry_msgs::PoseStamped base_link2map(double x, double y, double z);
   geometry_msgs::PoseStamped transform(double x, double y, double z, const std::string &from, const std::string &to);
   void tranformCluster2base_link(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_cluster);
   bool isValidCluster(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_cluster, Eigen::Vector4f &centroid);
