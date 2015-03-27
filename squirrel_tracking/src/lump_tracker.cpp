@@ -200,8 +200,8 @@ void SquirrelTrackingNode::receivePointcloud(const sensor_msgs::PointCloud2::Con
     transform.setRotation(q);
     tfBroadcast.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "kinect_depth_optical_frame", "lump"));
 
-    ROS_INFO("%s: cluster %s with %d points at (in base_link): (%.3f %.3f %.3f)", ros::this_node::getName().c_str(), "lump",
-      (int)selected->points.size(), centroid[0], centroid[1], centroid[2]);
+    /*ROS_INFO("%s: cluster %s with %d points at (in base_link): (%.3f %.3f %.3f)", ros::this_node::getName().c_str(), "lump",
+      (int)selected->points.size(), centroid[0], centroid[1], centroid[2]);*/
     /*geometry_msgs::PoseStamped pose_base = kinect2base_link(centroid[0], centroid[1], centroid[2]);
     ROS_INFO("%s: cluster in base_link %s: (%.3f %.3f %.3f)", ros::this_node::getName().c_str(), "lump",
       pose_base.pose.position.x, 

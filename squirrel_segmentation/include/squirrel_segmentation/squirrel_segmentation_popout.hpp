@@ -28,7 +28,7 @@ private:
   {
   public:
     static int cnt;
-    geometry_msgs::Point pos;  // position, in base_link
+    geometry_msgs::Point pos;  // position, in map
     double size;  // diameter of bounding sphere
     std::string name;
 
@@ -40,6 +40,9 @@ private:
       pos.x = x;
       pos.y = y;
       pos.z = z;
+      // HACK: for some reason size is calcuated as > 3m or so
+      size = 0.20;
+      /*
       size = 0.;
       for(size_t i = 0; i < cloud_cluster->points.size(); i++)
       {
@@ -49,7 +52,7 @@ private:
         dp.z = cloud_cluster->points[i].z - pos.z;
         double d = sqrt(dp.x*dp.x + dp.y*dp.y + dp.z*dp.z);
         size = std::max(size, 2*d);
-      }
+      }*/
     }
     bool isSame(const PersistentObject &other)
     {
@@ -68,6 +71,7 @@ private:
   {
   public:
     std_msgs::Int32MultiArray indices;
+    geometry_msgs::PoseStamped pose;  // pose in /map
     bool alreadyReturned;
     double distanceFromRobot;
     SegmentationResult()

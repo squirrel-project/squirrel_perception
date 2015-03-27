@@ -157,13 +157,13 @@ bool SegmentationPopoutNode::segment(squirrel_object_perception_msgs::SegmentIni
         knownObjects.push_back(newObject);
 
         tf::Transform transform;
-        tf::Vector3 p(centroid[0], centroid[1], centroid[2]);
+        tf::Vector3 p(inMap.pose.position.x, inMap.pose.position.y, inMap.pose.position.z);
         tf::Quaternion q(0., 0., 0., 1.);
         transform.setOrigin(p);
         transform.setRotation(q);
-        tfBroadcast.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "base_link", newObject.name));
+        tfBroadcast.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "map", newObject.name));
 
-        ROS_INFO("%s: found new object of size %.3f with %d points at (in base_link): (%.3f %.3f %.3f)",
+        ROS_INFO("%s: found new object of size %.3f with %d points at (in map): (%.3f %.3f %.3f)",
           ros::this_node::getName().c_str(),
           newObject.size, (int)clusters[i]->points.size(), newObject.pos.x, newObject.pos.y, newObject.pos.z);   
         
@@ -172,10 +172,11 @@ bool SegmentationPopoutNode::segment(squirrel_object_perception_msgs::SegmentIni
         for(size_t k = 0; k < cluster_indices[i].indices.size(); k++)
           results.back().indices.data.push_back(cluster_indices[i].indices[k]);
         results.back().distanceFromRobot = centroid[0];
+        results.back().pose = inMap;
       }
       else
       {
-        ROS_INFO("%s: found object with of size %.3f with %d points at (in base_link): (%.3f %.3f %.3f), which is the same as known object of size %.3f at (%.3f %.3f %.3f)",
+        ROS_INFO("%s: found object with of size %.3f with %d points at (in map): (%.3f %.3f %.3f), which is the same as known object of size %.3f at (%.3f %.3f %.3f)",
           ros::this_node::getName().c_str(),
           newObject.size, (int)clusters[i]->points.size(), newObject.pos.x, newObject.pos.y, newObject.pos.z,
           knownObject->size, knownObject->pos.x, knownObject->pos.y, knownObject->pos.z);
@@ -208,9 +209,23 @@ bool SegmentationPopoutNode::returnNextResult(squirrel_object_perception_msgs::S
   }
   if(selected < results.size())
   {
-    ROS_INFO("%s: returning cluster with %d points", ros::this_node::getName().c_str(), (int)results[selected].indices.data.size());
+    ROS_INFO("%s: returning cluster with %d points at /map pos %.3f %.3f %.3f", ros::this_node::getName().c_str(), (int)results[selected].indices.data.size(),
+      results[selected].pose.pose.position.x, results[selected].pose.pose.position.y, results[selected].pose.pose.position.z);
     results[selected].alreadyReturned = true;
+    // NOTE HACK: these are the wrong indices, they come from the filtered point cloud!!!
     response.clusters_indices.push_back(results[selected].indices);
+    // put fake points
+    pcl::PointCloud<PointT>::Ptr fake_points(new pcl::PointCloud<PointT>);
+    response.points.resize(1);
+    response.poses.resize(1);
+    for(size_t i = 0; i < results[selected].indices.data.size(); i++)
+    {
+      PointT p;
+      p.x = p.y = p.z = 0.;
+      fake_points->points.push_back(p);
+    }
+    pcl::toROSMsg(*fake_points, response.points[0]);
+    response.poses[0] = results[selected].pose;
     return true;
   }
   return false;
