@@ -6,6 +6,7 @@
 #
 
 import rospy
+from roslib import message
 import actionlib
 import dynamic_reconfigure.server
 from squirrel_object_perception.cfg import \
@@ -16,6 +17,7 @@ from squirrel_object_perception_msgs.srv import \
     SegmentsToObjects
 from squirrel_object_perception_msgs.msg import \
     LookForObjectsAction, LookForObjectsFeedback, LookForObjectsResult
+import sensor_msgs.point_cloud2 as pc2
 from sensor_msgs.msg import PointCloud2
 from squirrel_planning_knowledge_msgs.srv import AddObjectService, \
     AddObjectServiceRequest, UpdateObjectService, UpdateObjectServiceRequest
@@ -125,20 +127,26 @@ class SquirrelLookForObjectsImpl:
             rospy.wait_for_service(
                 'squirrel_segmentation_incremental_once', timeout=5)
             seg_result = do_segment()
+            ## START DEBUG PRINT
+            #data_out = pc2.read_points(self._point_cloud, field_names=None, skip_nans=True, uvs=[[self._point_cloud.width / 2, self._point_cloud.height / 2]])
+            #int_data = next(data_out)
+            #rospy.loginfo("int_data_after: " + str(int_data))
+            ## END
             rospy.wait_for_service(
                 'squirrel_segments_to_objects', timeout=5)
-            obj_result = do_objects(self._point_cloud, seg_result.clusters_indices)
-            print "found " + str(len(obj_result.poses)) + " object(s)"
-            # print "object 0 has " + str(len(seg_result.clusters_indices[0].data)) + " points"
+            #obj_result = do_objects(self._point_cloud, seg_result.clusters_indices)
+            #print "found " + str(len(obj_result.poses)) + " object(s)"
+            print "found " + str(len(seg_result.poses)) + " object(s)"
+            #print "object 0 has " + str(len(seg_result.clusters_indices[0].data)) + " points"
             # segment once always returns 1 or 0 objects
-            if len(obj_result.poses) > 0:
+            if len(seg_result.poses) > 0:
               print "appending object 0"
               obj = Object()
               obj._id = self.get_unique_object_id()
               obj._category = "thing"
               obj._point_indices = seg_result.clusters_indices[0]
-              obj._points = obj_result.points[0]
-              obj._pose = obj_result.poses[0]
+              obj._points = seg_result.points[0]
+              obj._pose = seg_result.poses[0]
               self._objects.append(obj)
             self.set_publish_feedback('segment_once', 'done', 50)
         except (rospy.ROSException, rospy.ServiceException):
