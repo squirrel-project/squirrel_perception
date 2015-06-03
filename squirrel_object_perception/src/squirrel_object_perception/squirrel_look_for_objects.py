@@ -11,13 +11,15 @@ from squirrel_object_perception_msgs.srv import \
 from squirrel_object_perception_msgs.msg import \
     LookForObjectsAction, LookForObjectsFeedback, LookForObjectsResult
 from sensor_msgs.msg import PointCloud2
+from squirrel_planning_knowledge.srv import AddObjectService, \
+    AddObjectServiceRequest, UpdateObjectService, UpdateObjectServiceRequest
 
 
 class SquirrelLookForObjectsImpl:
     _feedback = LookForObjectsFeedback()
     _result = LookForObjectsResult()
     _point_cloud = None
-    _objects = None
+    _objects = []
     _saliency_map = None
     _segment_result = []
 
@@ -130,12 +132,45 @@ class SquirrelLookForObjectsImpl:
                 'squirrel_classify', timeout=5)
             result = do_classify(self._point_cloud,
                                  self._segment_result[-1].clusters_indices)
+            #TODO: store result, point cloud cluster and pose in self._objects
+            #TODO: Do we actually get the pose from classification?
             print(result)
             self.set_publish_feedback('classification', 'done', 50)
         except (rospy.ROSException, rospy.ServiceException):
             self.set_publish_feedback('classification',
                                       'service call failed', 11)
             rospy.logdebug('classification failed')
+
+    def add_object_to_db(self, category):
+        rospy.wait_for_service('new_object')
+        new_object = rospy.ServiceProxy('new_object', AddObjectService, timeout=3)
+        request = AddObjectServiceRequest()
+        request.id = category
+        request.category = category
+        request.pose = None
+        request.cloud = None
+        try:
+          resp = new_object(request)
+        except rospy.ServiceException as exc:
+            print("Service did not process request: " + str(exc))
+            resp = False
+        return resp
+
+    def update_object_in_db(self, category):
+        rospy.wait_for_service('update_object')
+        update_object = rospy.ServiceProxy('update_object', UpdateObjectService, timeout=3)
+        request = UpdateObjectServiceRequest()
+        request.id = category
+        request.category = category
+        request.pose = None
+        request.cloud = None
+        try:
+          resp = update_object(request)
+          return resp
+        except rospy.ServiceException as exc:
+            print("Service did not process request: " + str(exc))
+            resp = False
+        return resp
 
     def execute_squirrel_object_perception_cb(self, goal):
         # initialize feedback
@@ -189,6 +224,18 @@ class SquirrelLookForObjectsImpl:
             return
 
         self.set_publish_feedback('database_update', 'started', 98)
+        for object in self._objects:
+            #TODO: check at which level we get the actual array of results
+            max_value = max(object.class_results.confidence)
+            max_index = object.class_results.confidence.index(max_value)
+            #TODO: id or category, what to use?
+            category = object.class_results.class_type[max_index].data
+            if goal.look_for_object == 0:# check
+                if not goal.category.lower() == category.lower():
+                    break
+                self.update_object_in_db(category)
+            elif goal.look_for_object == 1: #explore
+                self.add_object_to_db(category)
         self.set_publish_feedback('database_update', 'done', 99)
 
         self.set_publish_feedback('finish', 'done', 100)
