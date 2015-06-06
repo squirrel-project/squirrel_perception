@@ -6,16 +6,20 @@
  */
 
 #include <squirrel_attention/squirrel_attention_location.hpp>
+//#include <opencv2/core/operations.hpp>
 
 bool 
 AttentionLocationService::calculate (squirrel_object_perception_msgs::GetSaliencyLocation::Request & req, squirrel_object_perception_msgs::GetSaliencyLocation::Response & response)
 {
   //std::cerr << "in calculate " << std::endl;
+  return(false); // HACK
   
   pcl::PointCloud<PointT>::Ptr scene (new pcl::PointCloud<PointT>);
   pcl::fromROSMsg (req.cloud, *scene);
   
-  location_ = req.location.data;
+  // HACK location_ = req.location.data;
+  location_ = AttentionModule::AM_CENTER;
+  // HACK END
   center_point_ = cv::Point(0,0);
   if(AttentionModule::AM_LOCATION_CUSTOM == location_)
   {

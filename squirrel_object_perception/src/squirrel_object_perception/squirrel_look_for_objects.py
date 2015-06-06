@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+#
+# Implements the whole look for objects action:
+#
+# author: Markus Bajones, Michael Zillich
+#
 
 import rospy
 import actionlib
@@ -6,15 +11,23 @@ import dynamic_reconfigure.server
 from squirrel_object_perception.cfg import \
     squirrel_look_for_objectsConfig as ConfigType
 from squirrel_object_perception_msgs.srv import \
-    ObjectRecognizer, SegmentInit, SegmentOnce, GetSaliency3DSymmetry,\
-    SegmentVisualizationInit, SegmentVisualizationOnce, Classify
+    Recognize, SegmentInit, SegmentOnce, GetSaliencyItti,\
+    SegmentVisualizationInit, SegmentVisualizationOnce, Classify,\
+    SegmentsToObjects
 from squirrel_object_perception_msgs.msg import \
     LookForObjectsAction, LookForObjectsFeedback, LookForObjectsResult
 from sensor_msgs.msg import PointCloud2
-from squirrel_planning_knowledge.srv import AddObjectService, \
+from squirrel_planning_knowledge_msgs.srv import AddObjectService, \
     AddObjectServiceRequest, UpdateObjectService, UpdateObjectServiceRequest
 
 
+class Object:
+    _id = None
+    _category = None
+    _pose = None
+    _points = []
+    _point_indices = []
+  
 class SquirrelLookForObjectsImpl:
     _feedback = LookForObjectsFeedback()
     _result = LookForObjectsResult()
@@ -22,6 +35,7 @@ class SquirrelLookForObjectsImpl:
     _objects = []
     _saliency_map = None
     _segment_result = []
+    _id_cnt = 1
 
     def __init__(self):
         pass
@@ -31,6 +45,11 @@ class SquirrelLookForObjectsImpl:
 
     def update(self):
         pass
+
+    def get_unique_object_id(self):
+        id = self._id_cnt
+        self._id_cnt = self._id_cnt + 1
+        return "object" + str(id)
 
     def set_publish_feedback(self, phase, status, percent):
         self._feedback.current_phase = phase
@@ -54,11 +73,12 @@ class SquirrelLookForObjectsImpl:
         return result
 
     def get_saliency_map(self):
-        get_saliency_map = rospy.ServiceProxy(
-            '/squirrel_attention_3Dsymmetry', GetSaliency3DSymmetry)
+        do_saliency = rospy.ServiceProxy(
+            '/squirrel_attention_itti', GetSaliencyItti)
         try:
-            rospy.wait_for_service('/squirrel_attention_3Dsymmetry', timeout=5)
-            result = get_saliency_map(self._point_cloud)
+            rospy.wait_for_service('/squirrel_attention_itti', timeout=5)
+            # NOTE: loccation type 0 = CENTER
+            result = do_saliency(self._point_cloud)
             self._saliency_map = result.saliency_map
             self.set_publish_feedback('attention', 'done', 50)
         except (rospy.ROSException, rospy.ServiceException):
@@ -99,11 +119,27 @@ class SquirrelLookForObjectsImpl:
     def run_segmenter_once(self):
         do_segment = rospy.ServiceProxy(
             'squirrel_segmentation_incremental_once', SegmentOnce)
+        do_objects = rospy.ServiceProxy(
+            'squirrel_segments_to_objects', SegmentsToObjects)
         try:
             rospy.wait_for_service(
                 'squirrel_segmentation_incremental_once', timeout=5)
-            result = do_segment()
-            self._segment_result.append(result)
+            seg_result = do_segment()
+            rospy.wait_for_service(
+                'squirrel_segments_to_objects', timeout=5)
+            obj_result = do_objects(self._point_cloud, seg_result.clusters_indices)
+            print "found " + str(len(obj_result.poses)) + " object(s)"
+            # print "object 0 has " + str(len(seg_result.clusters_indices[0].data)) + " points"
+            # segment once always returns 1 or 0 objects
+            if len(obj_result.poses) > 0:
+              print "appending object 0"
+              obj = Object()
+              obj._id = self.get_unique_object_id()
+              obj._category = "thing"
+              obj._point_indices = seg_result.clusters_indices[0]
+              obj._points = obj_result.points[0]
+              obj._pose = obj_result.poses[0]
+              self._objects.append(obj)
             self.set_publish_feedback('segment_once', 'done', 50)
         except (rospy.ROSException, rospy.ServiceException):
             self.set_publish_feedback('segment_once',
@@ -124,49 +160,61 @@ class SquirrelLookForObjectsImpl:
                                       'service call failed', 11)
             rospy.logdebug('segment_visualization_once failed')
 
+    def most_confident_class(self, classification):
+        max_conf = max(classification.confidence)
+        max_index = classification.confidence.index(max_conf)
+        return classification.class_type[max_index].data
+
     def run_classifier(self):
         do_classify = rospy.ServiceProxy(
             'squirrel_classify', Classify)
         try:
             rospy.wait_for_service(
                 'squirrel_classify', timeout=5)
-            result = do_classify(self._point_cloud,
-                                 self._segment_result[-1].clusters_indices)
-            #TODO: store result, point cloud cluster and pose in self._objects
-            #TODO: Do we actually get the pose from classification?
-            print(result)
+            # classify the last segmented object
+            points_indices = []
+            points_indices.append(self._objects[-1]._point_indices)
+            result = do_classify(self._point_cloud, points_indices)
+            # NOTE: Classify outputs a list of classifications. In our case this should
+            # be of size 1, as we only input one cluster.
+            if len(result.class_results) == 1:
+                # NOTE: At this point we just take the most confident class and ignore the rest.
+                # At a later stage we might use the actual probability distribution over class labels.
+                self._objects[-1]._category = self.most_confident_class(result.class_results[0])
+            else:
+                rospy.logdebug('classification error: one object in, more than one (or 0) objects out')
             self.set_publish_feedback('classification', 'done', 50)
         except (rospy.ROSException, rospy.ServiceException):
             self.set_publish_feedback('classification',
                                       'service call failed', 11)
             rospy.logdebug('classification failed')
 
-    def add_object_to_db(self, category):
-        rospy.wait_for_service('new_object')
-        new_object = rospy.ServiceProxy('new_object', AddObjectService, timeout=3)
-        request = AddObjectServiceRequest()
-        request.id = category
-        request.category = category
-        request.pose = None
-        request.cloud = None
+    def add_object_to_db(self, obj):
+        add_object = rospy.ServiceProxy('/kcl_rosplan/add_object', AddObjectService)
         try:
-          resp = new_object(request)
+            rospy.wait_for_service('/kcl_rosplan/add_object', timeout=3)
+            request = AddObjectServiceRequest()
+            request.id = obj._id
+            request.category = obj._category
+            request.pose = obj._pose
+            request.cloud = obj._points
+            resp = add_object(request)
         except rospy.ServiceException as exc:
             print("Service did not process request: " + str(exc))
             resp = False
         return resp
 
-    def update_object_in_db(self, category):
-        rospy.wait_for_service('update_object')
-        update_object = rospy.ServiceProxy('update_object', UpdateObjectService, timeout=3)
-        request = UpdateObjectServiceRequest()
-        request.id = category
-        request.category = category
-        request.pose = None
-        request.cloud = None
+    def update_object_in_db(self, obj):
+        update_object = rospy.ServiceProxy('/kcl_rosplan/update_object', UpdateObjectService)
         try:
-          resp = update_object(request)
-          return resp
+            rospy.wait_for_service('/kcl_rosplan/update_object')
+            request = UpdateObjectServiceRequest()
+            request.id = obj._id
+            request.category = obj._category
+            request.pose = obj._pose
+            request.cloud = obj._points
+            resp = update_object(request)
+            return resp
         except rospy.ServiceException as exc:
             print("Service did not process request: " + str(exc))
             resp = False
@@ -175,6 +223,9 @@ class SquirrelLookForObjectsImpl:
     def execute_squirrel_object_perception_cb(self, goal):
         # initialize feedback
         self.set_publish_feedback('init', 'done', 5)
+
+        # clear results
+        self._objects = []
 
         # check that preempt has not been requested by the client
         if self.as_squirrel_object_perception.is_preempt_requested():
@@ -199,7 +250,8 @@ class SquirrelLookForObjectsImpl:
             return
 
         # call Aitor's recognition service
-        self.do_recognition()
+        # TODO: for now skip this
+        #self.do_recognition()
         # Start attention, segmentation classification pipeline
         self.set_publish_feedback('attention', 'started', 51)
         self.get_saliency_map()
@@ -207,11 +259,13 @@ class SquirrelLookForObjectsImpl:
         self.set_publish_feedback('segmentation', 'started', 61)
         self.set_publish_feedback('classification', 'started', 76)
         self.setup_segmentation()
-        self.setup_visualization()
-        for i in xrange(1, 5):
+        #self.setup_visualization()
+        # TODO: find a reasonable number of times to run here
+        # for now: just once
+        for i in xrange(1, 2):
             self.run_segmenter_once()
-            self.run_visualization_once()
-            self.run_classifier()
+            #self.run_visualization_once()
+            #self.run_classifier() TODO: this fails and hangs
         self.set_publish_feedback('segmentation', 'done', 75)
         self.set_publish_feedback('classification', 'done', 97)
 
@@ -224,18 +278,15 @@ class SquirrelLookForObjectsImpl:
             return
 
         self.set_publish_feedback('database_update', 'started', 98)
-        for object in self._objects:
-            #TODO: check at which level we get the actual array of results
-            max_value = max(object.class_results.confidence)
-            max_index = object.class_results.confidence.index(max_value)
-            #TODO: id or category, what to use?
-            category = object.class_results.class_type[max_index].data
-            if goal.look_for_object == 0:# check
-                if not goal.category.lower() == category.lower():
-                    break
-                self.update_object_in_db(category)
-            elif goal.look_for_object == 1: #explore
-                self.add_object_to_db(category)
+        for obj in self._objects:
+            # TODO: the semantics of this check vs. explore is not clear yet!
+            #if goal.look_for_object == 0:# check
+            #    if not goal.category.lower() == category.lower():
+            #        break
+            #    self.update_object_in_db(category)
+            #elif goal.look_for_object == 1: #explore
+            #    self.add_object_to_db(category)
+            self.add_object_to_db(obj)
         self.set_publish_feedback('database_update', 'done', 99)
 
         self.set_publish_feedback('finish', 'done', 100)
@@ -248,11 +299,11 @@ class SquirrelLookForObjectsImpl:
 class SquirrelLookForObjects:
     def __init__(self):
         self.impl = SquirrelLookForObjectsImpl()
-        self.impl._action_name = 'squirrel_object_perception'
+        self.impl._action_name = 'look_for_objects'
         self_dynrecon_server = dynamic_reconfigure.server.Server(
             ConfigType, self.config_callback)
         self.impl.as_squirrel_object_perception = actionlib.SimpleActionServer(
-            'squirrel_object_perception',
+            'look_for_objects',
             LookForObjectsAction,
             execute_cb=self.impl.execute_squirrel_object_perception_cb,
             auto_start=False)

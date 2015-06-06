@@ -9,7 +9,7 @@
 #define REGISTRATION_UTILS_H_
 
 #include <pcl/octree/octree.h>
-#include <pcl/features/organized_edge_detection.h>
+#include <v4r/OREdgeDetector/organized_edge_detection.h>
 
 namespace registration_utils
 {
@@ -23,11 +23,11 @@ namespace registration_utils
     typedef typename pcl::PointCloud<PointT> PointCloudT;
     typedef typename PointCloudT::Ptr PointCloudTPtr;
     //COMPUTE edges close to the boundaries
-    pcl::OrganizedEdgeFromRGB<PointT, pcl::Label> oed;
+    faat_pcl::OrganizedEdgeFromRGB<PointT, pcl::Label> oed;
     oed.setDepthDisconThreshold (0.03f);
     oed.setRGBCannyLowThreshold (low);
     oed.setRGBCannyHighThreshold (high);
-    oed.setEdgeType (pcl::OrganizedEdgeBase<pcl::PointXYZRGB, pcl::Label>::EDGELABEL_RGB_CANNY);
+    oed.setEdgeType (faat_pcl::OrganizedEdgeBase<pcl::PointXYZRGB, pcl::Label>::EDGELABEL_RGB_CANNY);
     oed.setInputCloud (cloud);
     pcl::PointCloud<pcl::Label>::Ptr labels (new pcl::PointCloud<pcl::Label>);
     std::vector<pcl::PointIndices> indices2;
@@ -60,9 +60,9 @@ namespace registration_utils
     typedef typename pcl::PointCloud<PointT> PointCloudT;
     typedef typename PointCloudT::Ptr PointCloudTPtr;
     //COMPUTE edges close to the boundaries
-    pcl::OrganizedEdgeFromRGB<PointT, pcl::Label> oed;
+    faat_pcl::OrganizedEdgeFromRGB<PointT, pcl::Label> oed;
     oed.setDepthDisconThreshold (0.03f);
-    oed.setEdgeType (pcl::OrganizedEdgeBase<PointT, pcl::Label>::EDGELABEL_OCCLUDING);
+    oed.setEdgeType (faat_pcl::OrganizedEdgeBase<PointT, pcl::Label>::EDGELABEL_OCCLUDING);
     oed.setInputCloud (cloud);
     pcl::PointCloud<pcl::Label>::Ptr labels (new pcl::PointCloud<pcl::Label>);
     std::vector<pcl::PointIndices> indices2;

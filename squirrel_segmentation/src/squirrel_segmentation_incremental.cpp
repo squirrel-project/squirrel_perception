@@ -13,8 +13,17 @@ SegmenterIncremental::segmentInit (squirrel_object_perception_msgs::SegmentInit:
   //get point cloud
   pcl::PointCloud<PointT>::Ptr scene (new pcl::PointCloud<PointT>);
   pcl::fromROSMsg (req.cloud, *scene);
-  ROS_INFO ("Number of points in the scene: %ld", scene->points.size());
-
+  printf("Attention3DSymmetryService::calculate: point cloud is organised? %s\n", (scene->isOrganized() ? "yes" : "no")); // HACK
+  // HACK: The gezebo somilated kinect seems to output a non-orgnized point cloud. Just fix that here.
+  if(scene->height == 1)
+  {
+    if(scene->points.size() == 640*480)
+    {
+      scene->height = 480;
+      scene->width = 640;
+    }
+  }
+  printf("Attention3DSymmetryService::calculate: point cloud is organised? %s\n", (scene->isOrganized() ? "yes" : "no")); // HACK
   //get saliency map
   std::vector<cv::Mat> saliencyMaps;
   cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(req.saliency_map, sensor_msgs::image_encodings::MONO8);
@@ -41,23 +50,27 @@ SegmenterIncremental::segmentOnce (squirrel_object_perception_msgs::SegmentOnce:
 {
   ROS_INFO ("Going to segment an object.");
 
-  if(!(segmenter_->attentionSegmentNext()))
+  if(segmenter_->attentionSegmentNext())
+  {
+    std::vector<std::vector<int> > clusters = segmenter_->getSegmentedObjectsIndices();
+    if(clusters.size() == 1)
+    {
+      std_msgs::Int32MultiArray indx;
+      for(size_t k=0; k < clusters[0].size(); k++)
+      {
+        indx.data.push_back(clusters[0][k]);
+      }
+      response.clusters_indices.push_back(indx);
+    }
+    else
+    {
+      ROS_INFO("Segmented more than one object at once, which should not happen.");
+    }
+  }
+  else
   {
     ROS_INFO("The object that is going to be returned is emty. There can be two reasons for that: 1) the whole scene was segmented; 2) the object you are trying segment was already segmented from this view.");
   }
-
-  std::vector<std::vector<int> > clusters = segmenter_->getSegmentedObjectsIndices();
-
-  ROS_INFO ("Number of segmented objects: %ld",clusters.size());
-  assert(clusters.size() == 1);
-
-  std_msgs::Int32MultiArray indx;
-  for(size_t k=0; k < clusters[0].size(); k++)
-  {
-    indx.data.push_back(clusters[0][k]);
-  }
-  response.clusters_indices.clear();
-  response.clusters_indices.push_back(indx);
 
   return true;
 }

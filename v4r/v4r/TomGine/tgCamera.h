@@ -154,23 +154,23 @@ public:
 	// Gets
 	TomGine::tgPose GetPose() const;
 
-	vec3 GetF() const {return f;}
-	vec3 GetS() const {return s;}
-	vec3 GetU() const {return u;}
+  const vec3& GetF() const {return f;}
+  const vec3& GetS() const {return s;}
+  const vec3& GetU() const {return u;}
 	
-	vec3 GetPos() const {return pos;}
-	vec3 GetView() const {return view;}
-	vec3 GetUp() const {return up;}
+  const vec3& GetPos() const {return pos;}
+  const vec3& GetView() const {return view;}
+  const vec3& GetUp() const {return up;}
 	
-	float GetZNear() const { return m_zNear; }
-	float GetZFar() const { return m_zFar; }
-	unsigned GetWidth() const { return m_width; }
-	unsigned GetHeight() const {return m_height; }
+  const float& GetZNear() const { return m_zNear; }
+  const float& GetZFar() const { return m_zFar; }
+  const unsigned& GetWidth() const { return m_width; }
+  const unsigned& GetHeight() const {return m_height; }
 	
-	float GetFOVY() const { return m_fovy; }
-	unsigned short GetProjection() const { return m_projection; }
-	mat4 GetIntrinsic() const { return m_intrinsic; }
-	mat4 GetExtrinsic() const { return m_extrinsic; }
+  const float& GetFOVY() const { return m_fovy; }
+  const unsigned short& GetProjection() const { return m_projection; }
+  const mat4& GetIntrinsic() const { return m_intrinsic; }
+  const mat4& GetExtrinsic() const { return m_extrinsic; }
 	
 	tgFrustum* GetFrustum(){ return &m_frustum; }
 
@@ -205,6 +205,9 @@ public:
 	/** @brief Rotate camera about z vector (absolute). */
 	void RotateY(float fAngle);
 	
+  /** @brief Rotate camera about an axis. */
+  void Rotate(vec3 axis, float angle);
+
 	/** @brief Rotate camera about an axis using a point as center of rotation. */
 	void Orbit(vec3 vPoint, vec3 vAxis, float fAngle);
 	
