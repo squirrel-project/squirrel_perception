@@ -8,7 +8,7 @@ link_directories(${OPENCV_LIBRARY_DIRS})
 find_package(PkgConfig REQUIRED)
 pkg_search_module(EIGEN3 REQUIRED eigen3)
 include_directories(${EIGEN3_INCLUDE_DIRS})
-#include_directories("/usr/include/eigen3")
+#include_directories("/usr/local/include/eigen3")
 
 find_package(OpenMP)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
