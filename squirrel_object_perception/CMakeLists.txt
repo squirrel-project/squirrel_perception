@@ -28,7 +28,7 @@ generate_dynamic_reconfigure_options(cfg/squirrel_look_for_objects.cfg )
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS
-   include 
+#   include 
   CATKIN_DEPENDS 
   	roscpp
     	dynamic_reconfigure
@@ -43,7 +43,7 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-include_directories(include)
+#include_directories(include)
 include_directories(${catkin_INCLUDE_DIRS})
 
 
