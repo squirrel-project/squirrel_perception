@@ -11,7 +11,10 @@ find_package(catkin REQUIRED COMPONENTS
     	dynamic_reconfigure 
 	squirrel_object_perception_msgs
 	sensor_msgs
+        tf2
+        tf
 )
+find_package(PCL 1.7 REQUIRED)
 
 # protected region additional user defined REQUIREMENTS on begin #
 # protected region additional user defined REQUIREMENTS end #
@@ -35,6 +38,7 @@ catkin_package(
 	squirrel_object_perception_msgs
 	sensor_msgs
        	actionlib_msgs
+        tf2
 )
 
 ###########
@@ -44,7 +48,7 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 #include_directories(include)
-include_directories(${catkin_INCLUDE_DIRS})
+include_directories(${catkin_INCLUDE_DIRS} ${PCL_INCLUDE_DIRS})
 
 
 ## Declare a cpp executable
@@ -58,6 +62,7 @@ add_dependencies(squirrel_look_for_objects ${squirrel_object_perception_EXPORTED
 ## Specify libraries to link a library or executable target against
 target_link_libraries(squirrel_look_for_objects
   ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
 )
 
 # protected region additional user defined BUILD STATEMENTS on begin #
