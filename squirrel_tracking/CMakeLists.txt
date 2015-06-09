@@ -112,7 +112,7 @@ add_executable(lump_tracker src/lump_tracker.cpp)
 # target_link_libraries(squirrel_tracking_node
 #   ${catkin_LIBRARIES}
 # )
-target_link_libraries(object_tracker ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS} ceres miniglog
+target_link_libraries(object_tracker ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS} ceres glog
 cholmod
 amd
 klu

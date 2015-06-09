@@ -25,6 +25,8 @@
   <run_depend>squirrel_object_perception_msgs</run_depend>
   <build_depend>sensor_msgs</build_depend>
   <run_depend>sensor_msgs</run_depend>
+  <build_depend>tf2</build_depend>
+  <run_depend>tf2</run_depend>
 
   <!-- protected region additional manifest statements on begin -->
   <!-- protected region additional manifest statements end -->
