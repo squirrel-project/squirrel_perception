@@ -230,7 +230,7 @@ protected:
 
   bool setup_segmentation()
   {
-      if (!ros::service::waitForService("/squirrel_attention_3Dsymmetry", ros::Duration(5.0)))
+      if (!ros::service::waitForService("/squirrel_segmentation_incremental_init", ros::Duration(5.0)))
           return false;
       ros::ServiceClient client = nh_.serviceClient<squirrel_object_perception_msgs::SegmentInit>("/squirrel_segmentation_incremental_init");
       squirrel_object_perception_msgs::SegmentInit srv;
@@ -259,19 +259,19 @@ protected:
     squirrel_object_perception_msgs::SegmentsToObjects srv1;
     if (client.call(srv))
     {
-        ROS_INFO("Called service %s: ", "/squirrel_attention_3Dsymmetry");
+        ROS_INFO("Called service %s: ", "/squirrel_segmentation_incremental_once");
         return true;
     }
     else
     {
-        ROS_ERROR("Failed to call service %s", "/squirrel_attention_3Dsymmetry");
+        ROS_ERROR("Failed to call service %s", "/squirrel_segmentation_incremental_once");
         return false;
     }
     srv1.request.cloud = *(this->scene);
     srv1.request.clusters_indices = srv.response.clusters_indices;
     if (client1.call(srv1))
     {
-        ROS_INFO("Called service %s: ", "/squirrel_attention_3Dsymmetry");
+        ROS_INFO("Called service %s: ", "/squirrel_segments_to_objects");
         ROS_INFO("Found %ld objects", srv1.response.points.size());
         if (srv1.response.points.size() > 0)
         {
@@ -292,7 +292,7 @@ protected:
     }
     else
     {
-        ROS_ERROR("Failed to call service %s", "/squirrel_attention_3Dsymmetry");
+        ROS_ERROR("Failed to call service %s", "/squirrel_segments_to_objects");
         return false;
     }
   }
