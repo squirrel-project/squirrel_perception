@@ -14,6 +14,7 @@
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/segmentation/extract_clusters.h>
 #include <pcl_conversions/pcl_conversions.h>
+#include <visualization_msgs/Marker.h>
 #include <squirrel_segmentation/squirrel_segmentation_popout.hpp>
 
 using namespace std;
@@ -37,6 +38,7 @@ void SegmentationPopoutNode::initialize(int argc, char ** argv)
   ROS_INFO("ros::init called");
   n_ = new ros::NodeHandle("~");
   ROS_INFO("node handle created");
+  markerPublisher = n_->advertise<visualization_msgs::Marker>("visualization_marker", 0);
   //segmentService_ = n_->advertiseService("/squirrel_segmentation", &SegmentationPopoutNode::segment, this);
   SegmentInit_ = n_->advertiseService ("/squirrel_segmentation_incremental_init", &SegmentationPopoutNode::segment, this);
   SegmentOnce_ = n_->advertiseService ("/squirrel_segmentation_incremental_once", &SegmentationPopoutNode::returnNextResult, this);
@@ -155,14 +157,7 @@ bool SegmentationPopoutNode::segment(squirrel_object_perception_msgs::SegmentIni
       if(knownObject == knownObjects.end())
       {
         knownObjects.push_back(newObject);
-
-        tf::Transform transform;
-        tf::Vector3 p(centroid[0], centroid[1], centroid[2]);
-        tf::Quaternion q(0., 0., 0., 1.);
-        transform.setOrigin(p);
-        transform.setRotation(q);
-        tfBroadcast.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "base_link", newObject.name));
-
+        visualizePersistentObject(newObject);
         ROS_INFO("%s: found new object of size %.3f with %d points at (in base_link): (%.3f %.3f %.3f)",
           ros::this_node::getName().c_str(),
           newObject.size, (int)clusters[i]->points.size(), newObject.pos.x, newObject.pos.y, newObject.pos.z);   
@@ -214,6 +209,74 @@ bool SegmentationPopoutNode::returnNextResult(squirrel_object_perception_msgs::S
     return true;
   }
   return false;
+}
+
+void SegmentationPopoutNode::visualizePersistentObject(PersistentObject &obj)
+{
+  static int cnt = 0;
+
+  // draw the bounding sphere
+  visualization_msgs::Marker marker;
+  marker.header.frame_id = "map";
+  marker.header.stamp = ros::Time();
+  marker.ns = obj.name;
+  marker.id = cnt;
+  marker.lifetime = ros::Duration();
+  marker.type = visualization_msgs::Marker::SPHERE;
+  marker.action = visualization_msgs::Marker::ADD;
+  marker.pose.position.x = obj.pos.x;
+  marker.pose.position.y = obj.pos.y;
+  marker.pose.position.z = obj.pos.z;
+  marker.pose.orientation.x = 0.0;
+  marker.pose.orientation.y = 0.0;
+  marker.pose.orientation.z = 0.0;
+  marker.pose.orientation.w = 1.0;
+  marker.scale.x = obj.size;
+  marker.scale.y = obj.size;
+  marker.scale.z = obj.size;
+  marker.color.r = 0.0;
+  marker.color.g = 1.0;
+  marker.color.b = 0.0;
+  marker.color.a = 0.5; // Don't forget to set the alpha!
+  markerPublisher.publish(marker);
+
+
+  visualization_msgs::Marker label;
+  label.header.frame_id = "map";
+  label.header.stamp = ros::Time();
+  std::stringstream ss;
+  ss << obj.name << "_label";
+  label.ns = ss.str();
+  label.id = cnt;
+  label.lifetime = ros::Duration();
+  label.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
+  label.action = visualization_msgs::Marker::ADD;
+  label.pose.position.x = obj.pos.x;
+  label.pose.position.y = obj.pos.y;
+  label.pose.position.z = obj.pos.z + 0.5;
+  label.pose.orientation.x = 0.0;
+  label.pose.orientation.y = 0.0;
+  label.pose.orientation.z = 0.0;
+  label.pose.orientation.w = 1.0;
+  label.scale.x = 0;
+  label.scale.y = 0;
+  label.scale.z = 0.2;
+  label.color.r = 0.0;
+  label.color.g = 1.0;
+  label.color.b = 0.0;
+  label.color.a = 1; // Don't forget to set the alpha!
+  label.text = obj.name;
+  markerPublisher.publish(label);
+
+  // and a transform
+  tf::Transform transform;
+  tf::Vector3 p(obj.pos.x, obj.pos.y, obj.pos.z);
+  tf::Quaternion q(0., 0., 0., 1.);
+  transform.setOrigin(p);
+  transform.setRotation(q);
+  tfBroadcast.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "map", obj.name));
+
+  cnt++;
 }
 
 geometry_msgs::PoseStamped SegmentationPopoutNode::kinect2base_link(double x, double y, double z)
@@ -307,9 +370,9 @@ bool SegmentationPopoutNode::isValidCluster(pcl::PointCloud<pcl::PointXYZ>::Ptr 
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "lump_tracker");
-  SegmentationPopoutNode tracker;
-  tracker.initialize(argc, argv);
+  ros::init(argc, argv, "segmentation_popout");
+  SegmentationPopoutNode seg;
+  seg.initialize(argc, argv);
 
   return 0;
 }
