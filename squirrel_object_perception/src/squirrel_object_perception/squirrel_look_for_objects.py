@@ -8,6 +8,7 @@
 import rospy
 import actionlib
 import dynamic_reconfigure.server
+from std_srvs.srv import Empty
 from squirrel_object_perception.cfg import \
     squirrel_look_for_objectsConfig as ConfigType
 from squirrel_object_perception_msgs.srv import \
@@ -58,6 +59,15 @@ class SquirrelLookForObjectsImpl:
         self.as_squirrel_object_perception.publish_feedback(self._feedback)
         print(self._feedback)
         return
+
+    def look_down(self):
+        look_down = rospy.ServiceProxy('/tilt_controller/resetPosition', Empty)
+        try:
+            rospy.wait_for_service('/tilt_controller/resetPosition', timeout=5)
+            look_down()
+        except (rospy.ROSException, rospy.ServiceException):
+            rospy.logdebug('looking down failed')
+        rospy.sleep(1.0)
 
     def do_recognition(self):
         recognizer = rospy.ServiceProxy('mp_recognition', ObjectRecognizer)
@@ -232,6 +242,9 @@ class SquirrelLookForObjectsImpl:
             rospy.loginfo('%s: Preempted' % self._action_name)
             self.as_squirrel_object_perception.set_preempted()
             return
+
+        # first look down on the floor
+        self.look_down()
 
         # Start getting data from /kinect/depth_registered/points
         # Set feedback to data acquisition succeeded and set percentage
