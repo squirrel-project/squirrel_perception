@@ -268,7 +268,7 @@ namespace faat_pcl
               v4r::utils::writeFloatToFile (path_entropy.str (), model.self_occlusions_->at (i));
             }
 
-            loadOrGenerate (dir, model_path, model);
+            //loadOrGenerate (dir, model_path, model);
 
           }
         }
