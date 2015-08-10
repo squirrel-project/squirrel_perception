@@ -268,7 +268,7 @@ namespace faat_pcl
               v4r::utils::writeFloatToFile (path_entropy.str (), model.self_occlusions_->at (i));
             }
 
-            loadOrGenerate (dir, model_path, model);
+            //loadOrGenerate (dir, model_path, model);
 
           }
         }
@@ -297,7 +297,7 @@ namespace faat_pcl
             //check which of them have been trained using training_dir and the model_id_
             //load views, poses and self-occlusions for those that exist
             //generate otherwise
-            std::cout << files[i] << std::endl;
+            //std::cout << files[i] << std::endl;
             std::stringstream model_path;
             model_path << path_ << "/" << files[i];
             std::string path_model = model_path.str ();
