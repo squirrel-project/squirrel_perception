@@ -22,6 +22,7 @@
 #include <pcl/point_types.h>
 #include <pcl/common/centroid.h>
 #include <pcl_conversions/pcl_conversions.h>
+#include <vector>
 
 class Object
 {
@@ -56,6 +57,7 @@ protected:
   std::vector<Object>::iterator objectIterator;
   // just for now
   std::vector<squirrel_object_perception_msgs::RecognizeResponse> recognized_object;
+  std::vector<std_msgs::Int32MultiArray> cluster_indices;
   int id_cnt_;
 
   void set_publish_feedback(std::string phase, std::string status, int percent)
@@ -120,7 +122,7 @@ protected:
           return false;
       ros::ServiceClient client = nh_.serviceClient<squirrel_object_perception_msgs::SegmentVisualizationOnce>("/squirrel_segmentation_visualization_once");
       squirrel_object_perception_msgs::SegmentVisualizationOnce srv;
-     // srv.request.clusters_indices = this->;
+      srv.request.clusters_indices = this->cluster_indices;
       if (client.call(srv))
       {
           ROS_INFO("Called service %s: ", "/squirrel_segmentation_visualization_once");
@@ -134,20 +136,20 @@ protected:
 
   bool get_saliency_map()
   {
-      if (!ros::service::waitForService("/squirrel_attention_3Dsymmetry", ros::Duration(5.0)))
+      if (!ros::service::waitForService("/squirrel_attention_itti", ros::Duration(5.0)))
           return false;
-      ros::ServiceClient client = nh_.serviceClient<squirrel_object_perception_msgs::GetSaliency3DSymmetry>("/squirrel_attention_3Dsymmetry");
+      ros::ServiceClient client = nh_.serviceClient<squirrel_object_perception_msgs::GetSaliency3DSymmetry>("/squirrel_attention_itti");
       squirrel_object_perception_msgs::GetSaliency3DSymmetry srv;
       srv.request.cloud = *(this->scene);
       if (client.call(srv))
       {
-          ROS_INFO("Called service %s: ", "/squirrel_attention_3Dsymmetry");
+          ROS_INFO("Called service %s: ", "/squirrel_attention_itti");
           this->saliency_map = srv.response.saliency_map;
           return true;
       }
       else
       {
-          ROS_ERROR("Failed to call service %s", "/squirrel_attention_3Dsymmetry");
+          ROS_ERROR("Failed to call service %s", "/squirrel_attention_itti");
           return false;
       }
   }
@@ -260,13 +262,15 @@ protected:
     if (client.call(srv))
     {
         ROS_INFO("Called service %s: ", "/squirrel_segmentation_incremental_once");
-        return true;
     }
     else
     {
         ROS_ERROR("Failed to call service %s", "/squirrel_segmentation_incremental_once");
         return false;
     }
+
+    this->cluster_indices = srv.response.clusters_indices;
+
     srv1.request.cloud = *(this->scene);
     srv1.request.clusters_indices = srv.response.clusters_indices;
     if (client1.call(srv1))
@@ -374,6 +378,8 @@ public:
 
     ROS_INFO("%s: executeCB started", action_name_.c_str());
 
+    sleep(2); // HACK: Michael Zillich
+
     if (as_.isPreemptRequested())
     {
         ROS_INFO("%s: Preempted", action_name_.c_str());
@@ -408,10 +414,19 @@ public:
         return;
     }
 
+    if (!setup_visualization())
+    {
+        result_.result_status = "unable to initialze visualization";
+        as_.setAborted(result_);
+        return;
+    }
+
+
     // TODO: find a reasonable number of times to run here
     for(int i=0; i<1; i++)
     {
         run_segmentation_once();
+        run_visualization_once();
     }
     if (objects.size() < 1)
     {
