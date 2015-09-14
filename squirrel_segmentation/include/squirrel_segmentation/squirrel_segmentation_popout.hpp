@@ -28,7 +28,7 @@ private:
   {
   public:
     static int cnt;
-    geometry_msgs::Point pos;  // position, in base_link
+    geometry_msgs::Point pos;  // position, in map frame
     double size;  // diameter of bounding sphere
     std::string name;
 
@@ -81,6 +81,7 @@ private:
   ros::ServiceServer SegmentInit_;
   ros::ServiceServer SegmentOnce_;
   ros::Subscriber pointcloudSubscriber;
+  ros::Publisher markerPublisher;
   tf::TransformBroadcaster tfBroadcast;
   pcl::PointCloud<PointT>::Ptr cloud_;
   tf::TransformListener tf_listener;
@@ -95,6 +96,7 @@ private:
   geometry_msgs::PoseStamped transform(double x, double y, double z, const std::string &from, const std::string &to);
   void tranformCluster2base_link(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_cluster);
   bool isValidCluster(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_cluster, Eigen::Vector4f &centroid);
+  void visualizePersistentObject(PersistentObject &obj);
 
   bool segment(squirrel_object_perception_msgs::SegmentInit::Request & req, squirrel_object_perception_msgs::SegmentInit::Response & response);
   bool returnNextResult(squirrel_object_perception_msgs::SegmentOnce::Request & req, squirrel_object_perception_msgs::SegmentOnce::Response & response);

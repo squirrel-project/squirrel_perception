@@ -67,6 +67,15 @@ protected:
       return;
   }
 
+  std::string get_unique_object_id()
+  {
+      std::stringstream ss;
+      ss << this->id_cnt_;
+      std::string str = ss.str();
+      this->id_cnt_++;
+      return (std::string("object") + str);
+  }
+
   bool do_recognition()
   {
       if (!ros::service::waitForService("/mp_recognition", ros::Duration(5.0)))
@@ -134,15 +143,37 @@ protected:
       {
           ROS_INFO("Called service %s: ", "/squirrel_attention_3Dsymmetry");
           this->saliency_map = srv.response.saliency_map;
-          set_publish_feedback("Get saliency map", "done", 60);
           return true;
       }
       else
       {
           ROS_ERROR("Failed to call service %s", "/squirrel_attention_3Dsymmetry");
-          set_publish_feedback("Get saliency map", "failed", 60);
           return false;
       }
+  }
+
+  geometry_msgs::PoseStamped transform(double x, double y, double z, const std::string &from, const std::string &to)
+  {
+    geometry_msgs::PoseStamped before, after;
+
+    before.pose.position.x = x;
+    before.pose.position.y = y;
+    before.pose.position.z = z;
+    before.pose.orientation.x = 0;
+    before.pose.orientation.y = 0;
+    before.pose.orientation.z = 0;
+    before.pose.orientation.w = 1;
+    before.header.frame_id = from;
+    try
+    {
+      tf_listener.waitForTransform(from, to, ros::Time::now(), ros::Duration(1.0));
+      tf_listener.transformPose(to, before, after);
+    }
+    catch (tf::TransformException& ex)
+    {
+      ROS_ERROR("%s: %s", ros::this_node::getName().c_str(), ex.what());
+    }
+    return after;
   }
 
   bool segments_to_objects(sensor_msgs::PointCloud2 cloud, std::vector<std_msgs::Int32MultiArray> clusters_indices)
@@ -199,8 +230,7 @@ protected:
 
   bool setup_segmentation()
   {
-      set_publish_feedback("Segmentation", "started", 60);
-      if (!ros::service::waitForService("/squirrel_attention_3Dsymmetry", ros::Duration(5.0)))
+      if (!ros::service::waitForService("/squirrel_segmentation_incremental_init", ros::Duration(5.0)))
           return false;
       ros::ServiceClient client = nh_.serviceClient<squirrel_object_perception_msgs::SegmentInit>("/squirrel_segmentation_incremental_init");
       squirrel_object_perception_msgs::SegmentInit srv;
@@ -229,19 +259,19 @@ protected:
     squirrel_object_perception_msgs::SegmentsToObjects srv1;
     if (client.call(srv))
     {
-        ROS_INFO("Called service %s: ", "/squirrel_attention_3Dsymmetry");
+        ROS_INFO("Called service %s: ", "/squirrel_segmentation_incremental_once");
         return true;
     }
     else
     {
-        ROS_ERROR("Failed to call service %s", "/squirrel_attention_3Dsymmetry");
+        ROS_ERROR("Failed to call service %s", "/squirrel_segmentation_incremental_once");
         return false;
     }
     srv1.request.cloud = *(this->scene);
     srv1.request.clusters_indices = srv.response.clusters_indices;
     if (client1.call(srv1))
     {
-        ROS_INFO("Called service %s: ", "/squirrel_attention_3Dsymmetry");
+        ROS_INFO("Called service %s: ", "/squirrel_segments_to_objects");
         ROS_INFO("Found %ld objects", srv1.response.points.size());
         if (srv1.response.points.size() > 0)
         {
@@ -262,7 +292,7 @@ protected:
     }
     else
     {
-        ROS_ERROR("Failed to call service %s", "/squirrel_attention_3Dsymmetry");
+        ROS_ERROR("Failed to call service %s", "/squirrel_segments_to_objects");
         return false;
     }
   }
@@ -285,6 +315,14 @@ protected:
       {
           return false;
       }
+  }
+
+  std::string most_confident_class(squirrel_object_perception_msgs::Classification classification)
+  {
+     std::vector<float>::iterator max;
+     max = std::max_element(classification.confidence.begin(), classification.confidence.end());
+     int max_index = std::distance(classification.confidence.begin(), max);
+     return classification.class_type[max_index].data;
   }
 
   bool run_classifier()
@@ -316,65 +354,6 @@ protected:
       }
   }
 
-  bool get_pointcloud_from_camera()
-  {
-    // get data from depth camera
-    scene = ros::topic::waitForMessage<sensor_msgs::PointCloud2>("/kinect/depth_registered/points", nh_, ros::Duration(5));
-    if (scene)
-    {
-        ROS_DEBUG("%s: Received data", action_name_.c_str());
-        set_publish_feedback("Get data from camera", "done", 10);
-        return true;
-    }
-    else
-    {
-        ROS_INFO("squirrel_object_perception: Did not receive any data from the camera");
-        set_publish_feedback("Get data from camera", "done", 10);
-        return false;
-    }
-  }
-
-  std::string most_confident_class(squirrel_object_perception_msgs::Classification classification)
-  {
-     std::vector<float>::iterator max;
-     max = std::max_element(classification.confidence.begin(), classification.confidence.end());
-     int max_index = std::distance(classification.confidence.begin(), max);
-     return classification.class_type[max_index].data;
-  }
-
-  std::string get_unique_object_id()
-  {
-      std::stringstream ss;
-      ss << this->id_cnt_;
-      std::string str = ss.str();
-      this->id_cnt_++;
-      return (std::string("object") + str);
-  }
-
-  geometry_msgs::PoseStamped transform(double x, double y, double z, const std::string &from, const std::string &to)
-  {
-    geometry_msgs::PoseStamped before, after;
-
-    before.pose.position.x = x;
-    before.pose.position.y = y;
-    before.pose.position.z = z;
-    before.pose.orientation.x = 0;
-    before.pose.orientation.y = 0;
-    before.pose.orientation.z = 0;
-    before.pose.orientation.w = 1;
-    before.header.frame_id = from;
-    try
-    {
-      tf_listener.waitForTransform(from, to, ros::Time::now(), ros::Duration(1.0));
-      tf_listener.transformPose(to, before, after);
-    }
-    catch (tf::TransformException& ex)
-    {
-      ROS_ERROR("%s: %s", ros::this_node::getName().c_str(), ex.what());
-    }
-    return after;
-  }
-
 public:
 
   LookForObjectsAction(std::string name) :
@@ -392,17 +371,27 @@ public:
 
   void executeCB(const squirrel_object_perception_msgs::LookForObjectsGoalConstPtr &goal)
   {
-    set_publish_feedback("Init look_for_objects", "done", 5);
+
+    ROS_INFO("%s: executeCB started", action_name_.c_str());
+
     if (as_.isPreemptRequested())
     {
         ROS_INFO("%s: Preempted", action_name_.c_str());
-        result_.result_status = "Received preempt.";
         as_.setPreempted(result_);
     }
-    if (!get_pointcloud_from_camera())
+
+    // get data from depth camera
+    scene = ros::topic::waitForMessage<sensor_msgs::PointCloud2>("/kinect/depth_registered/points", nh_, ros::Duration(5));
+    if (scene)
     {
+        ROS_DEBUG("%s: Received data", action_name_.c_str());
+    }
+    else
+    {
+        ROS_INFO("squirrel_object_perception: Did not receive any data from the camera");
         result_.result_status = "Unable to get data from the camera.";
         as_.setAborted(result_);
+        success = false;
         return;
     }
     if (!get_saliency_map())
@@ -411,39 +400,37 @@ public:
         as_.setAborted(result_);
         return;
     }
+
     if (!setup_segmentation())
     {
         result_.result_status = "unable to initialze segmentation";
         as_.setAborted(result_);
         return;
     }
+
     // TODO: find a reasonable number of times to run here
     for(int i=0; i<1; i++)
     {
         run_segmentation_once();
     }
-    set_publish_feedback("Segmentation", "finished", 60);
     if (objects.size() < 1)
     {
         result_.result_status = "No objects classified";
-        set_publish_feedback("Pipeline results", "empty", 99);
         as_.setAborted(result_);
         return;
     }
-    set_publish_feedback("Database update", "started", 98);
     for(objectIterator = objects.begin(); objectIterator != objects.end(); objectIterator++)
     {
         success = add_object_to_db(*objectIterator);
         if (!success)
             break;
     }
-    set_publish_feedback("Database update", "finished", 99);
+
     if(success)
     {
+      //result_.sequence = feedback_.sequence;
       ROS_INFO("%s: Succeeded", action_name_.c_str());
       // set the action state to succeeded
-      set_publish_feedback("Pipeline", "finished", 100);
-      result_.result_status = "Pipeline finished successful";
       as_.setSucceeded(result_);
     }
     else
@@ -451,6 +438,7 @@ public:
         result_.result_status = "Some error has occured.";
         as_.setAborted(result_);
     }
+
   }
 };
 
