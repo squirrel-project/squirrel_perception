@@ -201,6 +201,24 @@ template<template<class > class Distance, typename PointInT, typename FeatureT>
 
           flann_models_.push_back (descr_model);
         }
+        /* TP */
+        else if (strs[0] == "pose")
+        {
+          std::string full_file_name = itr_in->path ().string ();
+          std::vector < std::string > strs;
+          boost::split (strs, full_file_name, boost::is_any_of ("/"));
+          //std::cout << "load pose : " << full_file_name << std::endl;
+          pose_files_.push_back(full_file_name);
+        }
+        else if (strs[0] == "entropy")
+        {
+          std::string full_file_name = itr_in->path ().string ();
+          std::vector < std::string > strs;
+          boost::split (strs, full_file_name, boost::is_any_of ("/"));
+          //std::cout << "load entropy : " << full_file_name << std::endl;
+          entropy_files_.push_back(full_file_name);
+        }
+        /* -- */
       }
     }
 
@@ -231,6 +249,8 @@ template<template<class > class Distance, typename PointInT, typename FeatureT>
 
     categories_.clear ();
     confidences_.clear ();
+    poses_best_.clear();  // TP
+    entropies_best_.clear(); // TP
 
     first_nn_category_ = std::string ("");
 
@@ -285,12 +305,16 @@ template<template<class > class Distance, typename PointInT, typename FeatureT>
       first_nn_category_ = flann_models_[indices_scores[0].idx_models_].first->class_;
 
       std::cout << "first id: " << flann_models_[indices_scores[0].idx_models_].first->id_ << std::endl;
+      std::cout << "with class " << flann_models_[indices_scores[0].idx_models_].first->class_ << " and pose " << pose_files_[indices_scores[0].idx_models_] << std::endl;  // TP
 
       std::map<std::string, double> category_map;
       int num_n = std::min (NN_, static_cast<int> (indices_scores.size ()));
 
       std::map<std::string, double>::iterator it;
       double normalization_term = 0;
+
+      std::map<std::string, std::string> pose_file_map;  // TP
+      std::map<std::string, std::string> entropy_file_map;  // TP
 
       for (int i = 0; i < num_n; ++i)
       {
@@ -300,6 +324,8 @@ template<template<class > class Distance, typename PointInT, typename FeatureT>
         {
             category_map[cat] = 1;
             //category_map[cat] = indices_scores[i].score_;   // is the confidence better if score is higher or lower?
+	    pose_file_map[cat] = pose_files_[indices_scores[i].idx_models_];  // TP
+            entropy_file_map[cat] = entropy_files_[indices_scores[i].idx_models_];  // TP
         }
         else
         {
@@ -321,6 +347,8 @@ template<template<class > class Distance, typename PointInT, typename FeatureT>
         is.model_name_ = it->first;
         //is.idx_input_ = static_cast<int> (idx);
         is.score_ = prob;
+	is.pose_file_ = pose_file_map[it->first];  // TP
+        is.entropy_file_ = entropy_file_map[it->first];  // TP
         final_indices_scores.push_back (is);
       }
 
@@ -330,12 +358,16 @@ template<template<class > class Distance, typename PointInT, typename FeatureT>
       {
           categories_.push_back (final_indices_scores[i].model_name_);
           confidences_.push_back (final_indices_scores[i].score_);
+	  poses_best_.push_back (final_indices_scores[i].pose_file_);  // TP
+          entropies_best_.push_back (final_indices_scores[i].entropy_file_);  // TP
       }
     }
     else
     {
       first_nn_category_ = std::string ("error");
       categories_.push_back (first_nn_category_);
+      poses_best_.push_back (first_nn_category_);  // TP
+      entropies_best_.push_back (first_nn_category_);  // TP
     }
   }
 
