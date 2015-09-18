@@ -113,6 +113,7 @@ add_executable(squirrel_attention_symmetry src/squirrel_attention_symmetry.cpp)
 add_executable(squirrel_attention_3Dsymmetry src/squirrel_attention_3Dsymmetry.cpp)
 add_executable(squirrel_attention_height src/squirrel_attention_height.cpp)
 add_executable(squirrel_attention_surfaceorientation src/squirrel_attention_surfaceorientation.cpp)
+add_executable(attention_controller src/AttentionController.cpp)
 #add_executable(squirrel_attention_test src/test.cpp)
 
 ## Add cmake target dependencies of the executable/library
@@ -143,6 +144,8 @@ add_dependencies(squirrel_attention_height v4r)
 
 target_link_libraries(squirrel_attention_surfaceorientation ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
 add_dependencies(squirrel_attention_surfaceorientation v4r)
+
+target_link_libraries(attention_controller ${catkin_LIBRARIES} ${STRANDSV4R_LIBS})
 
 #target_link_libraries(squirrel_attention_test ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
 #add_dependencies(squirrel_attention_test v4r)
