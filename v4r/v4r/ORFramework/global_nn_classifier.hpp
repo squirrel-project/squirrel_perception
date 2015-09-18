@@ -8,6 +8,157 @@
 #include "global_nn_classifier.h"
 #include <v4r/utils/filesystem_utils.h>
 
+// HACK: Michael Zillich, 2015-05
+template<template<class > class Distance, typename PointInT, typename FeatureT>
+  void
+  faat_pcl::rec_3d_framework::GlobalNNPipeline<Distance, PointInT, FeatureT>::checkNNOverlap ()
+  {
+    int numCorrect = 0;
+    int numIncorrect = 0;
+    boost::shared_ptr < std::vector<ModelTPtr> > models = source_->getModels ();
+    for (size_t i = 0; i < models->size (); i++)
+    {
+        std::string path = source_->getModelDescriptorDir (*models->at (i), training_dir_, descr_name_);
+
+        bf::path inside = path;
+        bf::directory_iterator end_itr;
+
+        for (bf::directory_iterator itr_in (inside); itr_in != end_itr; ++itr_in)
+        {
+  #if BOOST_FILESYSTEM_VERSION == 3
+          std::string file_name = (itr_in->path ().filename ()).string();
+  #else
+          std::string file_name = (itr_in->path ()).filename ();
+  #endif
+
+          std::vector < std::string > strs;
+          boost::split (strs, file_name, boost::is_any_of ("_"));
+
+          if (strs[0] == "descriptor")
+          {
+            std::string full_file_name = itr_in->path ().string ();
+            std::vector < std::string > strs;
+            boost::split (strs, full_file_name, boost::is_any_of ("/"));
+
+            typename pcl::PointCloud<FeatureT>::Ptr signature (new pcl::PointCloud<FeatureT>);
+            pcl::io::loadPCDFile (full_file_name, *signature);
+
+            flann_model descr_model;
+            descr_model.first = models->at (i);
+            int size_feat = sizeof(signature->points[0].histogram) / sizeof(float);
+            descr_model.second.resize (size_feat);
+            memcpy (&descr_model.second[0], &signature->points[0].histogram[0], size_feat * sizeof(float));
+
+            flann::Matrix<int> indices;
+            flann::Matrix<float> distances;
+            nearestKSearch (flann_index_, descr_model, NN_, indices, distances);
+
+            //gather NN-search results
+            double score = 0;
+            for (int j = 0; j < NN_; ++j)
+            {
+              score = distances[0][j];
+              index_score is;
+              is.idx_models_ = indices[0][j];
+              is.idx_input_ = static_cast<int> (0);
+              is.score_ = score;
+              if (flann_models_[is.idx_models_].first->class_ != models->at (i)->class_)
+              {
+                numIncorrect++;
+                std::cout << models->at (i)->class_ << " was classified erroneously as " << flann_models_[is.idx_models_].first->class_ << "\n";
+                //std::cout << j << ": " << indices[0][j] << " with score " << score << " and model id: " << flann_models_[is.idx_models_].first->class_ << "/" << flann_models_[is.idx_models_].first->id_ <<std::endl;
+              }
+              else
+              {
+                numCorrect++;
+              }
+            }
+          }
+
+      }
+    }
+    std::cout << "wrongly classified " << numIncorrect << "/" << numCorrect + numIncorrect << " = " << (float)numIncorrect/(float)(numCorrect + numIncorrect) << "\n";
+  }
+
+/**
+ * Go through all training samples and see how many would lie inside the k nearest neighbours of the
+ * given class.
+ */
+template<template<class > class Distance, typename PointInT, typename FeatureT>
+  void
+  faat_pcl::rec_3d_framework::GlobalNNPipeline<Distance, PointInT, FeatureT>::checkNNOverlap (std::string classLabel)
+  {
+    int numCorrect = 0;
+    int numIncorrect = 0;
+    boost::shared_ptr < std::vector<ModelTPtr> > models = source_->getModels ();
+    for (size_t i = 0; i < models->size (); i++)
+    {
+      if (models->at (i)->class_ != classLabel
+         && models->at (i)->class_ == "calculator/")  // HACK
+      {
+        std::string path = source_->getModelDescriptorDir (*models->at (i), training_dir_, descr_name_);
+
+        bf::path inside = path;
+        bf::directory_iterator end_itr;
+
+        for (bf::directory_iterator itr_in (inside); itr_in != end_itr; ++itr_in)
+        {
+  #if BOOST_FILESYSTEM_VERSION == 3
+          std::string file_name = (itr_in->path ().filename ()).string();
+  #else
+          std::string file_name = (itr_in->path ()).filename ();
+  #endif
+
+          std::vector < std::string > strs;
+          boost::split (strs, file_name, boost::is_any_of ("_"));
+
+          if (strs[0] == "descriptor")
+          {
+            std::string full_file_name = itr_in->path ().string ();
+            std::vector < std::string > strs;
+            boost::split (strs, full_file_name, boost::is_any_of ("/"));
+
+            typename pcl::PointCloud<FeatureT>::Ptr signature (new pcl::PointCloud<FeatureT>);
+            pcl::io::loadPCDFile (full_file_name, *signature);
+
+            flann_model descr_model;
+            descr_model.first = models->at (i);
+            int size_feat = sizeof(signature->points[0].histogram) / sizeof(float);
+            descr_model.second.resize (size_feat);
+            memcpy (&descr_model.second[0], &signature->points[0].histogram[0], size_feat * sizeof(float));
+
+            flann::Matrix<int> indices;
+            flann::Matrix<float> distances;
+            nearestKSearch (flann_index_, descr_model, NN_, indices, distances);
+
+            //gather NN-search results
+            double score = 0;
+            for (int j = 0; j < NN_; ++j)
+            {
+              score = distances[0][j];
+              index_score is;
+              is.idx_models_ = indices[0][j];
+              is.idx_input_ = static_cast<int> (0);
+              is.score_ = score;
+              if (flann_models_[is.idx_models_].first->class_ == classLabel)
+              {
+                numIncorrect++;
+                std::cout << models->at (i)->class_ << " was classified erroneously as " << classLabel << "\n";
+                std::cout << j << ": " << indices[0][j] << " with score " << score << " and model id: " << flann_models_[is.idx_models_].first->class_ << "/" << flann_models_[is.idx_models_].first->id_ <<std::endl;
+              }
+              else
+              {
+                numCorrect++;
+              }
+            }
+          }
+        }
+      }
+    }
+    std::cout << "wrongly classified " << numIncorrect << "/" << numCorrect + numIncorrect << " = " << (float)numIncorrect/(float)(numCorrect + numIncorrect) << "\n";
+  }
+// HACK END: Michael Zillich, 2015-05
+
 template<template<class > class Distance, typename PointInT, typename FeatureT>
   void
   faat_pcl::rec_3d_framework::GlobalNNPipeline<Distance, PointInT, FeatureT>::loadFeaturesAndCreateFLANN ()

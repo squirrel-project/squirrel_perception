@@ -260,6 +260,12 @@ namespace faat_pcl
         {
           training_dir_ = dir;
         }
+        
+        void
+        checkNNOverlap ();
+
+        void
+        checkNNOverlap (std::string classLabel);
       };
   }
 }
