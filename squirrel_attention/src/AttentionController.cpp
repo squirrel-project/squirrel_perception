@@ -1,5 +1,5 @@
 /**
- * AttentionController.h
+ * AttentionController.cpp
  *
  * Gets to look to from various attention channels and decides how to move the
  * camera (and robot if necessary).
@@ -10,7 +10,6 @@
 
 #include <cmath>
 #include <std_msgs/Float64.h>
-
 #include <squirrel_attention/AttentionController.h>
 
 AttentionController::AttentionController()
@@ -23,7 +22,10 @@ AttentionController::AttentionController()
   lookSrv_ = nh_.advertiseService("/attention/look_at_position", &AttentionController::lookAtPosition, this);
   fixateSrv_ =  nh_.advertiseService("/attention/fixate_position", &AttentionController::fixatePosition, this);
   clearSrv_ = nh_.advertiseService("/attention/clear_fixation", &AttentionController::clearFixation, this);
+}
 
+void AttentionController::run()
+{
   ros::spin();
 }
 
@@ -70,5 +72,6 @@ int main(int argc, char ** argv)
 {
   ros::init(argc, argv, "attention_controller_node");
   AttentionController ac;
+  ac.run();
   exit(0);
 }

@@ -1,5 +1,5 @@
 /**
- * AttentionControllerNode.h
+ * AttentionController.h
  *
  * Gets to look to from various attention channels and decides how to move the
  * camera (and robot if necessary).
@@ -23,6 +23,7 @@ class AttentionController
 public:
   AttentionController();
   virtual ~AttentionController();
+  void run();
 
 private:
   ros::NodeHandle nh_;
