@@ -4,7 +4,7 @@ project(squirrel_attention)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp rospy sensor_msgs geometry_msgs cv_bridge squirrel_object_perception_msgs v4r) #pcl_conversions
+find_package(catkin REQUIRED COMPONENTS roscpp rospy sensor_msgs geometry_msgs cv_bridge image_transport squirrel_object_perception_msgs v4r) #pcl_conversions
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -114,6 +114,7 @@ add_executable(squirrel_attention_3Dsymmetry src/squirrel_attention_3Dsymmetry.c
 add_executable(squirrel_attention_height src/squirrel_attention_height.cpp)
 add_executable(squirrel_attention_surfaceorientation src/squirrel_attention_surfaceorientation.cpp)
 add_executable(attention_controller src/AttentionController.cpp)
+add_executable(attention_motion src/AttentionMotion.cpp)
 #add_executable(squirrel_attention_test src/test.cpp)
 
 ## Add cmake target dependencies of the executable/library
@@ -145,7 +146,9 @@ add_dependencies(squirrel_attention_height v4r)
 target_link_libraries(squirrel_attention_surfaceorientation ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
 add_dependencies(squirrel_attention_surfaceorientation v4r)
 
-target_link_libraries(attention_controller ${catkin_LIBRARIES} ${STRANDSV4R_LIBS})
+target_link_libraries(attention_controller ${catkin_LIBRARIES})
+
+target_link_libraries(attention_motion ${catkin_LIBRARIES})
 
 #target_link_libraries(squirrel_attention_test ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
 #add_dependencies(squirrel_attention_test v4r)
