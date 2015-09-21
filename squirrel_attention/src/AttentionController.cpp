@@ -8,6 +8,7 @@
  * @date Sept 2015
  */
 
+#include <cmath>
 #include <std_msgs/Float64.h>
 
 #include <squirrel_attention/AttentionController.h>
@@ -34,12 +35,22 @@ AttentionController::~AttentionController()
 bool AttentionController::lookAtImagePosition(squirrel_object_perception_msgs::LookAtImagePosition::Request &req,
                                              squirrel_object_perception_msgs::LookAtImagePosition::Response &res)
 {
+  std_msgs::Float64 panMsg, tiltMsg;
+  // HACK: the focal length is hardcoded for the Kinect/Asus
+  panMsg.data = atan2(req.x, 525);
+  tiltMsg.data = atan2(req.y, 525);
+  if(std::isfinite(panMsg.data) && std::isfinite(tiltMsg.data))
+  {
+    panPub_.publish(panMsg);
+    tiltPub_.publish(tiltMsg);
+  }
   return true;
 }
 
 bool AttentionController::lookAtPosition(squirrel_object_perception_msgs::LookAtPosition::Request &req,
                                         squirrel_object_perception_msgs::LookAtPosition::Response &res)
 {
+  
   return true;
 }
 
