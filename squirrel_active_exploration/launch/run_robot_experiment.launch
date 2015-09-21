@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="hostname" default="localhost" />
+
+  <arg name="save_directory" default="/home/tpat8946/Data/TUW/Results/experiments" />
+  <arg name="map_locations_file" default="/home/tpat8946/Data/TUW/TUW_GH30_experiment_dataset/GH30_experiment_locations_set_002.txt" />
+  <arg name="stored_points_directory" default="/home/tpat8946/Data/TUW/TUW_GH30_online_dataset/GH30_online_set_002" />
+  <arg name="variance" default="0.5" />
+  <arg name="plan_type" default="min_class_entropy_unoccluded" />
+  <arg name="expected_number_objects" default="8" />
+  <arg name="expected_number_classes" default="15" />
+  <arg name="scene_center_x" default="0.048" />
+  <arg name="scene_center_y" default="-1.652" />
+  <arg name="kinect_height" default="0.625" />
+  <arg name="visualize" default="false" />
+  <arg name="save" default="true" />
+
+  <!--
+  <arg name="max_object_distance" default="1.5" />
+  <arg name="min_object_height" default="0.075" />
+  <arg name="max_object_height" default="1.0" />
+  <arg name="min_object_length" default="0.01" />
+  <arg name="max_object_length" default="1.0" />
+  <arg name="table_height_threshold" default="0.5" />
+  <arg name="voxel_overlap" default="0.25" />
+  -->
+  <arg name="max_object_distance" default="1.5" />
+  <arg name="min_object_height" default="0.05" />
+  <arg name="max_object_height" default="2.0" />
+  <arg name="min_object_length" default="0.005" />
+  <arg name="max_object_length" default="2.0" />
+  <arg name="table_height_threshold" default="0.5" />
+  <arg name="voxel_overlap" default="0.4" />
+
+  <node name="squirrel_run_robot_experiment"
+        pkg="squirrel_active_exploration"
+        type="squirrel_run_robot_experiment"
+        output="screen">
+        <param name="save_directory" type="string" value="$(arg save_directory)"/>
+       	<param name="map_locations_file" type="string" value="$(arg map_locations_file)" />
+		<param name="stored_points_directory" type="string" value="$(arg stored_points_directory)" />
+		<param name="variance" type="double" value="$(arg variance)" />
+		<param name="plan_type" type="string" value="$(arg plan_type)" />
+	  	<param name="expected_number_objects" type="int" value="$(arg expected_number_objects)" />
+		<param name="expected_number_classes" type="int" value="$(arg expected_number_classes)" />
+		<param name="scene_center_x" type="double" value="$(arg scene_center_x)" />
+		<param name="scene_center_y" type="double" value="$(arg scene_center_y)" />
+		<param name="kinect_height" type="double" value="$(arg kinect_height)" />
+		<param name="visualize" type="bool" value="$(arg visualize)" />
+		<param name="save" type="bool" value="$(arg save)" />
+		<param name="max_object_distance" type="double" value="$(arg max_object_distance)" />
+		<param name="min_object_height" type="double" value="$(arg min_object_height)" />
+		<param name="max_object_height" type="double" value="$(arg max_object_height)" />
+		<param name="min_object_length" type="double" value="$(arg min_object_length)" />
+		<param name="max_object_length" type="double" value="$(arg max_object_length)" />
+		<param name="table_height_threshold" type="double" value="$(arg table_height_threshold)" />
+		<param name="voxel_overlap" type="double" value="$(arg voxel_overlap)" />
+  </node>
+
+</launch>
