@@ -22,6 +22,9 @@ AttentionController::AttentionController()
   lookSrv_ = nh_.advertiseService("/attention/look_at_position", &AttentionController::lookAtPosition, this);
   fixateSrv_ =  nh_.advertiseService("/attention/fixate_position", &AttentionController::fixatePosition, this);
   clearSrv_ = nh_.advertiseService("/attention/clear_fixation", &AttentionController::clearFixation, this);
+  panStateSub_ = nh_.subscribe("/pan_controller/state", 2, &AttentionController::panStateCallback, this);
+  tiltStateSub_ = nh_.subscribe("/tilt_controller/state", 2, &AttentionController::tiltStateCallback, this);
+  pan_ = tilt_ = 0.;
 }
 
 AttentionController::~AttentionController()
@@ -33,18 +36,35 @@ void AttentionController::run()
   ros::spin();
 }
 
+void AttentionController::panStateCallback(const dynamixel_msgs::JointState::ConstPtr& panStateMsg)
+{
+  jointMutex_.lock();
+  pan_ = panStateMsg->current_pos;
+  jointMutex_.unlock();
+}
+
+void AttentionController::tiltStateCallback(const dynamixel_msgs::JointState::ConstPtr& tiltStateMsg)
+{
+  jointMutex_.lock();
+  tilt_ = tiltStateMsg->current_pos;
+  jointMutex_.unlock();
+}
+
 bool AttentionController::lookAtImagePosition(squirrel_object_perception_msgs::LookAtImagePosition::Request &req,
                                              squirrel_object_perception_msgs::LookAtImagePosition::Response &res)
 {
+  jointMutex_.lock();
   std_msgs::Float64 panMsg, tiltMsg;
   // HACK: the focal length is hardcoded for the Kinect/Asus
-  panMsg.data = -atan2(req.x, 525);
-  tiltMsg.data = atan2(req.y, 525);
+  panMsg.data = pan_ + -atan2(req.x, 525);
+  tiltMsg.data = tilt_ + atan2(req.y, 525);
+  // ROS_INFO("pan/tilt move to (deg): %.f %.f", panMsg.data*180./M_PI, tiltMsg.data*180./M_PI);
   if(std::isfinite(panMsg.data) && std::isfinite(tiltMsg.data))
   {
     panPub_.publish(panMsg);
     tiltPub_.publish(tiltMsg);
   }
+  jointMutex_.unlock();
   return true;
 }
 
