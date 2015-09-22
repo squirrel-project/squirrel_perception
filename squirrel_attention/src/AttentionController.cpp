@@ -24,14 +24,13 @@ AttentionController::AttentionController()
   clearSrv_ = nh_.advertiseService("/attention/clear_fixation", &AttentionController::clearFixation, this);
 }
 
+AttentionController::~AttentionController()
+{
+}
+
 void AttentionController::run()
 {
   ros::spin();
-}
-
-AttentionController::~AttentionController()
-{
-  nh_.shutdown();
 }
 
 bool AttentionController::lookAtImagePosition(squirrel_object_perception_msgs::LookAtImagePosition::Request &req,
@@ -39,7 +38,7 @@ bool AttentionController::lookAtImagePosition(squirrel_object_perception_msgs::L
 {
   std_msgs::Float64 panMsg, tiltMsg;
   // HACK: the focal length is hardcoded for the Kinect/Asus
-  panMsg.data = atan2(req.x, 525);
+  panMsg.data = -atan2(req.x, 525);
   tiltMsg.data = atan2(req.y, 525);
   if(std::isfinite(panMsg.data) && std::isfinite(tiltMsg.data))
   {
