@@ -33,13 +33,16 @@ private:
   boost::mutex movingMutex_;
   bool panning_, tilting_, moving_, cameraSteady_, timerStarted_;
   ros::Timer steadyTimer_;
-  cv::Mat prevgray, gray, flow, cflow, frame;
+  cv::Mat prevgray_, gray_, flow_, cflow_, frame_;
+  int subsample_;  // image subsample factor
 
   void imageCallback(const sensor_msgs::ImageConstPtr& msg);
   void panStateCallback(const dynamixel_msgs::JointState::ConstPtr& panStateMsg);
   void tiltStateCallback(const dynamixel_msgs::JointState::ConstPtr& tiltStateMsg);
   void cameraSteadyCallback(const ros::TimerEvent& event);
   void checkMovement();
+  bool calculateFlowCenter(float &cx, float &cy, float &mag, float &angle);
+  void visualiseFlow(float cx, float cy, float mag, float angle, bool validFlow);
 };
 
 #endif
