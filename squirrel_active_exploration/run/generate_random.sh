@@ -3,13 +3,11 @@
 ###
 # VARIABLES
 ###
-SQUIRREL_DIRECTORY=/home/tpat8946/ros_ws/squirrel_active_exploration/src/squirrel_active_exploration
+SQUIRREL_DIRECTORY=/home/tpat8946/ros_ws/squirrel/src/squirrel_perception/squirrel_active_exploration
 SAVE_DIRECTORY=/home/tpat8946/Data/TUW/Results/online_dataset
-#DATA_DIRECTORY=/home/tpat8946/Data/TUW/TUW_dynamic_dataset_icra15/training_data/cisco_phone.pcd
 DATA_DIRECTORY=/home/tpat8946/Data/TUW/Datasets/TUW_GH30_online_dataset/GH30_online_set_001/min_class_entropy_unoccluded
 ENTROPY_FILE_NAME=$SQUIRREL_DIRECTORY/data/config/entropy_order/training_set_3/GH30_online_set_001_min_class_entropy_unoccluded.txt
-#DATA_DIRECTORY=/home/tpat8946/Data/TUW/TUW_dynamic_dataset_icra15/training_data/coffee_container.pcd
-#ENTROPY_FILE_NAME=$SQUIRREL_DIRECTORY/data/config/entropy_order/training_set_2/coffee_container.txt
+IMAGE_FILE=/home/tpat8946/ros_ws/squirrel/src/squirrel_perception/squirrel_active_exploration/data/test45.png
 VIEWS_LIMIT=$SQUIRREL_DIRECTORY/data/config/views_limit.txt
 SINGLE_CLASS_TEST=''
 REVERSE_TRANSFORMS=false
@@ -49,6 +47,7 @@ if [ "$GENERATE_ORDER_FLAG" = "true" ]; then
 	rosrun squirrel_active_exploration squirrel_run_with_dataset \
 		_save_directory:=$SAVE_DIRECTORY \
 		_data_directory:=$DATA_DIRECTORY \
+		_image_file:=$IMAGE_FILE \
 		_entropy_order_file:=$ENTROPY_FILE_NAME \
 		_views_limit_file:=$VIEWS_LIMIT \
 		_single_class_test:=$SINGLE_CLASS_TEST \
@@ -100,6 +99,7 @@ do
 		rosrun squirrel_active_exploration squirrel_run_with_dataset \
 			_save_directory:=$SAVE_DIRECTORY \
 			_data_directory:=$DATA_DIRECTORY \
+			_image_file:=$IMAGE_FILE \
 			_entropy_order_file:=$ENTROPY_FILE_NAME \
 			_views_limit_file:=$VIEWS_LIMIT \
 			_single_class_test:=$SINGLE_CLASS_TEST \

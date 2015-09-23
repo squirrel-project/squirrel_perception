@@ -208,11 +208,19 @@ int main(int argc, char **argv)
     ros::ServiceClient viz_client = n->serviceClient<squirrel_object_perception_msgs::SegmentVisualizationOnce>("/squirrel_segmentation_visualization_once");
 
     // Get the directory
-
     string test_dir;
     if (!n->getParam("directory", test_dir))
     {
         ROS_ERROR("save_segment_indices::main : You must enter a directory");
+        if (exp)
+            delete exp;
+        return EXIT_FAILURE;
+    }
+    // Get a fake image file for visualization
+    string image_file;
+    if (!n->getParam("image_file", umage_file))
+    {
+        ROS_ERROR("save_segment_indices::main : You must enter an image file for visualization");
         if (exp)
             delete exp;
         return EXIT_FAILURE;
@@ -230,8 +238,7 @@ int main(int argc, char **argv)
     }
 
     // Load the image
-    string image_name = "/home/tpat8946/ros_ws/squirrel_active_exploration/src/squirrel_active_exploration/data/test45.png";
-    cv::Mat image = cv::imread(image_name,-1);
+    cv::Mat image = cv::imread(image_file,-1);
     cv_bridge::CvImagePtr cv_ptr (new cv_bridge::CvImage);
     ros::Time time = ros::Time::now();
     // Convert OpenCV image to ROS message

@@ -39,42 +39,8 @@ public:
     }
 
     void pointcloud2pcd() {
-//        ROS_INFO("Start saving");
-//        sensor_msgs::PointCloud2ConstPtr scene;
-//        scene = ros::topic::waitForMessage<sensor_msgs::PointCloud2>("/kinect/depth_registered/points", *nh, ros::Duration(50));
-////        std::cout << "1" << std::endl;
-////        std::cout << "breite " << scene->width << std::endl;
-//        pcl::PCLPointCloud2 pcl_pc2;
-//        pcl_conversions::toPCL(*scene,pcl_pc2);
 
-//        pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
-//        pcl::fromPCLPointCloud2(pcl_pc2, *cloud);
-
-//        printf("Read %ld points\n", (long int)cloud->size());
-
-//        pcl::io::savePCDFileBinary ("/home/tpat8946/Data/TUW/TUW_Gusshausstrasse_dataset/test1.pcd", *cloud);
-//        ROS_INFO("PointCloud saved");
-
-//        if (savePose) {
-//            tf::StampedTransform transform;
-//            tf::TransformListener tf_listener;
-//            tf_listener.waitForTransform("/kinect_depth_optical_frame", "/map", ros::Time(0), ros::Duration(5.0));
-//            tf_listener.lookupTransform ("/kinect_depth_optical_frame", "/map", ros::Time(0), transform);
-
-//            tf::Vector3 t = transform.getOrigin();
-//            tf::Matrix3x3 r = transform.getBasis();
-
-//            std::ofstream poseFile;
-//            poseFile.open ("/home/tpat8946/Data/TUW/TUW_Gusshausstrasse_dataset/stampedPose.txt");
-//            poseFile << t[0] << " " << t[1] << " " << t[2] << "\n";
-//            //write rotation matrix row-wise
-//            poseFile << r[0][0] << " " << r[0][1] << " " << r[0][2] << " " << r[1][0] << " " << r[1][1] << " " << r[1][2] << " " << r[2][0] << " " << r[2][1] << " " << r[2][2];
-//            poseFile.close();
-
-
-//        }
-
-        string dir = "/home/tpat8946/";
+        string dir = "";
         int id = 100;
         nh->getParam("directory", dir);
         nh->getParam("id", id);

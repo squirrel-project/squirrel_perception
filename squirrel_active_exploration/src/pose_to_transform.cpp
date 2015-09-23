@@ -22,8 +22,13 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "cloud2pcd");
     ros::NodeHandle nh( "~" );
     // Read the directory name
-    string dir = "/home/tpat8946/Data/TUW/TUW_GH30_dataset/set_001";
+    string dir = "";
     nh.getParam("directory", dir);
+    if (dir.size() == 0)
+    {
+        ROS_ERROR("pose_to_transform::main : invalid directory");
+        return EXIT_FAILURE;
+    }
     ROS_INFO("pose_to_transform::main : converting files in directory %s", dir.c_str());
 
     DIR *dp;

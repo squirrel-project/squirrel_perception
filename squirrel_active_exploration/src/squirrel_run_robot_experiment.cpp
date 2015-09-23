@@ -7,8 +7,9 @@ using namespace std;
 using namespace pcl;
 
 #define _LOCATIONS_ORDER_FILENAME "experiment_locations.txt"
-#define _MAP_LOCATIONS_FILE "/home/tpat8946/Data/TUW/TUW_GH30_dataset/GH30_set_003_locations.txt"
-#define _STORE_POINTS_DIR "/home/tpat8946/Data/"
+#define _MAP_LOCATIONS_FILE ""
+#define _STORE_POINTS_DIR ""
+#define _IMAGE_FILE "test45.png"
 #define _VARIANCE 0.5
 #define _PLAN_TYPE "max_area"
 #define _EXPECTED_NUMBER_OBJECTS -1
@@ -21,13 +22,14 @@ using namespace pcl;
 #define _TRANSFORMATION_PREFIX "transformation_"
 #define _VERIFICATION_PREFIX "verification_cloud_"
 
-bool parse_input(const ros::NodeHandle &n, string &map_locations_file, string &stored_points_dir, double &variance, SIM_TYPE &sim,
+bool parse_input(const ros::NodeHandle &n, string &map_locations_file, string &stored_points_dir, string &image_file, double &variance, SIM_TYPE &sim,
                  int &expected_number_objects, int &expected_number_classes, double &scene_center_x, double &scene_center_y, double &kinect_height,
                  bool &do_visualize, bool &do_saving)
 {
     // Default values
     map_locations_file = _MAP_LOCATIONS_FILE;
     stored_points_dir = _STORE_POINTS_DIR;
+    image_file = _IMAGE_FILE;
     variance = _VARIANCE;
     expected_number_objects = _EXPECTED_NUMBER_OBJECTS;
     expected_number_classes = _EXPECTED_NUMBER_CLASSES;
@@ -39,6 +41,7 @@ bool parse_input(const ros::NodeHandle &n, string &map_locations_file, string &s
     // Read the arguments
     n.getParam("map_locations_file", map_locations_file);
     n.getParam("stored_points_directory", stored_points_dir);
+    n.getParam("image_file", image_file);
     n.getParam("variance", variance);
     n.getParam("expected_number_objects", expected_number_objects);
     n.getParam("expected_number_classes", expected_number_classes);
@@ -89,10 +92,28 @@ bool parse_input(const ros::NodeHandle &n, string &map_locations_file, string &s
         ROS_ERROR("squirrel_run_planner::parse_input : could not interpret plan type input %s", plan_type.c_str());
         return false;
     }
+    // Check inputs are valid
+    if (map_locations_file.size() == 0)
+    {
+        ROS_ERROR("squirrel_run_planner::parse_input : invalid map locations file");
+        return false;
+    }
+    if (stored_points_dir.size() == 0)
+    {
+        ROS_ERROR("squirrel_run_planner::parse_input : invalid directory to store point clouds");
+        return false;
+    }
+    if (image_file.size() == 0)
+    {
+        ROS_ERROR("squirrel_run_planner::parse_input : invalid image file");
+        return false;
+    }
+
     // Print the input to console
     ROS_INFO(" -- PARAMETERS --");
     ROS_INFO("  Map locations file = %s", map_locations_file.c_str());
     ROS_INFO("  Stored points directory = %s", stored_points_dir.c_str());
+    ROS_INFO("  Image file = %s", image_file.c_str());
     ROS_INFO("  Variance = %.4f", variance);
     ROS_INFO("  Simulation type = %s", plan_type.c_str());
     ROS_INFO("  Expected number objects = %i", expected_number_objects);
@@ -112,7 +133,7 @@ bool parse_input(const ros::NodeHandle &n, string &map_locations_file, string &s
     return true;
 }
 
-bool load_map_locations(const string &map_locations_file, const double &height, vector<Eigen::Vector4f> &map_locations,
+bool load_map_locations(const string &map_locations_file, const string &image_file, const double &height, vector<Eigen::Vector4f> &map_locations,
                         vector<pair<Eigen::Vector4f,int> > &locations_with_ix, vector<Eigen::Vector4f> &road_map, sensor_msgs::Image &in_image)
 {
     map_locations.clear();
@@ -163,8 +184,7 @@ bool load_map_locations(const string &map_locations_file, const double &height, 
     }
 
     // Load the image
-    string image_name = "/home/tpat8946/ros_ws/squirrel_active_exploration/src/squirrel_active_exploration/data/test45.png";
-    cv::Mat image = cv::imread(image_name,-1);
+    cv::Mat image = cv::imread(image_file,-1);
     cv_bridge::CvImagePtr cv_ptr (new cv_bridge::CvImage);
     ros::Time time = ros::Time::now();
     // Convert OpenCV image to ROS message
@@ -428,6 +448,7 @@ int main(int argc, char **argv)
     // Get the input
     string map_locations_file;
     string stored_points_dir;
+    string image_file;
     double variance;
     SIM_TYPE sim;
     int expected_number_objects;
@@ -437,7 +458,7 @@ int main(int argc, char **argv)
     double kinect_height;
     bool do_visualize;
     bool do_saving;
-    if (!parse_input(*exp->get_ros_node_handle(), map_locations_file, stored_points_dir, variance, sim,
+    if (!parse_input(*exp->get_ros_node_handle(), map_locations_file, stored_points_dir, image_file, variance, sim,
                      expected_number_objects, expected_number_classes, scene_center_x, scene_center_y, kinect_height,
                      do_visualize, do_saving))
     {
@@ -451,7 +472,7 @@ int main(int argc, char **argv)
     vector<pair<Eigen::Vector4f,int> > map_locations_with_indices;
     vector<Eigen::Vector4f> road_map;
     sensor_msgs::Image in_image;
-    if (!load_map_locations(map_locations_file, kinect_height, map_locations, map_locations_with_indices, road_map, in_image))
+    if (!load_map_locations(map_locations_file, image_file, kinect_height, map_locations, map_locations_with_indices, road_map, in_image))
     {
         ROS_ERROR("squirrel_run_robot_experiment::main : could not load the data");
         if (exp)

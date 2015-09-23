@@ -51,23 +51,6 @@ bool frame_to_frame_tf(const string &frame1, const string &frame2, Eigen::Matrix
     transform(1,3) = translation.getY();
     transform(2,3) = translation.getZ();
 
-    //transform = transform.inverse();
-
-//    tf::StampedTransform transform;
-//    tf::TransformListener tf_listener;
-//    tf_listener.waitForTransform("/kinect_depth_optical_frame", "/map", ros::Time(0), ros::Duration(5.0));
-//    tf_listener.lookupTransform ("/kinect_depth_optical_frame", "/map", ros::Time(0), transform);
-
-//    tf::Vector3 t = transform.getOrigin();
-//    tf::Matrix3x3 r = transform.getBasis();
-
-//    std::ofstream poseFile;
-//    poseFile.open ("/home/tpat8946/Data/TUW/TUW_Gusshausstrasse_dataset/stampedPose.txt");
-//    poseFile << t[0] << " " << t[1] << " " << t[2] << "\n";
-//    //write rotation matrix row-wise
-//    poseFile << r[0][0] << " " << r[0][1] << " " << r[0][2] << " " << r[1][0] << " " << r[1][1] << " " << r[1][2] << " " << r[2][0] << " " << r[2][1] << " " << r[2][2];
-//    poseFile.close();
-
     return true;
 }
 
@@ -556,7 +539,6 @@ bool transform_cloud_to_cloud_nonrigid(const PointCloud<PointT> &source, const P
     }
     PointCloud<PointT> write_cloud;
     transformPointCloud(source, write_cloud, best_transform);
-    io::savePCDFileASCII("/home/tpat8946/transformed1.pcd", write_cloud);
 
     PointCloud<PointT>::Ptr source_ptr (new PointCloud<PointT>(source));
     PointCloud<PointT>::Ptr target_ptr (new PointCloud<PointT>(target));
@@ -653,168 +635,6 @@ bool transform_cloud_to_cloud_nonrigid(const PointCloud<PointT> &source, const P
     //cout << transform << endl;
 
     return true;
-
-
-//    Eigen::Matrix4f tf_scale = Eigen::Matrix4f::Identity();
-//    double score_scale = numeric_limits<double>::infinity();
-//    if (!transform_cloud_to_cloud(source_copy, target, tf_scale, score_scale))
-//    {
-//        printf(ANSI_COLOR_RED  "ERROR utils::icp_nonrigid : could not call icp function"  ANSI_COLOR_RESET "\n");
-//        return false;
-//    }
-//    io::savePCDFileASCII("/home/tpat8946/transformed2a.pcd", source_copy);
-//    transformPointCloud(source_copy, write_cloud, tf_scale);
-//    io::savePCDFileASCII("/home/tpat8946/transformed2b.pcd", write_cloud);
-
-//    // If the unscaled score was better than the scaled score then return the unscaled transform and score
-//    if (score_scale > best_score)
-//    {
-//        printf(ANSI_COLOR_YELLOW  "WARN utils::icp_nonrigid : scaling did not improve the alignment"  ANSI_COLOR_RESET "\n");
-//        transform = best_transform;
-//        score = best_score;
-//        scale = NAN;
-//        return true;
-//    }
-//    else
-//    {
-//        transform = tf_scale;
-//        score = score_scale;
-//        scale = av_scale;
-//    }
-
-//    return true;
-
-
-
-
-
-
-//    // Try again at this scale
-//    double best_scale = pca_scale;
-//    Eigen::Matrix4f T_scale = Eigen::Matrix4f::Identity();
-//    T_scale.topLeftCorner(3,3) *= Eigen::Matrix3f::Identity() * pca_scale;
-//    PointCloud<PointT> source_copy;
-//    transformPointCloud(source, source_copy, T_scale);
-//    Eigen::Matrix4f tf_scale = Eigen::Matrix4f::Identity();
-//    double score_scale = numeric_limits<double>::infinity();
-//    if (!transform_cloud_to_cloud (source_copy, target, tf_scale, score_scale))
-//    {
-//        printf(ANSI_COLOR_RED  "ERROR utils::icp_nonrigid : could not call icp function"  ANSI_COLOR_RESET "\n");
-//        return false;
-//    }
-//    io::savePCDFileASCII("/home/tpat8946/transformed2a.pcd", source_copy);
-//    transformPointCloud(source_copy, write_cloud, tf_scale);
-//    io::savePCDFileASCII("/home/tpat8946/transformed2b.pcd", write_cloud);
-
-//    // If the unscaled score was better than the scaled score then return the unscaled transform and score
-//    if (score_scale > best_score)
-//    {
-//        printf(ANSI_COLOR_YELLOW  "WARN utils::icp_nonrigid : scaling did not improve the alignment"  ANSI_COLOR_RESET "\n");
-//        transform = best_transform;
-//        score = best_score;
-//        scale = NAN;
-//        return true;
-//    }
-
-//    // Otherwise proceed with trying different scales
-//    best_transform = tf_scale;
-//    best_score = score_scale;
-//    int num_iterations = 10;
-//    double iteration_scale_step = 0.2;
-//    double s_loop;
-//    // Loop through iteration step
-//    for (int i = -(num_iterations/2); i <= (num_iterations/2); ++i)
-//    {
-//        s_loop = (pca_scale + (double)i*(pca_scale*iteration_scale_step));
-//        if (s_loop <= 0)
-//            s_loop = iteration_scale_step;
-//        //cout << "scale to " << s_loop << endl;
-//        Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
-//        T.topLeftCorner(3,3) *= Eigen::Matrix3f::Identity() * s_loop;
-//        //cout << "apply scale" << endl << T << endl;
-//        transformPointCloud(source, source_copy, T);
-//        string f ="/home/tpat8946/transformed" + boost::lexical_cast<string>(s_loop) + ".pcd";
-//        io::savePCDFileASCII(f, source_copy);
-//        // Perform icp
-//        Eigen::Matrix4f tf = Eigen::Matrix4f::Identity();
-//        double sc = numeric_limits<double>::infinity();
-//        if (!transform_cloud_to_cloud(source_copy, target, tf, sc))
-//        {
-//            printf(ANSI_COLOR_RED  "ERROR utils::icp_nonrigid : could not call icp function"  ANSI_COLOR_RESET "\n");
-//        }
-//        else
-//        {
-//            cout << "scale " << s_loop << " score " << sc << endl;
-//            // If score is better
-//            if (sc < best_score)
-//            {
-//                best_score = sc;
-//                best_transform = tf;
-//                best_scale = s_loop;
-//            }
-//        }
-//    }
-
-//    // If no iteration improved the score, then return the original
-//    if (best_score > score_scale)
-//    {
-//        printf(ANSI_COLOR_YELLOW  "WARN utils::icp_nonrigid : first iterations did not improve the alignment"  ANSI_COLOR_RESET "\n");
-//        transform = T_scale * tf_scale;
-//        score = score_scale;
-//        scale = pca_scale;
-//        return true;
-//    }
-//    cout << "BEST scale first " << best_scale << endl;
-//    Eigen::Matrix4f T3 = Eigen::Matrix4f::Identity();
-//    T3.topLeftCorner(3,3) *= Eigen::Matrix3f::Identity() * best_scale;
-//    transformPointCloud(source_copy, write_cloud, T3);
-//    io::savePCDFileASCII("/home/tpat8946/transformed3a.pcd", write_cloud);
-//    transformPointCloud(write_cloud, write_cloud, best_transform);
-//    io::savePCDFileASCII("/home/tpat8946/transformed3b.pcd", write_cloud);
-
-//    // Otherwise loop again at a finer scale step
-//    num_iterations = 20;
-//    iteration_scale_step = 0.02;
-//    double fine_scale = best_scale;
-//    // Loop at the first iteration step
-//    for (int i = -(num_iterations/2); i <= (num_iterations/2); ++i)
-//    {
-//        s_loop = (fine_scale + (double)i*(fine_scale*iteration_scale_step));
-//        //cout << "scale to " << s_loop << endl;
-//        Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
-//        T.topLeftCorner(3,3) *= Eigen::Matrix3f::Identity() * s_loop;
-//        //cout << "apply scale" << endl << T << endl;
-//        transformPointCloud(source, source_copy, T);
-//        // Perform icp
-//        Eigen::Matrix4f tf = Eigen::Matrix4f::Identity();
-//        double sc = numeric_limits<double>::infinity();
-//        if (!transform_cloud_to_cloud(source_copy, target, tf, sc))
-//        {
-//            printf(ANSI_COLOR_RED  "ERROR utils::icp_nonrigid : could not call icp function"  ANSI_COLOR_RESET "\n");
-//        }
-//        else
-//        {
-//            // If score is better
-//            if (sc < best_score)
-//            {
-//                best_score = sc;
-//                best_transform = tf;
-//                best_scale = s_loop;
-//            }
-//        }
-//    }
-//    Eigen::Matrix4f T4 = Eigen::Matrix4f::Identity();
-//    T3.topLeftCorner(3,3) *= Eigen::Matrix3f::Identity() * best_scale;
-//    transformPointCloud(source_copy, write_cloud, T4);
-//    io::savePCDFileASCII("/home/tpat8946/transformed4a.pcd", write_cloud);
-//    transformPointCloud(write_cloud, write_cloud, best_transform);
-//    io::savePCDFileASCII("/home/tpat8946/transformed4b.pcd", write_cloud);
-
-//    // Return the best
-//    transform = best_transform;
-//    score = best_score;
-//    scale = best_scale;
-//    return true;
 }
 
 vector<Eigen::Matrix4f> rotation_matrix(const double &theta)

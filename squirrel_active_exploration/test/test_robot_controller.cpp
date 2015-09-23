@@ -131,8 +131,8 @@ int main(int argc, char **argv)
         exp->data_from_sensor(tf);
         // Get the point cloud
         current_cloud = exp->get_cloud();
-        f = "/home/tpat8946/raw_cloud_" + boost::lexical_cast<string>(counter) + ".pcd";
-        io::savePCDFileBinary(f, current_cloud);
+//        f = "/home/tpat8946/raw_cloud_" + boost::lexical_cast<string>(counter) + ".pcd";
+//        io::savePCDFileBinary(f, current_cloud);
 //        // Transform the cloud here
 //        transformPointCloud(current_cloud, transformed_cloud, tf);
 //        f = "/home/tpat8946/transformed_cloud_" + boost::lexical_cast<string>(counter) + ".pcd";
@@ -173,13 +173,13 @@ int main(int argc, char **argv)
         tf(2,3) = t[2];
         // Transform the cloud here
         transformPointCloud(current_cloud, transformed_cloud, tf);
-        f = "/home/tpat8946/transformed_cloud_" + boost::lexical_cast<string>(counter) + ".pcd";
-        io::savePCDFileBinary(f, transformed_cloud);
+//        f = "/home/tpat8946/transformed_cloud_" + boost::lexical_cast<string>(counter) + ".pcd";
+//        io::savePCDFileBinary(f, transformed_cloud);
         // Inverse transform the cloud here
         inv_tf = tf.inverse();
         transformPointCloud(current_cloud, transformed_cloud, inv_tf);
-        f = "/home/tpat8946/inverse_transformed_cloud_" + boost::lexical_cast<string>(counter) + ".pcd";
-        io::savePCDFileBinary(f, transformed_cloud);
+//        f = "/home/tpat8946/inverse_transformed_cloud_" + boost::lexical_cast<string>(counter) + ".pcd";
+//        io::savePCDFileBinary(f, transformed_cloud);
 
         // Increment counter
         ++counter;

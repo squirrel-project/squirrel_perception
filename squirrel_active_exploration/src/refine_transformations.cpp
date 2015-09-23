@@ -14,8 +14,13 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "refine_transforms");
     ros::NodeHandle nh ("~");
 
-    string test_dir = "/home/tpat8946/Data/TUW/TUW_GH30_dataset/set_001";
+    string test_dir = "";
     nh.getParam("directory", test_dir);
+    if (test_dir.size() == 0)
+    {
+        ROS_ERROR("refine_transforms::main : invalid directory");
+        return EXIT_FAILURE;
+    }
     ROS_INFO("refine_transforms::main : aligning the clouds in directory %s", test_dir.c_str());
     bool reverse_transform = false;
 

@@ -393,12 +393,6 @@ bool find_planes(const PointCloud<PointT> &cloud, vector<int> &plane_indices)
             max_cluster = ec_cluster_indices[i].indices.size();
     }
 
-//    // Write the first ground to file
-//    string f = "/home/tpat8946/cloud0.pcd";
-//    io::savePCDFileASCII(f,*in_cloud);
-//    f = "/home/tpat8946/plane0.pcd";
-//    io::savePCDFileASCII(f,*cloud_plane);
-
     // Current index mapping
     vector<int> ix_mapping (in_cloud->size());
     for (int i = 0; i < ix_mapping.size(); ++i)
@@ -425,15 +419,6 @@ bool find_planes(const PointCloud<PointT> &cloud, vector<int> &plane_indices)
                 all_planes.push_back(ix_mapping[inliers->indices[i]]);
                 original_plane.push_back(ix_mapping[inliers->indices[i]]);
             }
-
-//            f = "/home/tpat8946/cloud" + boost::lexical_cast<string>(iteration) + ".pcd";
-//            io::savePCDFileASCII(f,*curr_cloud);
-//            PointCloud<PointT> extracted_cloud;
-//            cout << "in_cloud " << in_cloud->size() << endl;
-//            cout << "original_plane " << original_plane.size() << endl;
-//            copyPointCloud(*in_cloud, original_plane, extracted_cloud);
-//            f = "/home/tpat8946/plane" + boost::lexical_cast<string>(iteration) + ".pcd";
-//            io::savePCDFileASCII(f,extracted_cloud);
         }
 
         // Store the indices of the cloud
@@ -446,9 +431,6 @@ bool find_planes(const PointCloud<PointT> &cloud, vector<int> &plane_indices)
         extract.setIndices (inliers);
         extract.setNegative (true);
         extract.filter (*curr_cloud);
-
-//        f = "/home/tpat8946/nonplane" + boost::lexical_cast<string>(iteration) + ".pcd";
-//        io::savePCDFileASCII(f,*curr_cloud);
 
         // Get the indices into the original point cloud
         vector<int> outliers (ix_vec.size() + inliers->indices.size());

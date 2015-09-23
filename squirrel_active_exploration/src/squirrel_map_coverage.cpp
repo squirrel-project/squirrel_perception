@@ -4,7 +4,7 @@ using namespace std;
 using namespace octomap;
 
 // Default definitions, should be replaced by program arguments
-#define _FILENAME "/home/tpat8946/Data/TUW/maps/fr_078_tidyup/"
+#define _FILENAME ""
 #define _TREE_DEPTH 14
 #define _ROBOT_HEIGHT 0.7
 #define _ROBOT_OUTER_RANGE 2.0
@@ -55,6 +55,13 @@ int main(int argc, char **argv)
         ROS_INFO("Visualization = ON");
     else
         ROS_INFO("Visualization = OFF");
+
+    // Chack that input filename is valid
+    if (filename.size() == 0)
+    {
+        ROS_ERROR("squirrel_map_coverage::main : invalid input file");
+        return EXIT_FAILURE;
+    }
 
     // Get the octree
     bool is_directory;

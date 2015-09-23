@@ -17,9 +17,10 @@ CLASS_TYPE=('' '')
 EXPECTED_NUMBER_OBJECTS=(6 6)
 DATA_PATH=/home/tpat8946/Data/TUW/willow_dataset_training_models_gt/test_set
 
+IMAGE_FILE=/home/tpat8946/ros_ws/squirrel/src/squirrel_perception/squirrel_active_exploration/data/test45.png
 RESULTS_PATH=/home/tpat8946/Data/TUW/Results
 TRAINING_SET=training_set_3
-SQUIRREL_DIRECTORY=/home/tpat8946/ros_ws/squirrel_active_exploration/src/squirrel_active_exploration
+SQUIRREL_DIRECTORY=/home/tpat8946/ros_ws/squirrel/src/squirrel_perception/squirrel_active_exploration
 VIEWS_LIMIT=$SQUIRREL_DIRECTORY/data/config/views_limit.txt
 REVERSE_TRANSFORMS=true
 LOAD_SEGMENTATION=true
@@ -69,6 +70,7 @@ for i in "${!DATA_SETS[@]}"; do
 		rosrun squirrel_active_exploration squirrel_run_with_dataset \
 			_save_directory:=$save_dir \
 			_data_directory:=$data_dir \
+			_image_file:=$IMAGE_FILE \
 			_entropy_order_file:=$entropy_file_name \
 			_views_limit_file:=$VIEWS_LIMIT \
 			_single_class_test:=$c_type \
@@ -114,6 +116,7 @@ for i in "${!DATA_SETS[@]}"; do
 			rosrun squirrel_active_exploration squirrel_run_with_dataset \
 				_save_directory:=$save_dir \
 				_data_directory:=$data_dir \
+				_image_file:=$IMAGE_FILE \
 				_entropy_order_file:=$entropy_file_name \
 				_views_limit_file:=$VIEWS_LIMIT \
 				_single_class_test:=$c_type \

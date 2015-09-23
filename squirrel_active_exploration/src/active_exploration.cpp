@@ -1686,29 +1686,6 @@ bool ActiveExploration::visualize_planning_world(const Eigen::Vector4f &best_loc
     best_location_pt.points[0].z = best_location[2];
     viewer->addSphere (best_location_pt[0], 0.06, 1.0, 0.3, 0.6, "next best view");  // Pink
 
-//    // For testing to compare the point clouds, show a point cloud from file and make sure everything aligns to this cloud
-////    string cc = "/home/tpat8946/Data/TUW/willow_dataset_training_models_gt/test_set/T_01_willow_dataset/cloud_0000000000.pcd";
-////    string tt = "/home/tpat8946/Data/TUW/willow_dataset_training_models_gt/test_set/T_01_willow_dataset/pose_0000000000.pcd";
-////    bool reverse_transform = true;
-//    string cc = "/home/tpat8946/Data/TUW/TUW_dynamic_dataset_icra15/training_data/asus_box.pcd/cloud_00000001.pcd";
-//    string tt = "/home/tpat8946/Data/TUW/TUW_dynamic_dataset_icra15/training_data/asus_box.pcd/pose_00000001.txt";
-//    bool reverse_transform = false;
-//    // Load the cloud and tf
-//    PointCloud<PointT>::Ptr ground_truth (new PointCloud<PointT>());
-//    io::loadPCDFile(cc.c_str(), *ground_truth);
-//    if (io::loadPCDFile(cc.c_str(), *ground_truth) == -1)
-//        ROS_ERROR("ActiveExploration::visualize_planning_world : could not load ground truth cloud");
-//    Eigen::Matrix4f ground_truth_transform = Eigen::Matrix4f::Identity();
-//    if (!read_tf_file(tt, ground_truth_transform))
-//        ROS_ERROR("ActiveExploration::visualize_planning_world : could not load ground truth transform file");
-//    if (reverse_transform)
-//        ground_truth_transform = ground_truth_transform.inverse();
-//    // Display the transformed ground truth cloud
-//    transformPointCloud(*ground_truth, *ground_truth, ground_truth_transform);
-//    visualization::PointCloudColorHandlerCustom<PointT> gtt_pts_handler (ground_truth, 128, 128, 128);  // Grey
-//    viewer->addPointCloud (ground_truth, gtt_pts_handler, "ground_truth_transform");
-//    viewer->setPointCloudRenderingProperties (visualization::PCL_VISUALIZER_POINT_SIZE, 2, "ground_truth_transform");
-
     // Unwrap the the transforms from the _instances_to_map_tfs vector
     vector<vector<Eigen::Matrix4f> > itfs;
     itfs.resize(_instances_to_map_tfs.size());
@@ -2945,51 +2922,12 @@ bool ActiveExploration::update_hypotheses(const vector<vector<OcTreeKey> > &pre_
             ROS_ERROR("ActiveExploration::update_hypotheses : error in classification");
             return false;
         }
-//        // Write the point clouds to file to visualize
-//        PointCloud<PointT> cloud1;
-//        pcl::fromROSMsg(_cloud,cloud1);
-//        //PointCloud<PointT> transformed_cloud1;
-//        //transformPointCloud(cloud1,transformed_cloud1,_transform);
-//        //io::savePCDFileASCII ("transformed_cloud1.pcd",transformed_cloud1);
-//        for (size_t i = 0; i < _segments.size(); ++i)
-//        {
-//            PointCloud<PointT> s;
-//            transformPointCloud(cloud1, _segments[i].data, s, _transform);
-//            //string f = "/home/tpat8946/seg_1_" + boost::lexical_cast<string>(i) + ".pcd";
-//            //io::savePCDFileASCII (f, s);
-//        }
-//        PointCloud<PointT> cloud2;
-//        pcl::fromROSMsg(previous_exp.get_cloud(),cloud2);
-//        //PointCloud<PointT> transformed_cloud2;
-//        //transformPointCloud(cloud2,transformed_cloud2,previous_exp.get_transform());
-//        //io::savePCDFileASCII ("transformed_cloud2.pcd",transformed_cloud2);
-//        for (size_t i = 0; i < previous_exp.get_segments().size(); ++i)
-//        {
-//            PointCloud<PointT> s;
-//            transformPointCloud(cloud2, previous_exp.get_segments()[i].data, s, previous_exp.get_transform());
-//            //string f = "/home/tpat8946/seg_2_" + boost::lexical_cast<string>(i) + ".pcd";
-//            //io::savePCDFileASCII (f,s);
-//        }
-
-
-//        int current = _segments.size();
-//        int previous = previous_exp.get_segments().size();
 
         // Find the overlaps with the current segmented point cloud
         overlaps = active_exploration_utils::segment_overlap(_poses, _segment_octree_keys, pre_poses, pre_octree_keys, _voxel_overlap_threshold);
         ROS_INFO("ActiveExploration::update_hypotheses : overlaps vector has length %lu", overlaps.size());
         if (_class_estimates.size() != overlaps.size())
             ROS_WARN("ActiveExploration::update_hypotheses : overlaps size %lu does not equal _class_estimates size %lu", overlaps.size(), _class_estimates.size());
-
-//        // Update the class estimates
-//        vector<vector<int> > updated_associations;
-//        if (!update_class_estimates(overlaps, pre_octree_keys, pre_class_estimates, pre_poses,
-//                                    pre_instance_directories, pre_transforms, updated_associations))
-//        {
-//            ROS_ERROR("ActiveExploration::update_hypotheses : could not update the class estimates with the original classes");
-//            return false;
-//        }
-
 
         vector<vector<int> > updated_associations;
         Hypothesis result_hyp;
@@ -4383,13 +4321,11 @@ void ActiveExploration::run_view_segment(visualization::PCLVisualizer *viewer, c
         viewer->addPointCloud (seg, segment_handler, s_name);
         viewer->setPointCloudRenderingProperties (visualization::PCL_VISUALIZER_POINT_SIZE, 4, s_name);
         printf(ANSI_COLOR_RED  "SEGMENT"  ANSI_COLOR_RESET);
-        //io::savePCDFileASCII("/home/tpat8946/segment.pcd", *seg);
         cin.ignore();
         // View cloud
         visualization::PointCloudColorHandlerCustom<PointT> instance_view_handler (i_view, 20, 230, 20); // Green
         viewer->addPointCloud (i_view, instance_view_handler, i_view_name);
         viewer->setPointCloudRenderingProperties (visualization::PCL_VISUALIZER_POINT_SIZE, 3, i_view_name);
-        //io::savePCDFileASCII("/home/tpat8946/instance_view.pcd", *i_view);
         // Camera position for model
         visualization::PointCloudColorHandlerCustom<PointT> model_position_handler (m_view, 20, 230, 20); // Green
         viewer->addPointCloud (m_view, model_position_handler, m_name);

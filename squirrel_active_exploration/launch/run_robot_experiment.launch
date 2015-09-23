@@ -6,6 +6,7 @@
   <arg name="save_directory" default="/home/tpat8946/Data/TUW/Results/experiments" />
   <arg name="map_locations_file" default="/home/tpat8946/Data/TUW/TUW_GH30_experiment_dataset/GH30_experiment_locations_set_002.txt" />
   <arg name="stored_points_directory" default="/home/tpat8946/Data/TUW/TUW_GH30_online_dataset/GH30_online_set_002" />
+  <arg name="image_file" default="$(find squirrel_active_exploration)/data/test45.png" />
   <arg name="variance" default="0.5" />
   <arg name="plan_type" default="min_class_entropy_unoccluded" />
   <arg name="expected_number_objects" default="8" />
@@ -40,6 +41,7 @@
         <param name="save_directory" type="string" value="$(arg save_directory)"/>
        	<param name="map_locations_file" type="string" value="$(arg map_locations_file)" />
 		<param name="stored_points_directory" type="string" value="$(arg stored_points_directory)" />
+		<param name="image_file" type="string" value="$(arg image_file)" />
 		<param name="variance" type="double" value="$(arg variance)" />
 		<param name="plan_type" type="string" value="$(arg plan_type)" />
 	  	<param name="expected_number_objects" type="int" value="$(arg expected_number_objects)" />

@@ -22,7 +22,7 @@ int main(int argc, char **argv)
     ros::NodeHandle n("~");
 
     // Get the parameters
-    string filename = "/home/tpat8946/Data/TUW/maps/tuw_apartment/";
+    string filename = _FILENAME;
     //string dir = _FILENAME;
     unsigned int tree_depth = _TREE_DEPTH;
     double robot_height = _ROBOT_HEIGHT;

@@ -5,8 +5,9 @@
 using namespace std;
 using namespace pcl;
 
-#define _DATA_DIR "/home/tpat8946/Data/TUW/willow_dataset_training_models_gt/test_set/T_01_willow_dataset"
-#define _SQUIRREL_DIRECTORY "/home/tpat8946/ros_ws/squirrel_active_exploration/src/squirrel_active_exploration"
+#define _DATA_DIR ""
+#define _IMAGE_FILE "test45.png"
+#define _SQUIRREL_DIRECTORY ""
 #define _VIEWS_LIMIT_FILE "views_limit.txt"
 #define _SINGLE_CLASS_TEST "null"
 #define _REVERSE_TRANSFORMS 0
@@ -23,13 +24,14 @@ using namespace pcl;
 #define _GENERATE_VIEW_ORDER 0
 #define _VISUALIZE_VIEWS_EXIT 0
 
-bool parse_input(const ros::NodeHandle &n, string &data_dir, string &entropy_order_file, string &views_lim_file, string &single_class_test,
-                 bool &reverse_transforms, bool &load_segmentation_indices, double &variance, SIM_TYPE &sim,
+bool parse_input(const ros::NodeHandle &n, string &data_dir, string &image_file, string &entropy_order_file, string &views_lim_file,
+                 string &single_class_test, bool &reverse_transforms, bool &load_segmentation_indices, double &variance, SIM_TYPE &sim,
                  int &expected_number_objects, int &expected_number_classes, int &max_iters, int &start_index, int &loaded_views_limit,
                  bool &do_visualize, bool &do_saving, bool &do_generate_order, bool &visualize_views_and_exit)
 {
     // Default values
     data_dir = _DATA_DIR;
+    image_file = _IMAGE_FILE;
     entropy_order_file = _SQUIRREL_DIRECTORY;
     views_lim_file = _VIEWS_LIMIT_FILE;
     single_class_test = _SINGLE_CLASS_TEST;
@@ -46,6 +48,7 @@ bool parse_input(const ros::NodeHandle &n, string &data_dir, string &entropy_ord
     visualize_views_and_exit = _VISUALIZE_VIEWS_EXIT;
     // Read the arguments
     n.getParam("data_directory", data_dir);
+    n.getParam("image_file", image_file);
     n.getParam("entropy_order_file", entropy_order_file);
     n.getParam("views_limit_file", views_lim_file);
     n.getParam("single_class_test", single_class_test);
@@ -115,9 +118,31 @@ bool parse_input(const ros::NodeHandle &n, string &data_dir, string &entropy_ord
         ROS_ERROR("squirrel_run_planner::parse_input : could not interpret plan type input %s", plan_type.c_str());
         return false;
     }
+    // Check inputs are valid
+    if (data_dir.size() == 0)
+    {
+        ROS_ERROR("squirrel_run_planner::parse_input : invalid data directory");
+        return false;
+    }
+    if (image_file.size() == 0)
+    {
+        ROS_ERROR("squirrel_run_planner::parse_input : invalid image file");
+        return false;
+    }
+    if (entropy_order_file.size() == 0)
+    {
+        ROS_ERROR("squirrel_run_planner::parse_input : invalid entropy order file");
+        return false;
+    }
+    if (views_lim_file.size() == 0)
+    {
+        ROS_ERROR("squirrel_run_planner::parse_input : invalid views limit file");
+        return false;
+    }
     // Print the input to console
     ROS_INFO(" -- PARAMETERS --");
     ROS_INFO("  Data directory = %s", data_dir.c_str());
+    ROS_INFO("  Image file = %s", image_file.c_str());
     ROS_INFO("  Entropy order file = %s", entropy_order_file.c_str());
     ROS_INFO("  Views limit file = %s", views_lim_file.c_str());
     ROS_INFO("  Single class test = %s", single_class_test.c_str());
@@ -157,7 +182,7 @@ bool parse_input(const ros::NodeHandle &n, string &data_dir, string &entropy_ord
     return true;
 }
 
-bool load_data(const string &data_dir, const bool &reverse_transforms, const bool &load_segmentation_indices,
+bool load_data(const string &data_dir, const string &image_file, const bool &reverse_transforms, const bool &load_segmentation_indices,
                const int &loaded_views_limit, vector<Eigen::Vector4f> &camera_poses, vector<Eigen::Vector4f> &transformed_locations,
                vector<PointCloud<PointT> > &clouds, vector<Eigen::Matrix4f> &transforms, vector<vector<vector<int> > > &indices,
                sensor_msgs::Image &in_image)
@@ -198,8 +223,7 @@ bool load_data(const string &data_dir, const bool &reverse_transforms, const boo
         transformed_locations[i] = transform_eigvec(camera_poses[i], transforms[i]);
 
     // Load the image
-    string image_name = "/home/tpat8946/ros_ws/squirrel_active_exploration/src/squirrel_active_exploration/data/test45.png";
-    cv::Mat image = cv::imread(image_name,-1);
+    cv::Mat image = cv::imread(image_file,-1);
     cv_bridge::CvImagePtr cv_ptr (new cv_bridge::CvImage);
     ros::Time time = ros::Time::now();
     // Convert OpenCV image to ROS message
@@ -300,6 +324,7 @@ int main(int argc, char **argv)
 
     // Get the input
     string data_dir;
+    string image_file;
     string entropy_order_file;
     string views_lim_file;
     string single_class_test;
@@ -316,7 +341,7 @@ int main(int argc, char **argv)
     bool do_saving;
     bool do_generate_order;
     bool visualize_views_and_exit;
-    if (!parse_input(*exp->get_ros_node_handle(), data_dir, entropy_order_file, views_lim_file, single_class_test, reverse_transforms,
+    if (!parse_input(*exp->get_ros_node_handle(), data_dir, image_file, entropy_order_file, views_lim_file, single_class_test, reverse_transforms,
                      load_segmentation_indices, variance, sim, expected_number_objects, expected_number_classes, max_iters, start_index,
                      loaded_views_limit, do_visualize, do_saving, do_generate_order, visualize_views_and_exit))
     {
@@ -381,7 +406,7 @@ int main(int argc, char **argv)
     vector<Eigen::Matrix4f> transforms;
     vector<vector<vector<int> > > indices;
     sensor_msgs::Image in_image;
-    if (!load_data(data_dir, reverse_transforms, load_segmentation_indices, loaded_views_limit, camera_poses, transformed_locations,
+    if (!load_data(data_dir, image_file, reverse_transforms, load_segmentation_indices, loaded_views_limit, camera_poses, transformed_locations,
                    clouds, transforms, indices, in_image))
     {
         ROS_ERROR("squirrel_run_planner::main : could not load the data");

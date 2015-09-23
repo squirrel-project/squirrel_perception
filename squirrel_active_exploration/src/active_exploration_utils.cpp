@@ -3409,13 +3409,11 @@ namespace active_exploration_utils
             viewer->addPointCloud (seg, segment_handler, s_name);
             viewer->setPointCloudRenderingProperties (visualization::PCL_VISUALIZER_POINT_SIZE, 4, s_name);
             printf(ANSI_COLOR_RED  "SEGMENT"  ANSI_COLOR_RESET);
-            //io::savePCDFileASCII("/home/tpat8946/segment.pcd", *seg);
             cin.ignore();
             // View cloud
             visualization::PointCloudColorHandlerCustom<PointT> instance_view_handler (i_view, 20, 230, 20); // Green
             viewer->addPointCloud (i_view, instance_view_handler, i_view_name);
             viewer->setPointCloudRenderingProperties (visualization::PCL_VISUALIZER_POINT_SIZE, 3, i_view_name);
-            //io::savePCDFileASCII("/home/tpat8946/instance_view.pcd", *i_view);
             // Camera position for model
             visualization::PointCloudColorHandlerCustom<PointT> model_position_handler (m_view, 20, 230, 20); // Green
             viewer->addPointCloud (m_view, model_position_handler, m_name);
