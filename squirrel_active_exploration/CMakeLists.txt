@@ -141,9 +141,6 @@ add_dependencies(robot_controller v4r)
 add_executable(test_octomap_utils test/test_octomap_utils.cpp $<TARGET_OBJECTS:common>)
 target_link_libraries(test_octomap_utils ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS} ${OCTOMAP_LIBRARIES})
 
-add_executable(test_math_utils test/test_math_utils.cpp $<TARGET_OBJECTS:common>)
-target_link_libraries(test_math_utils ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OCTOMAP_LIBRARIES})
-
 add_executable(save_segment_indices test/save_segment_indices.cpp $<TARGET_OBJECTS:common>)
 target_link_libraries(save_segment_indices ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS} ${OCTOMAP_LIBRARIES})
 add_dependencies(save_segment_indices v4r)

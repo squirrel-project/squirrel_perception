@@ -218,7 +218,7 @@ int main(int argc, char **argv)
     }
     // Get a fake image file for visualization
     string image_file;
-    if (!n->getParam("image_file", umage_file))
+    if (!n->getParam("image_file", image_file))
     {
         ROS_ERROR("save_segment_indices::main : You must enter an image file for visualization");
         if (exp)
