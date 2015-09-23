@@ -144,21 +144,6 @@ target_link_libraries(test_octomap_utils ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PC
 add_executable(test_math_utils test/test_math_utils.cpp $<TARGET_OBJECTS:common>)
 target_link_libraries(test_math_utils ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OCTOMAP_LIBRARIES})
 
-add_executable(test_transform_utils test/test_transform_utils.cpp $<TARGET_OBJECTS:common>)
-target_link_libraries(test_transform_utils ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
-
-add_executable(test_update test/test_update.cpp $<TARGET_OBJECTS:common>)
-target_link_libraries(test_update ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS} ${OCTOMAP_LIBRARIES})
-add_dependencies(test_update v4r)
-
-add_executable(test_load_set test/test_load_set.cpp $<TARGET_OBJECTS:common>)
-target_link_libraries(test_load_set ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS} ${OCTOMAP_LIBRARIES})
-add_dependencies(test_load_set v4r)
-
-add_executable(test_plan test/test_plan.cpp $<TARGET_OBJECTS:common>)
-target_link_libraries(test_plan ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS} ${OCTOMAP_LIBRARIES})
-add_dependencies(test_plan v4r)
-
 add_executable(save_segment_indices test/save_segment_indices.cpp $<TARGET_OBJECTS:common>)
 target_link_libraries(save_segment_indices ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS} ${OCTOMAP_LIBRARIES})
 add_dependencies(save_segment_indices v4r)
@@ -179,9 +164,6 @@ target_link_libraries(squirrel_map_coverage_server ${catkin_LIBRARIES} ${OpenCV_
 
 add_executable(test_map_coverage_server test/test_map_coverage_server.cpp src/octomap_utils.cpp)
 target_link_libraries(test_map_coverage_server ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${OCTOMAP_LIBRARIES})
-
-add_executable(test_SIFT_align test/test_SIFT_align.cpp test/boost_graph_extension.cpp)
-target_link_libraries(test_SIFT_align ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
 add_executable(PointCloud2PCD src/PointCloud2PCD.cpp)
 target_link_libraries(PointCloud2PCD ${catkin_LIBRARIES} ${PCL_LIBRARIES})
