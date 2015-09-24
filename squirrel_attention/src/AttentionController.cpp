@@ -56,9 +56,9 @@ bool AttentionController::lookAtImagePosition(squirrel_object_perception_msgs::L
   jointMutex_.lock();
   std_msgs::Float64 panMsg, tiltMsg;
   // HACK: the focal length is hardcoded for the Kinect/Asus
-  panMsg.data = pan_ + -atan2(req.x, 525);
+  panMsg.data = pan_ - atan2(req.x, 525);
   tiltMsg.data = tilt_ + atan2(req.y, 525);
-  // ROS_INFO("pan/tilt move to (deg): %.f %.f", panMsg.data*180./M_PI, tiltMsg.data*180./M_PI);
+  //ROS_INFO("pan/tilt relative move move (deg): %.f %.f", -atan2(req.x, 525)*180./M_PI, atan2(req.y, 525*180./M_PI));
   if(std::isfinite(panMsg.data) && std::isfinite(tiltMsg.data))
   {
     panPub_.publish(panMsg);

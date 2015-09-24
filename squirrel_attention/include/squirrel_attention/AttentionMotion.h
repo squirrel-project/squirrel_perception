@@ -33,8 +33,9 @@ private:
   boost::mutex movingMutex_;
   bool panning_, tilting_, moving_, cameraSteady_, timerStarted_;
   ros::Timer steadyTimer_;
-  cv::Mat prevgray_, gray_, flow_, cflow_, frame_;
+  cv::Mat prevgray_, gray_, flow_, frame_;
   int subsample_;  // image subsample factor
+  float MIN_FLOW_; // ignore flow lower than this as noise
 
   void imageCallback(const sensor_msgs::ImageConstPtr& msg);
   void panStateCallback(const dynamixel_msgs::JointState::ConstPtr& panStateMsg);

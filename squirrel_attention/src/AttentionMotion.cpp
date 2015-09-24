@@ -28,12 +28,13 @@ AttentionMotion::AttentionMotion()
   moving_ = false;
   cameraSteady_ = true;
   subsample_ = 8;
+  MIN_FLOW_ = 4./(float)subsample_;
   imageSub_= it_.subscribe("/camera/rgb/image_raw", 1, &AttentionMotion::imageCallback, this);
   imagePub_ = it_.advertise("/attention_motion/saliency", 1);
   controllerSrv_ = nh_.serviceClient<squirrel_object_perception_msgs::LookAtImagePosition>("/attention/look_at_image_position");
   panStateSub_ = nh_.subscribe("/pan_controller/state", 2, &AttentionMotion::panStateCallback, this);
   tiltStateSub_ = nh_.subscribe("/tilt_controller/state", 2, &AttentionMotion::tiltStateCallback, this);
-  steadyTimer_ = nh_.createTimer(ros::Duration(0.10), &AttentionMotion::cameraSteadyCallback, this, false, false);
+  steadyTimer_ = nh_.createTimer(ros::Duration(0.25), &AttentionMotion::cameraSteadyCallback, this, false, false);
 }
 
 AttentionMotion::~AttentionMotion()
@@ -89,21 +90,11 @@ void AttentionMotion::cameraSteadyCallback(const ros::TimerEvent& event)
 
 bool AttentionMotion::calculateFlowCenter(float &cx, float &cy, float &mag, float &angle)
 {
-  // ignore flow lower than this as noise
-  const float MIN_FLOW = 8./(float)subsample_;
-
   mag = 0.;
   cx = 0.;
   cy = 0.;
   angle = 0.;
 
-  // NOTE: The flow image must be set to zero, as sometimes the flow
-  // computation does not overwrite the output image, so the old "ghost"
-  // flow persists and leasd to craze things.
-  // NOTE: Is there a more efficient way to zero an exiting matrix?
-  // FIX: actually this weird persistence can be a result of skipping the first
-  // frame after movment! -> check that, and move all stuff within the if
-  flow_ = Mat::zeros(gray_.rows, gray_.cols, CV_32FC2);
   calcOpticalFlowFarneback(prevgray_, gray_, flow_, 0.5, 3, 11, 3, 5, 1.2, 0);
 
   float sum = 0.;
@@ -114,7 +105,7 @@ bool AttentionMotion::calculateFlowCenter(float &cx, float &cy, float &mag, floa
       float fx = flow_.at<Vec2f>(i, j)[0];
       float fy = flow_.at<Vec2f>(i, j)[1];
       float f = sqrt(fx*fx + fy*fy);
-      if(f > MIN_FLOW)
+      if(f > MIN_FLOW_)
         flowCnt++;
       sum += f;
       cx += f*(float)j;
@@ -129,33 +120,32 @@ bool AttentionMotion::calculateFlowCenter(float &cx, float &cy, float &mag, floa
     mag = sqrt(fx*fx + fy*fy);
   }
 
-  ROS_INFO("flow %.2f, flow percentage: %.2f", mag, 100.*(float)flowCnt/((float)flow_.rows*(float)flow_.cols));
+  //ROS_INFO("flow %.2f, flow percentage: %.2f", mag, 100.*(float)flowCnt/((float)flow_.rows*(float)flow_.cols));
 
-  return mag > MIN_FLOW && (float)flowCnt/((float)flow_.rows*(float)flow_.cols) < 0.10;
+  return mag > MIN_FLOW_ && (float)flowCnt/((float)flow_.rows*(float)flow_.cols) < 0.10;
 }
 
 void AttentionMotion::visualiseFlow(float cx, float cy, float mag, float angle, bool validFlow)
 {
-  cflow_ = frame_;
   for(int i = 0; i < flow_.rows; i++)
     for(int j = 0; j < flow_.cols; j++)
     {
       float fx = flow_.at<Vec2f>(i, j)[0];
       float fy = flow_.at<Vec2f>(i, j)[1];
       float f = sqrt(fx*fx + fy*fy);
-      //if(f > MIN_FLOW)
+      if(f > MIN_FLOW_)
       {
         f *= 30.;  // scale to be visible in a [0,255] range
         if(f > 255.)
           f = 255.;
-        cflow_.at<Vec3b>(i, j) = Vec3b(0, (unsigned char)f, 0);
+        frame_.at<Vec3b>(i, j) = Vec3b(0, (unsigned char)f, 0);
       }
     }
   if(validFlow)
-    circle(cflow_, Point(cx, cy), 5, Scalar(255, 0, 0), 1);
+    circle(frame_, Point(cx, cy), 5, Scalar(255, 0, 0), 1);
   cv_bridge::CvImagePtr outPtr(new cv_bridge::CvImage);
   outPtr->encoding = "bgr8";
-  outPtr->image = cflow_;
+  outPtr->image = frame_;
   imagePub_.publish(outPtr->toImageMsg());
 }
 
@@ -200,6 +190,7 @@ void AttentionMotion::imageCallback(const sensor_msgs::ImageConstPtr& msg)
     else
       running = true;
   }
+  visualiseFlow(cx, cy, mag, angle, haveFlow);
   std::swap(prevgray_, gray_);
 
   if(haveFlow)
@@ -209,11 +200,9 @@ void AttentionMotion::imageCallback(const sensor_msgs::ImageConstPtr& msg)
     lookSrv.request.x = cx*subsample_ - 320.;
     lookSrv.request.y = cy*subsample_ - 240.;
     lookSrv.request.why = "motion";
-    ROS_INFO("look at image position %.f %.f", lookSrv.request.x, lookSrv.request.y);
+    //ROS_INFO("look at image position %.f %.f", lookSrv.request.x, lookSrv.request.y);
     controllerSrv_.call(lookSrv);
   }
-
-  visualiseFlow(cx, cy, mag, angle, haveFlow);
 }
 
 int main(int argc, char ** argv)
