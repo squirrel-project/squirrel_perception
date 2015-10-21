@@ -7,7 +7,9 @@ PROJECT(ARMarker)
 #include_directories(${OPENCV_INCLUDE_DIRS})
 #link_directories(${OPENCV_LIBRARY_DIRS})
 
-include_directories("/usr/include/eigen3")
+find_package( PkgConfig )
+pkg_check_modules( EIGEN3 REQUIRED eigen3 )
+include_directories( ${EIGEN3_INCLUDE_DIRS} )
 
 # Michael Zillich: this is ugly and thus removed
 #IF ( "x${OPENCV_LIBRARIES}x" STREQUAL "xx"  )

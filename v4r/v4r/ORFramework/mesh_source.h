@@ -16,6 +16,7 @@
 #include "vtk_model_sampling.h"
 #include <boost/function.hpp>
 #include <vtkTransformPolyDataFilter.h>
+#include <v4r/utils/filesystem_utils.h>
 
 namespace faat_pcl
 {
@@ -37,7 +38,6 @@ namespace faat_pcl
         using SourceT::path_;
         using SourceT::models_;
         using SourceT::createTrainingDir;
-        using SourceT::getModelsInDirectory;
         using SourceT::model_scale_;
         using SourceT::radius_normals_;
         using SourceT::compute_normals_;
@@ -53,7 +53,6 @@ namespace faat_pcl
       public:
 
         using SourceT::setFilterDuplicateViews;
-        using SourceT::getViewsFilenames;
 
         MeshSource () :
         SourceT ()
@@ -124,7 +123,7 @@ namespace faat_pcl
             pose_file << pathmodel.str () << "/" << file_replaced1;
 
             Eigen::Matrix4f pose;
-            PersistenceUtils::readMatrixFromFile2 (pose_file.str (), pose);
+            v4r::utils::readMatrixFromFile(pose_file.str (), pose);
 
             model.poses_->push_back (pose);
 
@@ -132,7 +131,7 @@ namespace faat_pcl
             std::stringstream entropy_file;
             entropy_file << pathmodel.str () << "/" << file_replaced2;
             float entropy = 0;
-            PersistenceUtils::readFloatFromFile (entropy_file.str (), entropy);
+            v4r::utils::readFloatFromFile (entropy_file.str (), entropy);
             model.self_occlusions_->push_back (entropy);
 
           }
@@ -143,7 +142,6 @@ namespace faat_pcl
         {
           std::stringstream pathmodel;
           pathmodel << dir << "/" << model.class_ << "/" << model.id_;
-          bf::path trained_dir = pathmodel.str ();
 
           model.views_.reset (new std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr>);
           model.poses_.reset (new std::vector<Eigen::Matrix4f, Eigen::aligned_allocator<Eigen::Matrix4f> >);
@@ -162,48 +160,8 @@ namespace faat_pcl
           vis.addPointCloudNormals<PointInT, pcl::Normal>(model.assembled_, model.normals_assembled_, 50, 0.02, "normals");
           vis.spin();*/
 
-          if (bf::exists (trained_dir))
+          if (v4r::utils::getFilesInDirectory(pathmodel.str (), model.view_filenames_, "", ".*view_prefix_.*.pcd", false) != -1)
           {
-            //load views, poses and self-occlusions
-
-            getViewsFilenames(trained_dir, model.view_filenames_, "view");
-
-            /*std::vector < std::string > view_filenames;
-            int number_of_views = 0;
-            bf::directory_iterator end_itr;
-            for (bf::directory_iterator itr (trained_dir); itr != end_itr; ++itr)
-            {
-              //check if its a directory, then get models in it
-              if (!(bf::is_directory (*itr)))
-              {
-                //check that it is a ply file and then add, otherwise ignore..
-                std::vector < std::string > strs;
-                std::vector < std::string > strs_;
-
-#if BOOST_FILESYSTEM_VERSION == 3
-                std::string file = (itr->path ().filename ()).string();
-#else
-                std::string file = (itr->path ()).filename ();
-#endif
-
-                boost::split (strs, file, boost::is_any_of ("."));
-                boost::split (strs_, file, boost::is_any_of ("_"));
-
-                std::string extension = strs[strs.size () - 1];
-
-                if (extension == "pcd" && strs_[0] == "view")
-                {
-#if BOOST_FILESYSTEM_VERSION == 3
-                  view_filenames.push_back ((itr->path ().filename ()).string());
-#else
-                  view_filenames.push_back ((itr->path ()).filename ());
-#endif
-
-                  number_of_views++;
-                }
-              }
-            }*/
-
             if(load_into_memory_)
             {
               loadInMemorySpecificModel(dir, model);
@@ -303,14 +261,14 @@ namespace faat_pcl
               std::stringstream path_pose;
               path_pose << direc.str () << "/pose_" << i << ".txt";
 
-              PersistenceUtils::writeMatrixToFile (path_pose.str (), model.poses_->at (i));
+              v4r::utils::writeMatrixToFile( path_pose.str (), model.poses_->at (i));
 
               std::stringstream path_entropy;
               path_entropy << direc.str () << "/entropy_" << i << ".txt";
-              PersistenceUtils::writeFloatToFile (path_entropy.str (), model.self_occlusions_->at (i));
+              v4r::utils::writeFloatToFile (path_entropy.str (), model.self_occlusions_->at (i));
             }
 
-            loadOrGenerate (dir, model_path, model);
+            //loadOrGenerate (dir, model_path, model);
 
           }
         }
@@ -327,10 +285,7 @@ namespace faat_pcl
 
           //get models in directory
           std::vector < std::string > files;
-          std::string start = "";
-          std::string ext = std::string ("ply");
-          bf::path dir = path_;
-          getModelsInDirectory (dir, start, files, ext);
+          v4r::utils::getFilesInDirectory(path_, files, "", ".*.ply", true);
 
           models_.reset (new std::vector<ModelTPtr>);
 
@@ -342,7 +297,7 @@ namespace faat_pcl
             //check which of them have been trained using training_dir and the model_id_
             //load views, poses and self-occlusions for those that exist
             //generate otherwise
-            std::cout << files[i] << std::endl;
+            //std::cout << files[i] << std::endl;
             std::stringstream model_path;
             model_path << path_ << "/" << files[i];
             std::string path_model = model_path.str ();

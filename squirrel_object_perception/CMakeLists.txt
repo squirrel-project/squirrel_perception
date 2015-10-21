@@ -5,19 +5,21 @@ project(squirrel_object_perception)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-    rospy
-    actionlib
-    dynamic_reconfigure
-    squirrel_object_perception_msgs
-    sensor_msgs
+	roscpp
+    	actionlib
+    	actionlib_msgs
+    	dynamic_reconfigure 
+	squirrel_object_perception_msgs
+	sensor_msgs
+        tf2
+        tf
 )
-
-catkin_python_setup()
+find_package(PCL 1.7 REQUIRED)
 
 # protected region additional user defined REQUIREMENTS on begin #
 # protected region additional user defined REQUIREMENTS end #
 
-generate_dynamic_reconfigure_options(cfg/squirrel_look_for_objects.cfg)
+generate_dynamic_reconfigure_options(cfg/squirrel_look_for_objects.cfg )
 
 ###################################
 ## catkin specific configuration ##
@@ -28,9 +30,55 @@ generate_dynamic_reconfigure_options(cfg/squirrel_look_for_objects.cfg)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  CATKIN_DEPENDS
-    rospy
-    dynamic_reconfigure
-    squirrel_object_perception_msgs
-    sensor_msgs
+  INCLUDE_DIRS
+#   include 
+  CATKIN_DEPENDS 
+  	roscpp
+    	dynamic_reconfigure
+	squirrel_object_perception_msgs
+	sensor_msgs
+       	actionlib_msgs
+        tf2
 )
+
+###########
+## Build ##
+###########
+
+## Specify additional locations of header files
+## Your package locations should be listed before other locations
+#include_directories(include)
+include_directories(${catkin_INCLUDE_DIRS} ${PCL_INCLUDE_DIRS})
+
+
+## Declare a cpp executable
+add_executable(squirrel_look_for_objects src/squirrel_look_for_objects_server.cpp)
+
+## Add cmake target dependencies of the executable/library
+## as an example, message headers may need to be generated before nodes
+#add_dependencies(squirrel_look_for_objects squirrel_look_for_objects_gencfg)
+add_dependencies(squirrel_look_for_objects ${squirrel_object_perception_EXPORTED_TARGETS})
+
+## Specify libraries to link a library or executable target against
+target_link_libraries(squirrel_look_for_objects
+  ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
+)
+
+# protected region additional user defined BUILD STATEMENTS on begin #
+# protected region additional user defined BUILD STATEMENTS end #
+
+
+#############
+## Install ##
+#############
+
+## Mark executables and/or libraries for installation
+install(TARGETS squirrel_look_for_objects
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+# protected region user Cmake macros on begin #
+# protected region user Cmake macros end #

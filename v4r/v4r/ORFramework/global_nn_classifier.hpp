@@ -6,6 +6,158 @@
  */
 
 #include "global_nn_classifier.h"
+#include <v4r/utils/filesystem_utils.h>
+
+// HACK: Michael Zillich, 2015-05
+template<template<class > class Distance, typename PointInT, typename FeatureT>
+  void
+  faat_pcl::rec_3d_framework::GlobalNNPipeline<Distance, PointInT, FeatureT>::checkNNOverlap ()
+  {
+    int numCorrect = 0;
+    int numIncorrect = 0;
+    boost::shared_ptr < std::vector<ModelTPtr> > models = source_->getModels ();
+    for (size_t i = 0; i < models->size (); i++)
+    {
+        std::string path = source_->getModelDescriptorDir (*models->at (i), training_dir_, descr_name_);
+
+        bf::path inside = path;
+        bf::directory_iterator end_itr;
+
+        for (bf::directory_iterator itr_in (inside); itr_in != end_itr; ++itr_in)
+        {
+  #if BOOST_FILESYSTEM_VERSION == 3
+          std::string file_name = (itr_in->path ().filename ()).string();
+  #else
+          std::string file_name = (itr_in->path ()).filename ();
+  #endif
+
+          std::vector < std::string > strs;
+          boost::split (strs, file_name, boost::is_any_of ("_"));
+
+          if (strs[0] == "descriptor")
+          {
+            std::string full_file_name = itr_in->path ().string ();
+            std::vector < std::string > strs;
+            boost::split (strs, full_file_name, boost::is_any_of ("/"));
+
+            typename pcl::PointCloud<FeatureT>::Ptr signature (new pcl::PointCloud<FeatureT>);
+            pcl::io::loadPCDFile (full_file_name, *signature);
+
+            flann_model descr_model;
+            descr_model.first = models->at (i);
+            int size_feat = sizeof(signature->points[0].histogram) / sizeof(float);
+            descr_model.second.resize (size_feat);
+            memcpy (&descr_model.second[0], &signature->points[0].histogram[0], size_feat * sizeof(float));
+
+            flann::Matrix<int> indices;
+            flann::Matrix<float> distances;
+            nearestKSearch (flann_index_, descr_model, NN_, indices, distances);
+
+            //gather NN-search results
+            double score = 0;
+            for (int j = 0; j < NN_; ++j)
+            {
+              score = distances[0][j];
+              index_score is;
+              is.idx_models_ = indices[0][j];
+              is.idx_input_ = static_cast<int> (0);
+              is.score_ = score;
+              if (flann_models_[is.idx_models_].first->class_ != models->at (i)->class_)
+              {
+                numIncorrect++;
+                std::cout << models->at (i)->class_ << " was classified erroneously as " << flann_models_[is.idx_models_].first->class_ << "\n";
+                //std::cout << j << ": " << indices[0][j] << " with score " << score << " and model id: " << flann_models_[is.idx_models_].first->class_ << "/" << flann_models_[is.idx_models_].first->id_ <<std::endl;
+              }
+              else
+              {
+                numCorrect++;
+              }
+            }
+          }
+
+      }
+    }
+    std::cout << "wrongly classified " << numIncorrect << "/" << numCorrect + numIncorrect << " = " << (float)numIncorrect/(float)(numCorrect + numIncorrect) << "\n";
+  }
+
+/**
+ * Go through all training samples and see how many would lie inside the k nearest neighbours of the
+ * given class.
+ */
+template<template<class > class Distance, typename PointInT, typename FeatureT>
+  void
+  faat_pcl::rec_3d_framework::GlobalNNPipeline<Distance, PointInT, FeatureT>::checkNNOverlap (std::string classLabel)
+  {
+    int numCorrect = 0;
+    int numIncorrect = 0;
+    boost::shared_ptr < std::vector<ModelTPtr> > models = source_->getModels ();
+    for (size_t i = 0; i < models->size (); i++)
+    {
+      if (models->at (i)->class_ != classLabel
+         && models->at (i)->class_ == "calculator/")  // HACK
+      {
+        std::string path = source_->getModelDescriptorDir (*models->at (i), training_dir_, descr_name_);
+
+        bf::path inside = path;
+        bf::directory_iterator end_itr;
+
+        for (bf::directory_iterator itr_in (inside); itr_in != end_itr; ++itr_in)
+        {
+  #if BOOST_FILESYSTEM_VERSION == 3
+          std::string file_name = (itr_in->path ().filename ()).string();
+  #else
+          std::string file_name = (itr_in->path ()).filename ();
+  #endif
+
+          std::vector < std::string > strs;
+          boost::split (strs, file_name, boost::is_any_of ("_"));
+
+          if (strs[0] == "descriptor")
+          {
+            std::string full_file_name = itr_in->path ().string ();
+            std::vector < std::string > strs;
+            boost::split (strs, full_file_name, boost::is_any_of ("/"));
+
+            typename pcl::PointCloud<FeatureT>::Ptr signature (new pcl::PointCloud<FeatureT>);
+            pcl::io::loadPCDFile (full_file_name, *signature);
+
+            flann_model descr_model;
+            descr_model.first = models->at (i);
+            int size_feat = sizeof(signature->points[0].histogram) / sizeof(float);
+            descr_model.second.resize (size_feat);
+            memcpy (&descr_model.second[0], &signature->points[0].histogram[0], size_feat * sizeof(float));
+
+            flann::Matrix<int> indices;
+            flann::Matrix<float> distances;
+            nearestKSearch (flann_index_, descr_model, NN_, indices, distances);
+
+            //gather NN-search results
+            double score = 0;
+            for (int j = 0; j < NN_; ++j)
+            {
+              score = distances[0][j];
+              index_score is;
+              is.idx_models_ = indices[0][j];
+              is.idx_input_ = static_cast<int> (0);
+              is.score_ = score;
+              if (flann_models_[is.idx_models_].first->class_ == classLabel)
+              {
+                numIncorrect++;
+                std::cout << models->at (i)->class_ << " was classified erroneously as " << classLabel << "\n";
+                std::cout << j << ": " << indices[0][j] << " with score " << score << " and model id: " << flann_models_[is.idx_models_].first->class_ << "/" << flann_models_[is.idx_models_].first->id_ <<std::endl;
+              }
+              else
+              {
+                numCorrect++;
+              }
+            }
+          }
+        }
+      }
+    }
+    std::cout << "wrongly classified " << numIncorrect << "/" << numCorrect + numIncorrect << " = " << (float)numIncorrect/(float)(numCorrect + numIncorrect) << "\n";
+  }
+// HACK END: Michael Zillich, 2015-05
 
 template<template<class > class Distance, typename PointInT, typename FeatureT>
   void
@@ -49,6 +201,24 @@ template<template<class > class Distance, typename PointInT, typename FeatureT>
 
           flann_models_.push_back (descr_model);
         }
+        /* TP */
+        else if (strs[0] == "pose")
+        {
+          std::string full_file_name = itr_in->path ().string ();
+          std::vector < std::string > strs;
+          boost::split (strs, full_file_name, boost::is_any_of ("/"));
+          //std::cout << "load pose : " << full_file_name << std::endl;
+          pose_files_.push_back(full_file_name);
+        }
+        else if (strs[0] == "entropy")
+        {
+          std::string full_file_name = itr_in->path ().string ();
+          std::vector < std::string > strs;
+          boost::split (strs, full_file_name, boost::is_any_of ("/"));
+          //std::cout << "load entropy : " << full_file_name << std::endl;
+          entropy_files_.push_back(full_file_name);
+        }
+        /* -- */
       }
     }
 
@@ -79,6 +249,8 @@ template<template<class > class Distance, typename PointInT, typename FeatureT>
 
     categories_.clear ();
     confidences_.clear ();
+    poses_best_.clear();  // TP
+    entropies_best_.clear(); // TP
 
     first_nn_category_ = std::string ("");
 
@@ -133,12 +305,16 @@ template<template<class > class Distance, typename PointInT, typename FeatureT>
       first_nn_category_ = flann_models_[indices_scores[0].idx_models_].first->class_;
 
       std::cout << "first id: " << flann_models_[indices_scores[0].idx_models_].first->id_ << std::endl;
+      std::cout << "with class " << flann_models_[indices_scores[0].idx_models_].first->class_ << " and pose " << pose_files_[indices_scores[0].idx_models_] << std::endl;  // TP
 
       std::map<std::string, double> category_map;
       int num_n = std::min (NN_, static_cast<int> (indices_scores.size ()));
 
       std::map<std::string, double>::iterator it;
       double normalization_term = 0;
+
+      std::map<std::string, std::string> pose_file_map;  // TP
+      std::map<std::string, std::string> entropy_file_map;  // TP
 
       for (int i = 0; i < num_n; ++i)
       {
@@ -148,6 +324,8 @@ template<template<class > class Distance, typename PointInT, typename FeatureT>
         {
             category_map[cat] = 1;
             //category_map[cat] = indices_scores[i].score_;   // is the confidence better if score is higher or lower?
+	    pose_file_map[cat] = pose_files_[indices_scores[i].idx_models_];  // TP
+            entropy_file_map[cat] = entropy_files_[indices_scores[i].idx_models_];  // TP
         }
         else
         {
@@ -169,6 +347,8 @@ template<template<class > class Distance, typename PointInT, typename FeatureT>
         is.model_name_ = it->first;
         //is.idx_input_ = static_cast<int> (idx);
         is.score_ = prob;
+	is.pose_file_ = pose_file_map[it->first];  // TP
+        is.entropy_file_ = entropy_file_map[it->first];  // TP
         final_indices_scores.push_back (is);
       }
 
@@ -178,12 +358,16 @@ template<template<class > class Distance, typename PointInT, typename FeatureT>
       {
           categories_.push_back (final_indices_scores[i].model_name_);
           confidences_.push_back (final_indices_scores[i].score_);
+	  poses_best_.push_back (final_indices_scores[i].pose_file_);  // TP
+          entropies_best_.push_back (final_indices_scores[i].entropy_file_);  // TP
       }
     }
     else
     {
       first_nn_category_ = std::string ("error");
       categories_.push_back (first_nn_category_);
+      poses_best_.push_back (first_nn_category_);  // TP
+      entropies_best_.push_back (first_nn_category_);  // TP
     }
   }
 
@@ -230,11 +414,11 @@ template<template<class > class Distance, typename PointInT, typename FeatureT>
 
           std::stringstream path_pose;
           path_pose << path << "/pose_" << v << ".txt";
-          PersistenceUtils::writeMatrixToFile (path_pose.str (), models->at (i)->poses_->at (v));
+          v4r::utils::writeMatrixToFile( path_pose.str (), models->at (i)->poses_->at (v));
 
           std::stringstream path_entropy;
           path_entropy << path << "/entropy_" << v << ".txt";
-          PersistenceUtils::writeFloatToFile (path_entropy.str (), models->at (i)->self_occlusions_->at (v));
+          v4r::utils::writeFloatToFile (path_entropy.str (), models->at (i)->self_occlusions_->at (v));
 
           //save signatures and centroids to disk
           for (size_t j = 0; j < signatures.size (); j++)
@@ -242,7 +426,7 @@ template<template<class > class Distance, typename PointInT, typename FeatureT>
             std::stringstream path_centroid;
             path_centroid << path << "/centroid_" << v << "_" << j << ".txt";
             Eigen::Vector3f centroid (centroids[j][0], centroids[j][1], centroids[j][2]);
-            PersistenceUtils::writeCentroidToFile (path_centroid.str (), centroid);
+            v4r::utils::writeCentroidToFile (path_centroid.str (), centroid);
 
             std::stringstream path_descriptor;
             path_descriptor << path << "/descriptor_" << v << "_" << j << ".pcd";

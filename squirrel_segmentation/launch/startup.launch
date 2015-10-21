@@ -2,8 +2,8 @@
 
   <arg name="model_filename" default="$(find squirrel_segmentation)/data/ST-TrainAll.txt.model" />
   <arg name="scaling_filename" default="$(find squirrel_segmentation)/data/ST-TrainAll.txt.scalingparams" />
-  
-  <node name="squirrel_segmentation_incremental"
+
+  <!-- <node name="squirrel_segmentation_incremental"
         pkg="squirrel_segmentation"
         type="squirrel_segmentation_incremental"
         required="true" output="screen">
@@ -14,6 +14,17 @@
   <node name="squirrel_segmentation_visualization"
         pkg="squirrel_segmentation"
         type="squirrel_segmentation_visualization">
+  </node>-->
+
+  <!-- NOTE: for now we use the simple ground plane popout segmentation -->
+  <node name="squirrel_segmentation_incremental"
+        pkg="squirrel_segmentation"
+        type="squirrel_segmentation_popout">
+  </node>
+
+  <node name="segments_to_objects"
+        pkg="squirrel_segmentation"
+        type="segments_to_objects">
   </node>
 
 </launch>

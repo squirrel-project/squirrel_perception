@@ -45,6 +45,8 @@ class ShapeClassifier
     std::vector<pcl::PointIndices> cluster_indices_;
     std::vector < std::string > categories_;
     std::vector<float> conf_;
+    std::vector<std::string> entropies_;  // TP
+    std::vector<std::string> poses_;  // TP
 
     boost::shared_ptr<faat_pcl::rec_3d_framework::GlobalNNPipeline<flann::L1, PointT, pcl::ESFSignature640> > classifier_;
     ros::ServiceServer segment_and_classify_service_;
@@ -65,6 +67,15 @@ class ShapeClassifier
     {
       ROS_INFO("Classifying %d objects\n", (int)req.clusters_indices.size());
       pcl::fromROSMsg(req.cloud, *frame_);
+      // HACK: The gezebo somilated kinect seems to output a non-orgnized point cloud. Just fix that here.
+      if(frame_->height == 1)
+      {
+        if(frame_->points.size() == 640*480)
+        {
+          frame_->height = 480;
+          frame_->width = 640;
+        }
+      }
       classifier_->setInputCloud(frame_);
 
       pcl::PointCloud<pcl::PointXYZRGB>::Ptr pClusteredPCl (new pcl::PointCloud<pcl::PointXYZRGB>());
@@ -99,6 +110,8 @@ class ShapeClassifier
         classifier_->classify ();
         classifier_->getCategory (categories_);
         classifier_->getConfidence (conf_);
+        classifier_->getEntropy(entropies_);  // TP
+        classifier_->getPose(poses_);  // TP
 
         std::cout << "for cluster " << i << " with size " << cluster_indices_int.size() << ", I have following hypotheses: " << std::endl;
 
@@ -110,6 +123,11 @@ class ShapeClassifier
           str_tmp.data = categories_[kk];
           class_tmp.class_type.push_back(str_tmp);
           class_tmp.confidence.push_back(conf_[kk]);
+	      /* TP */
+          std_msgs::String pose_tmp;
+          pose_tmp.data = poses_[kk];
+          class_tmp.pose.push_back(pose_tmp);
+	      /* -- */
         }
         response.class_results.push_back(class_tmp);
 
@@ -269,6 +287,7 @@ class ShapeClassifier
       classify_service_ = n_->advertiseService("/squirrel_classify", &ShapeClassifier::classify, this);
       vis_pub_ = n_->advertise<visualization_msgs::MarkerArray>( "visualization_marker", 0 );
       vis_pc_pub_ = n_->advertise<sensor_msgs::PointCloud2>( "clusters", 1 );
+	  ROS_INFO("Ready to get service calls...");
       ros::spin();
     }
 };

@@ -41,6 +41,14 @@ namespace faat_pcl
 
       virtual void
       setInputCloud (const PointInTPtr & cloud) = 0;
+
+      /* TP */
+      virtual void
+      getEntropy (std::vector<std::string> & ent) = 0;
+
+      virtual void
+      getPose (std::vector<std::string> & pos) = 0;
+      /* -- */
     };
 
     /**
@@ -65,6 +73,9 @@ namespace faat_pcl
           double score_;
 
           std::string model_name_;
+
+          std::string pose_file_;  // TP
+          std::string entropy_file_;  // TP
         };
 
         struct sortIndexScores
@@ -111,6 +122,11 @@ namespace faat_pcl
         std::vector<flann_model> flann_models_;
 
         std::vector<int> indices_;
+
+        std::vector<std::string> pose_files_;  // TP
+        std::vector<std::string> entropy_files_;  // TP
+        std::vector<std::string> poses_best_;  // TP
+        std::vector<std::string> entropies_best_;  // TP
 
         //load features from disk and create flann structure
         void
@@ -171,6 +187,20 @@ namespace faat_pcl
           conf = confidences_;
         }
 
+        /* TP */
+        void
+        getEntropy(std::vector<std::string> & ent)
+        {
+          ent = entropies_best_;
+        }
+
+        void
+        getPose(std::vector<std::string> & pos)
+        {
+          pos = poses_best_;
+        }
+	/* -- */
+
         /**
          * \brief Initializes the FLANN structure from the provided source
          */
@@ -230,6 +260,12 @@ namespace faat_pcl
         {
           training_dir_ = dir;
         }
+        
+        void
+        checkNNOverlap ();
+
+        void
+        checkNNOverlap (std::string classLabel);
       };
   }
 }

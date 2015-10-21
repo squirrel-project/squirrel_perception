@@ -12,13 +12,31 @@ Attention3DSymmetryService::calculate (squirrel_object_perception_msgs::GetSalie
 {
   pcl::PointCloud<PointT>::Ptr scene (new pcl::PointCloud<PointT>);
   pcl::fromROSMsg (req.cloud, *scene);
-  
+  printf("Attention3DSymmetryService::calculate: point cloud is organised? %s\n", (scene->isOrganized() ? "yes" : "no")); // HACK
+  // HACK: The gezebo somilated kinect seems to output a non-orgnized point cloud. Just fix that here.
+  if(scene->height == 1)
+  {
+    if(scene->points.size() == 640*480)
+    {
+      scene->height = 480;
+      scene->width = 640;
+    }
+  }
+  printf("Attention3DSymmetryService::calculate: point cloud is organised? %s\n", (scene->isOrganized() ? "yes" : "no")); // HACK
+
   //prepare point cloud
   pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients());
   pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>());
   pcl::PointIndices::Ptr scene_indices(new pcl::PointIndices());
-  preparePointCloud(scene,coefficients,normals,scene_indices);
-  
+  // HACK MZ
+  scene_indices->indices.resize(scene->points.size());
+  for(size_t i = 0; i < scene->points.size(); i++)
+    scene_indices->indices[i] = i;
+  // HACK END
+  printf("[DEBUG]: Attention3DSymmetryService::calculate: 1 indices size %d normals %d\n", (int)scene_indices->indices.size(), (int)normals->points.size());
+  int ret = preparePointCloud(scene,coefficients,normals,scene_indices);
+  printf("[DEBUG]: Attention3DSymmetryService::calculate: 2 preparePointCloud returned: %d\n", ret);
+
   // start creating parameters
   saliencyMap_.reset(new AttentionModule::Symmetry3DMap);
   saliencyMap_->setWidth(scene->width);
