@@ -268,8 +268,8 @@ namespace faat_pcl
               v4r::utils::writeFloatToFile (path_entropy.str (), model.self_occlusions_->at (i));
             }
 
+            // MZ: this seems to recurse forever 
             //loadOrGenerate (dir, model_path, model);
-
           }
         }
 
