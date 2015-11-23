@@ -4,9 +4,8 @@ find_package(PCL REQUIRED)
 
 include(ExternalProject)
 ExternalProject_Add( V4R
- #GIT_REPOSITORY "https://github.com/strands-project/v4r"
- GIT_REPOSITORY "git@rgit.acin.tuwien.ac.at:markus-bajones/v4r.git"
- GIT_TAG "fix_glfw3"
+ GIT_REPOSITORY "https://github.com/strands-project/v4r"
+ GIT_TAG "recognition_update"
  CMAKE_ARGS ../V4R -DCMAKE_INSTALL_PREFIX=${CATKIN_DEVEL_PREFIX}/../install
  BUILD_COMMAND ${MAKE} 
 )
