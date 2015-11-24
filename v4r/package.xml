@@ -1,25 +1,22 @@
 <?xml version="1.0"?>
 <package>
   <name>v4r</name>
-  <version>0.0.0</version>
-  <description>The v4r package</description>
+  <version>1.1.1</version>
+  <description>The Vision for Robotics Library of ACIN TUW</description>
 
-  <!-- One maintainer tag required, multiple allowed, one person per tag --> 
-  <!-- Example:  -->
-  <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
-  <maintainer email="bajo@todo.todo">bajo</maintainer>
+  <maintainer email="bajones@acin.tuwien.ac.at">Markus Bajones</maintainer>
+  <maintainer email="zillich@acin.tuwien.ac.at">Michael Zillich</maintainer>
 
 
   <!-- One license tag required, multiple allowed, one license per tag -->
   <!-- Commonly used license strings: -->
   <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
-  <license>TODO</license>
+  <license>MIT</license>
 
 
   <!-- Url tags are optional, but mutiple are allowed, one per tag -->
   <!-- Optional attribute type can be: website, bugtracker, or repository -->
   <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/v4r</url> -->
 
 
   <!-- Author tags are optional, mutiple are allowed, one per tag -->
@@ -28,23 +25,46 @@
   <!-- <author email="jane.doe@example.com">Jane Doe</author> -->
 
 
-  <!-- The *_depend tags are used to specify dependencies -->
-  <!-- Dependencies can be catkin packages or system dependencies -->
-  <!-- Examples: -->
-  <!-- Use build_depend for packages you need at compile time: -->
-  <!--   <build_depend>message_generation</build_depend> -->
-  <!-- Use buildtool_depend for build tool packages: -->
-  <!--   <buildtool_depend>catkin</buildtool_depend> -->
-  <!-- Use run_depend for packages you need at runtime: -->
-  <!--   <run_depend>message_runtime</run_depend> -->
-  <!-- Use test_depend for packages you need only for testing: -->
-  <!--   <test_depend>gtest</test_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
 
+  <build_depend>suitesparse</build_depend>
+  <build_depend>libpcl-all-dev</build_depend>
+  <build_depend>libopenni-dev</build_depend>
+  <build_depend>libceres-dev</build_depend>
+  <build_depend>boost</build_depend>
+  <build_depend>libopencv-dev</build_depend>
+  <build_depend>libglew-dev</build_depend>
+  <build_depend>glut</build_depend>
+  <build_depend>libdevil-dev</build_depend>
+  <build_depend>libqt4-dev</build_depend>
+  <build_depend>libqt4-opengl-dev</build_depend>
+  <build_depend>libopenni2-dev</build_depend>
+  <build_depend>libglm-dev</build_depend>
+  <build_depend>assimp</build_depend>
+  <build_depend>libgoogle-glog-dev</build_depend>
+  <build_depend>libx11-dev</build_depend>
+  <build_depend>libxinerama-dev</build_depend>
+  <build_depend>libxi-dev</build_depend>
+  <build_depend>libxrandr</build_depend>
+  <build_depend>libxxf86vm</build_depend>
 
-  <!-- The export tag contains other, unspecified, tags -->
-  <export>
-    <!-- Other tools can request additional information be placed here -->
-
-  </export>
+  <run_depend>libpcl-all-dev</run_depend>
+  <run_depend>libopencv-dev</run_depend>
+  <run_depend>libceres-dev</run_depend>
+  <run_depend>libglew-dev</run_depend>
+  <run_depend>glut</run_depend>
+  <run_depend>libdevil-dev</run_depend>
+  <run_depend>libqt4-dev</run_depend>
+  <run_depend>libqt4-opengl-dev</run_depend>
+  <run_depend>libopenni2-dev</run_depend>
+  <run_depend>libglm-dev</run_depend>
+  <run_depend>assimp</run_depend>
+  <run_depend>libgoogle-glog-dev</run_depend>
+  <run_depend>libx11-dev</run_depend>
+  <run_depend>libxinerama-dev</run_depend>
+  <run_depend>libxi-dev</run_depend>
+  <run_depend>libxrandr</run_depend>
+  <run_depend>libxxf86vm</run_depend>
+ 
 </package>
+
