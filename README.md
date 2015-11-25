@@ -1,7 +1,7 @@
 squirrel_perception
 ===================
 
-Technical Maintainer: mzillich (Michael Zillich, TU Wien)
+Technical Maintainer: bajo (Markus "Bajo" Bajones, TU Wien)
 
 Repository for object perception related SQUIRREL packages.
 
