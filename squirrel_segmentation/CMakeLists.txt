@@ -107,12 +107,12 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${V4R_INCLUDE_DIR} ${PCL_INCL
 # link_directories(${V4R_LIB_DIR})
 
 ## Declare a cpp executable
-# add_executable(squirrel_segmentation_node src/squirrel_segmentation_node.cpp)
+#add_executable(squirrel_segmentation_node src/squirrel_segmentation_node.cpp)
 #add_executable(squirrel_segmentation_incremental src/squirrel_segmentation_incremental.cpp)
 ##add_executable(squirrel_segmentation_test src/test.cpp)
 #add_executable(squirrel_segmentation_visualization src/squirrel_segmentation_visualization.cpp)
 #add_executable(squirrel_segmentation src/squirrel_segmentation.cpp)
-#add_executable(segments_to_objects src/segments_to_objects.cpp)
+add_executable(segments_to_objects src/segments_to_objects.cpp)
 add_executable(squirrel_segmentation_popout src/squirrel_segmentation_popout.cpp)
 
 ## Add cmake target dependencies of the executable/library
@@ -123,13 +123,13 @@ add_executable(squirrel_segmentation_popout src/squirrel_segmentation_popout.cpp
 # target_link_libraries(squirrel_segmentation_node
 #   ${catkin_LIBRARIES}
 # )
-#target_link_libraries(squirrel_segmentation_incremental ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
+#target_link_libraries(squirrel_segmentation_incremental ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${V4R_LIBS})
 #add_dependencies(squirrel_segmentation_incremental v4r)
 #
-#target_link_libraries(squirrel_segmentation_visualization ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
+#target_link_libraries(squirrel_segmentation_visualization ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${V4R_LIBS})
 #add_dependencies(squirrel_segmentation_visualization v4r)
 #
-#target_link_libraries(squirrel_segmentation ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS}
+#target_link_libraries(squirrel_segmentation ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${V4R_LIBS}
 #cholmod
 #amd
 #klu
@@ -145,11 +145,11 @@ add_executable(squirrel_segmentation_popout src/squirrel_segmentation_popout.cpp
 #)
 #add_dependencies(squirrel_segmentation v4r)
 #
-#target_link_libraries(segments_to_objects ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+target_link_libraries(segments_to_objects ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
 target_link_libraries(squirrel_segmentation_popout ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
-#target_link_libraries(squirrel_segmentation_test ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
+#target_link_libraries(squirrel_segmentation_test ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${V4R_LIBS})
 #add_dependencies(squirrel_segmentation_test v4r)
 
 #############
@@ -205,7 +205,7 @@ if(CATKIN_ENABLE_TESTING)
 
 # catkin_add_gtest(squirrel_segmentation_incremental_test test/squirrel_segmentation_incremental_test.cpp) # WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
 # if(TARGET squirrel_segmentation_incremental_test)
-#   target_link_libraries(squirrel_segmentation_incremental_test ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS})# ${STRANDSV4R_LIBS}
+#   target_link_libraries(squirrel_segmentation_incremental_test ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS})# ${V4R_LIBS}
 # endif()
 # 
   add_rostest(test/squirrel_segmentation_incremental_test.test)
