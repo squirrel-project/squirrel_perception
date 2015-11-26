@@ -5,7 +5,8 @@ project(squirrel_tracking)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED)
-find_package(catkin REQUIRED COMPONENTS roscpp rospy cv_bridge squirrel_object_perception_msgs v4r tf2 tf)
+find_package(V4R REQUIRED)
+find_package(catkin REQUIRED COMPONENTS roscpp rospy cv_bridge squirrel_object_perception_msgs tf2 tf)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -81,7 +82,7 @@ find_package(OpenCV 2.4 REQUIRED)
 catkin_package(
  INCLUDE_DIRS include
 #  LIBRARIES squirrel_tracking
- CATKIN_DEPENDS squirrel_object_perception_msgs v4r tf2
+ CATKIN_DEPENDS squirrel_object_perception_msgs tf2
 #  DEPENDS system_lib
 )
 
@@ -93,7 +94,7 @@ add_definitions(-DEIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET)
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-include_directories(include ${catkin_INCLUDE_DIRS} ${V4R_INCLUDE_DIR} ${PCL_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS} ${V4R_INCLUDE_DIRS} ${PCL_INCLUDE_DIRS})
 
 ## Declare a cpp library
 # add_library(squirrel_tracking
@@ -112,7 +113,7 @@ add_executable(lump_tracker src/lump_tracker.cpp)
 # target_link_libraries(squirrel_tracking_node
 #   ${catkin_LIBRARIES}
 # )
-target_link_libraries(object_tracker ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS} ceres glog
+target_link_libraries(object_tracker ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${V4R_LIBS} ceres glog
 cholmod
 amd
 klu
@@ -129,9 +130,9 @@ blas
 lapack
 boost_thread boost_program_options boost_serialization boost_regex boost_filesystem boost_system
 )
-add_dependencies(object_tracker v4r)
+add_dependencies(object_tracker V4R)
 
-target_link_libraries(lump_tracker ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
+target_link_libraries(lump_tracker ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${V4R_LIBS})
 
 #############
 ## Install ##
