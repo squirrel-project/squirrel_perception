@@ -1,5 +1,5 @@
-#include <squirrel_active_exploration/CoveragePlan.h>
-#include <squirrel_active_exploration/CoveragePlanFile.h>
+#include <squirrel_object_perception_msgs/CoveragePlan.h>
+#include <squirrel_object_perception_msgs/CoveragePlanFile.h>
 
 #include "squirrel_active_exploration/octomap_utils.h"
 
@@ -39,8 +39,8 @@ private:
 
     /* === FUNCTIONS === */
 
-    bool extract_coverage_locations(squirrel_active_exploration::CoveragePlan::Request &req,
-                                    squirrel_active_exploration::CoveragePlan::Response &response)
+    bool extract_coverage_locations(squirrel_object_perception_msgs::CoveragePlan::Request &req,
+                                    squirrel_object_perception_msgs::CoveragePlan::Response &response)
     {
         // Print out the parameters
         ROS_INFO("squirrel_map_coverage_server : input parameters");
@@ -115,8 +115,8 @@ private:
         return true;
     }
 
-    bool extract_coverage_locations_from_file(squirrel_active_exploration::CoveragePlanFile::Request &req,
-                                              squirrel_active_exploration::CoveragePlanFile::Response &response)
+    bool extract_coverage_locations_from_file(squirrel_object_perception_msgs::CoveragePlanFile::Request &req,
+                                              squirrel_object_perception_msgs::CoveragePlanFile::Response &response)
     {
         // Print out the parameters
         ROS_INFO("squirrel_map_coverage_server : input parameters");

@@ -686,7 +686,7 @@ namespace active_exploration_utils
         }
         // For each segment call the entropy map service
         entropy_maps.resize(instance_directories.size());
-        squirrel_active_exploration::EntropyMap em_srv;
+        squirrel_object_perception_msgs::EntropyMap em_srv;
         for (size_t i = 0; i < instance_directories.size(); ++i)
         {
             // For each class estimate
@@ -2460,7 +2460,7 @@ namespace active_exploration_utils
 
     /* === DATA TYPE CONVERSION === */
 
-    bool fromROSMsg(const squirrel_active_exploration::EntropyMap &in, EntMap &out)
+    bool fromROSMsg(const squirrel_object_perception_msgs::EntropyMap &in, EntMap &out)
     {
         try
         {

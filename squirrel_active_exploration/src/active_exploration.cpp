@@ -145,8 +145,8 @@ bool ActiveExploration::initialize(ros::NodeHandle *node)
     _viz_init_client = _n->serviceClient<SegmentVisualizationInit>("/squirrel_segmentation_visualization_init");
     _viz_client = _n->serviceClient<SegmentVisualizationOnce>("/squirrel_segmentation_visualization_once");
     _class_client = _n->serviceClient<Classify>("/squirrel_classify");
-    _em_client = _n->serviceClient<squirrel_active_exploration::EntropyMap>("/squirrel_entropy_map");
-    _em_viz_client = _n->serviceClient<squirrel_active_exploration::EntropyMapViz>("/squirrel_entropy_map_visualize");
+    _em_client = _n->serviceClient<squirrel_object_perception_msgs::EntropyMap>("/squirrel_entropy_map");
+    _em_viz_client = _n->serviceClient<squirrel_object_perception_msgs::EntropyMapViz>("/squirrel_entropy_map_visualize");
 
     // Read the input if it exists
     string cloud_name = "";
@@ -4103,7 +4103,7 @@ bool ActiveExploration::is_valid_segment(const PointCloud<PointT> &cloud, const 
     return is_valid_segment(transformed_cloud, ix);
 }
 
-bool ActiveExploration::fromROSMsg(const squirrel_active_exploration::EntropyMap &in, EntMap &out)
+bool ActiveExploration::fromROSMsg(const squirrel_object_perception_msgs::EntropyMap &in, EntMap &out)
 {
     try
     {

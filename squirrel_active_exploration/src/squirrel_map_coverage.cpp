@@ -4,7 +4,6 @@ using namespace std;
 using namespace octomap;
 
 // Default definitions, should be replaced by program arguments
-#define _FILENAME ""
 #define _TREE_DEPTH 14
 #define _ROBOT_HEIGHT 0.7
 #define _ROBOT_OUTER_RANGE 2.0
@@ -22,7 +21,7 @@ int main(int argc, char **argv)
     ros::NodeHandle n("~");
 
     // Get the parameters
-    string filename = _FILENAME;
+    string filename = "";
     int tree_depth = _TREE_DEPTH;
     double robot_height = _ROBOT_HEIGHT;
     double robot_outer_range = _ROBOT_OUTER_RANGE;
@@ -32,7 +31,11 @@ int main(int argc, char **argv)
     int max_iters = _MAX_ITERS;
     bool visualize = false;
     // Read the input if it exists
-    n.getParam ("data_filename", filename);
+    if (!n.getParam ("data_filename", filename))
+    {
+        ROS_ERROR("squirrel_map_coverage::main : you must enter a filename");
+        return EXIT_FAILURE;
+    }
     n.getParam ("tree_depth", tree_depth);
     n.getParam ("robot_height", robot_height);
     n.getParam ("robot_outer_range", robot_outer_range);
@@ -56,7 +59,7 @@ int main(int argc, char **argv)
     else
         ROS_INFO("Visualization = OFF");
 
-    // Chack that input filename is valid
+    // Check that input filename is valid
     if (filename.size() == 0)
     {
         ROS_ERROR("squirrel_map_coverage::main : invalid input file");

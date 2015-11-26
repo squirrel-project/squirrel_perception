@@ -26,8 +26,8 @@
 #include <squirrel_object_perception_msgs/SegmentVisualizationInit.h>
 #include <squirrel_object_perception_msgs/SegmentVisualizationOnce.h>
 #include <squirrel_object_perception_msgs/Classify.h>
-#include <squirrel_active_exploration/EntropyMap.h>
-#include <squirrel_active_exploration/EntropyMapViz.h>
+#include <squirrel_object_perception_msgs/EntropyMap.h>
+#include <squirrel_object_perception_msgs/EntropyMapViz.h>
 #include <octomap_ros/conversions.h>
 
 #include <cv.h>
@@ -394,7 +394,7 @@ private:
 
     /* === DATA TYPE CONVERSION === */
 
-    bool fromROSMsg(const squirrel_active_exploration::EntropyMap &in, EntMap &out);
+    bool fromROSMsg(const squirrel_object_perception_msgs::EntropyMap &in, EntMap &out);
 
     /* === VISUALIZATION === */
 
@@ -445,9 +445,9 @@ private:
     ros::ServiceClient _class_client;  // service client for classification
     squirrel_object_perception_msgs::Classify _class_srv;  // message for classification service
     ros::ServiceClient _em_client;  // service client for entropy map
-    squirrel_active_exploration::EntropyMap _em_srv;  // message for entropy map service
+    squirrel_object_perception_msgs::EntropyMap _em_srv;  // message for entropy map service
     ros::ServiceClient _em_viz_client;  // service client for entropy map visualization
-    squirrel_active_exploration::EntropyMapViz _em_viz_srv;  // message for entropy map visualization service
+    squirrel_object_perception_msgs::EntropyMapViz _em_viz_srv;  // message for entropy map visualization service
 
     /* === POSITION, POINT CLOUDS, IMAGES AND TRANSFORMS === */
     Eigen::Vector4f _position;  // the current location

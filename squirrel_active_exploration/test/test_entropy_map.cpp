@@ -1,6 +1,6 @@
 #include "ros/ros.h"
-#include <squirrel_active_exploration/EntropyMap.h>
-#include <squirrel_active_exploration/EntropyMapViz.h>
+#include <squirrel_object_perception_msgs/EntropyMap.h>
+#include <squirrel_object_perception_msgs/EntropyMapViz.h>
 
 #include "squirrel_active_exploration/pcl_conversions.h"
 #include <pcl/PCLPointCloud2.h>
@@ -53,10 +53,10 @@ int main(int argc, char **argv)
 
     vector<PointCloud<PointT>::Ptr> clouds;
 
-    ros::ServiceClient em_client = n.serviceClient<squirrel_active_exploration::EntropyMap>("/squirrel_entropy_map");
-    squirrel_active_exploration::EntropyMap em_srv;
-    ros::ServiceClient em_viz_client = n.serviceClient<squirrel_active_exploration::EntropyMapViz>("/squirrel_entropy_map_visualize");
-    squirrel_active_exploration::EntropyMapViz em_vis_srv;
+    ros::ServiceClient em_client = n.serviceClient<squirrel_object_perception_msgs::EntropyMap>("/squirrel_entropy_map");
+    squirrel_object_perception_msgs::EntropyMap em_srv;
+    ros::ServiceClient em_viz_client = n.serviceClient<squirrel_object_perception_msgs::EntropyMapViz>("/squirrel_entropy_map_visualize");
+    squirrel_object_perception_msgs::EntropyMapViz em_vis_srv;
     // Call the services
     em_srv.request.class_type.data = class_type;
     em_srv.request.instance_name.data = instance_name;

@@ -60,36 +60,36 @@ find_package(Boost REQUIRED COMPONENTS system)
 ##   * uncomment the generate_messages entry below
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
-# Generate messages in the 'msg' folder
-add_message_files(
-  FILES
-  ViewpointEntropy.msg
-)
+## Generate messages in the 'msg' folder
+#add_message_files(
+#  FILES
+#  ViewpointEntropy.msg
+#)
 
-# Generate services in the 'srv' folder
-add_service_files(
-  FILES
-  EntropyMap.srv
-  EntropyMapViz.srv
-  CoveragePlan.srv
-  CoveragePlanFile.srv
-)
+## Generate services in the 'srv' folder
+#add_service_files(
+#  FILES
+#  EntropyMap.srv
+#  EntropyMapViz.srv
+#  CoveragePlan.srv
+#  CoveragePlanFile.srv
+#)
 
-## Generate actions in the 'action' folder
-# add_action_files(
-#   FILES
-#   Action1.action
-#   Action2.action
-# )
+### Generate actions in the 'action' folder
+## add_action_files(
+##   FILES
+##   Action1.action
+##   Action2.action
+## )
 
-# Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-  sensor_msgs
-  geometry_msgs
-  octomap_msgs
-)
+## Generate added messages and services with any dependencies listed here
+#generate_messages(
+#  DEPENDENCIES
+#  std_msgs
+#  sensor_msgs
+#  geometry_msgs
+#  octomap_msgs
+#)
 
 ###################################
 ## catkin specific configuration ##
@@ -103,7 +103,17 @@ generate_messages(
 catkin_package(
  INCLUDE_DIRS include
 #  LIBRARIES squirrel_segmentation
- CATKIN_DEPENDS squirrel_object_perception_msgs v4r tf2 std_msgs sensor_msgs geometry_msgs octomap_msgs octomap_ros nav_msgs message_runtime
+ CATKIN_DEPENDS
+ squirrel_object_perception_msgs
+ v4r
+ tf2
+ std_msgs
+ sensor_msgs
+ geometry_msgs
+ octomap_msgs
+ octomap_ros
+ nav_msgs
+ message_runtime
 #  DEPENDS system_lib
 )
 

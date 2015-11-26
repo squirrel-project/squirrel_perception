@@ -7,8 +7,6 @@ using namespace std;
 using namespace pcl;
 
 #define _LOCATIONS_ORDER_FILENAME "experiment_locations.txt"
-#define _MAP_LOCATIONS_FILE ""
-#define _STORE_POINTS_DIR ""
 #define _IMAGE_FILE "test45.png"
 #define _VARIANCE 0.5
 #define _PLAN_TYPE "max_area"
@@ -27,8 +25,8 @@ bool parse_input(const ros::NodeHandle &n, string &map_locations_file, string &s
                  bool &do_visualize, bool &do_saving)
 {
     // Default values
-    map_locations_file = _MAP_LOCATIONS_FILE;
-    stored_points_dir = _STORE_POINTS_DIR;
+    map_locations_file = "";
+    stored_points_dir = "";
     image_file = _IMAGE_FILE;
     variance = _VARIANCE;
     expected_number_objects = _EXPECTED_NUMBER_OBJECTS;
@@ -39,8 +37,16 @@ bool parse_input(const ros::NodeHandle &n, string &map_locations_file, string &s
     do_visualize = _VISUALIZE_FLAG;
     do_saving = _SAVE_FLAG;
     // Read the arguments
-    n.getParam("map_locations_file", map_locations_file);
-    n.getParam("stored_points_directory", stored_points_dir);
+    if (!n.getParam("map_locations_file", map_locations_file))
+    {
+        ROS_ERROR("squirrel_run_planner::parse_input : you must enter a map locations file");
+        return false;
+    }
+    if (!n.getParam("stored_points_directory", stored_points_dir))
+    {
+        ROS_ERROR("squirrel_run_planner::parse_input : you must enter a directory specifying where to save point clouds");
+        return false;
+    }
     n.getParam("image_file", image_file);
     n.getParam("variance", variance);
     n.getParam("expected_number_objects", expected_number_objects);

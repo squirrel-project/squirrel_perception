@@ -1,5 +1,5 @@
-#include <squirrel_active_exploration/CoveragePlan.h>
-#include <squirrel_active_exploration/CoveragePlanFile.h>
+#include <squirrel_object_perception_msgs/CoveragePlan.h>
+#include <squirrel_object_perception_msgs/CoveragePlanFile.h>
 
 #include "squirrel_active_exploration/octomap_utils.h"
 
@@ -7,7 +7,6 @@ using namespace std;
 using namespace octomap;
 
 // Default definitions, should be replaced by program arguments
-#define _FILENAME "/home/tpat8946/Data/TUW/maps/tuw_apartment/tuw_apartment.ot"
 #define _TREE_DEPTH 14  // 14 => resolution of 0.1m, initial tree depth is 16 => 0.025m
 #define _ROBOT_HEIGHT 0.75
 #define _ROBOT_OUTER_RANGE 2.0
@@ -23,7 +22,7 @@ int main(int argc, char **argv)
     ros::NodeHandle n("~");
 
     // Get the parameters
-    string filename = _FILENAME;
+    string filename = "";
     int tree_depth = _TREE_DEPTH;
     double robot_height = _ROBOT_HEIGHT;
     double robot_outer_range = _ROBOT_OUTER_RANGE;
@@ -33,7 +32,11 @@ int main(int argc, char **argv)
     int max_iters = _MAX_ITERS;
     bool visualize = false;
     // Read the input if it exists
-    n.getParam ("data_filename", filename);
+    if (!n.getParam ("data_filename", filename))
+    {
+        ROS_ERROR("TEST_map_coverage_server::main : you must enter a filename");
+        return EXIT_FAILURE;
+    }
     n.getParam ("tree_depth", tree_depth);
     n.getParam ("robot_height", robot_height);
     n.getParam ("robot_outer_range", robot_outer_range);
@@ -57,12 +60,12 @@ int main(int argc, char **argv)
     else
         ROS_INFO("Visualization = OFF");
 
-//    ros::ServiceClient mp_client = n.serviceClient<squirrel_active_exploration::CoveragePlan>("/squirrel_map_coverage");
-//    squirrel_active_exploration::CoveragePlan mp_srv;
+//    ros::ServiceClient mp_client = n.serviceClient<squirrel_object_perception_msgs::CoveragePlan>("/squirrel_map_coverage");
+//    squirrel_object_perception_msgs::CoveragePlan mp_srv;
 //    // TODO ...
 
-    ros::ServiceClient mp_file_client = n.serviceClient<squirrel_active_exploration::CoveragePlanFile>("/squirrel_map_coverage_file");
-    squirrel_active_exploration::CoveragePlanFile mp_file_srv;
+    ros::ServiceClient mp_file_client = n.serviceClient<squirrel_object_perception_msgs::CoveragePlanFile>("/squirrel_map_coverage_file");
+    squirrel_object_perception_msgs::CoveragePlanFile mp_file_srv;
     mp_file_srv.request.filename = filename;
     mp_file_srv.request.tree_depth = tree_depth;
     mp_file_srv.request.robot_height = robot_height;
