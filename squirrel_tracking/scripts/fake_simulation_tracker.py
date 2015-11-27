@@ -83,8 +83,10 @@ def start_tracking(req):
 		# start tracking with ~30 Hz
 		timer = rospy.Timer(rospy.Duration(0.03), track_object)
 		rospy.loginfo("start_tracking: %s", tracked_object_id)
+                resp.result = StartObjectTrackingResponse.SUCCESS
 	else:
 		rospy.logerr("start_tracking: I am already tracking an object, can only do one at a time.");
+                resp.result = StartObjectTrackingResponse.FAILURE
 	return resp;
 
 
@@ -97,8 +99,10 @@ def stop_tracking(req):
 		tracked_object_id = ""
 		timer.shutdown()
 		rospy.loginfo("stopTracking: stopped");
+                resp.result = StopObjectTrackingResponse.SUCCESS
 	else:
 		rospy.logerr("stopTracking: currently not tracking an object");
+                resp.result = StopObjectTrackingResponse.FAILURE
 	return resp;
 
 
