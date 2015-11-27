@@ -13,7 +13,7 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/CameraInfo.h>
-#include <v4r/KeypointSlam/ObjectTrackerMono.hh>
+#include <v4r/tracking/ObjectTrackerMono.h>
 #include <squirrel_object_perception_msgs/StartObjectTracking.h>
 #include <squirrel_object_perception_msgs/StopObjectTracking.h>
 
@@ -21,7 +21,7 @@ class SquirrelTrackingNode
 {
 private:
   ros::NodeHandle *n_;
-  kp::ObjectTrackerMono::Ptr tracker;
+  v4r::ObjectTrackerMono::Ptr tracker;
   ros::ServiceServer startTrackingService_;
   ros::ServiceServer stopTrackingService_;
   ros::Subscriber imageSubscriber;

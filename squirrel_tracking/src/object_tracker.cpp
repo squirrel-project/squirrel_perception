@@ -5,7 +5,7 @@
  * @date 2015-03
  */
 
-#include <v4r/KeypointSlam/io.hh>
+#include <v4r/keypoints/io.h>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
@@ -51,10 +51,10 @@ bool SquirrelTrackingNode::startTracking(squirrel_object_perception_msgs::StartO
   {
     if(!startedTracking)
     {
-      kp::ObjectTrackerMono::Parameter param;
+      v4r::ObjectTrackerMono::Parameter param;
       param.kt_param.plk_param.use_ncc = true;
       param.kt_param.plk_param.ncc_residual = .6;
-      tracker.reset(new kp::ObjectTrackerMono(param));
+      tracker.reset(new v4r::ObjectTrackerMono(param));
       tracker->setCameraParameter(intrinsic, dist);
 
       trackedObjectId = req.object_id.data;
@@ -62,8 +62,8 @@ bool SquirrelTrackingNode::startTracking(squirrel_object_perception_msgs::StartO
       // for now, we just take the objectId as the model name
       string filename = modelPath + "/" + trackedObjectId + "/" + trackedObjectId + ".ao";
       ROS_INFO("SquirrelTrackingNode::startTracking: loading '%s'", filename.c_str());
-      kp::ArticulatedObject::Ptr model(new kp::ArticulatedObject());
-      if(kp::io::read(filename, model))
+      v4r::ArticulatedObject::Ptr model(new v4r::ArticulatedObject());
+      if(v4r::io::read(filename, model))
       {
         tracker->setObjectModel(model);
         imageSubscriber = n_->subscribe("/kinect/rgb/image_rect_color", 5, &SquirrelTrackingNode::receiveImage, this);
