@@ -12,7 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
              v4r
              tf2
              tf
-             pcl_ros
+             #pcl_ros
              std_msgs
              geometry_msgs
              sensor_msgs
