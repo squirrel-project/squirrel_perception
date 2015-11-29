@@ -69,7 +69,7 @@
   <run_depend>octomap_ros</run_depend>
   <run_depend>nav_msgs</run_depend>
   <run_depend>squirrel_segmentation</run_depend>
-  <run_depend>squirrel_segmentation_visualization</run_depend>
+  <!--run_depend>squirrel_segmentation_visualization</run_depend-->
   <run_depend>squirrel_classification</run_depend>
   <!--run_depend>squirrel_active_exploration</run_depend-->
 
