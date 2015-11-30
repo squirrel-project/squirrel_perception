@@ -27,7 +27,6 @@ script:
   - ln -s $TRAVIS_BUILD_DIR $CATKIN_WS_SRC
   - cd $CATKIN_WS
   - git clone git@github.com:squirrel-project/squirrel_common.git ~/catkin_ws/src/squirrel_common
-  - git clone git@github.com:squirrel-project/squirrel_planning.git ~/catkin_ws/src/squirrel_planning
   - catkin init
   - rosdep install --from-paths src/ -i -y --rosdistro $CI_ROS_DISTRO
   # Enable install space
