@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="hostname" default="localhost" />
+
+  <arg name="class_type" default="banana" />
+  <arg name="instance_name" default="7d78e217e0ba160fe2b248b8bb97d290" />
+  <arg name="view_index" default="-1" />
+  <arg name="score_type" default="prob" />
+
+
+  <node name="test_entropy_map"
+        pkg="squirrel_active_exploration"
+        type="test_entropy_map"
+        output="screen">
+        <param name="class_type" type="string" value="$(arg class_type)"/>
+	<param name="instance_name" type="string" value="$(arg instance_name)"/>
+        <param name="view_index" type="int" value="$(arg view_index)"/> 
+        <param name="score_type" type="string" value="$(arg score_type)"/> 
+  </node>
+
+</launch>
