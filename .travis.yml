@@ -21,6 +21,8 @@ install:
   - rosdep update
   - sudo apt-get install ros-indigo-desktop
   # Use rosdep to install all dependencies (including ROS itself)
+before_script:
+  - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
 script:
   - source /opt/ros/$CI_ROS_DISTRO/setup.bash
   - mkdir -p $CATKIN_WS_SRC
