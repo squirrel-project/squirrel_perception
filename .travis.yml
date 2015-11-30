@@ -21,13 +21,14 @@ install:
   - rosdep update
   - sudo apt-get install ros-indigo-desktop
   # Use rosdep to install all dependencies (including ROS itself)
+before_script:
+  - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
 script:
   - source /opt/ros/$CI_ROS_DISTRO/setup.bash
   - mkdir -p $CATKIN_WS_SRC
   - ln -s $TRAVIS_BUILD_DIR $CATKIN_WS_SRC
   - cd $CATKIN_WS
   - git clone git@github.com:squirrel-project/squirrel_common.git ~/catkin_ws/src/squirrel_common
-  - git clone git@github.com:squirrel-project/squirrel_planning.git ~/catkin_ws/src/squirrel_planning
   - catkin init
   - rosdep install --from-paths src/ -i -y --rosdistro $CI_ROS_DISTRO
   # Enable install space
