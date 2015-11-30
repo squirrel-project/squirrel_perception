@@ -75,9 +75,9 @@ def track_object(timer_event):
 
 def start_tracking(req):
 	global tracked_object_id
-	global timer
+	global timer;
 
-	resp = StartObjectTrackingResponse()
+	resp = StartObjectTrackingResponse
 	if tracked_object_id == "":
 		tracked_object_id = req.object_id.data
 		# start tracking with ~30 Hz
@@ -85,32 +85,31 @@ def start_tracking(req):
 		rospy.loginfo("start_tracking: %s", tracked_object_id)
                 resp.result = StartObjectTrackingResponse.SUCCESS
 	else:
-		rospy.logerr("start_tracking: I am already tracking an object, can only do one at a time.")
+		rospy.logerr("start_tracking: I am already tracking an object, can only do one at a time.");
                 resp.result = StartObjectTrackingResponse.FAILURE
-	print("done")
-	return resp
+	return resp;
 
 
 def stop_tracking(req):
 	global tracked_object_id
 	global timer
 
-	resp = StopObjectTrackingResponse()
+	resp = StopObjectTrackingResponse
 	if not tracked_object_id == "":
 		tracked_object_id = ""
 		timer.shutdown()
-		rospy.loginfo("stopTracking: stopped")
+		rospy.loginfo("stopTracking: stopped");
                 resp.result = StopObjectTrackingResponse.SUCCESS
 	else:
-		rospy.logerr("stopTracking: currently not tracking an object")
+		rospy.logerr("stopTracking: currently not tracking an object");
                 resp.result = StopObjectTrackingResponse.FAILURE
-	return resp
+	return resp;
 
 
 if __name__ == "__main__":
 	rospy.sleep(2)
-	s1 = rospy.Service("/squirrel_start_object_tracking", StartObjectTracking, start_tracking)
-	s2 = rospy.Service("/squirrel_stop_object_tracking", StopObjectTracking, stop_tracking)
-	rospy.loginfo("Ready to get service calls...")
+	s1 = rospy.Service("/squirrel_start_object_tracking", StartObjectTracking, start_tracking);
+	s2 = rospy.Service("/squirrel_stop_object_tracking", StopObjectTracking, stop_tracking);
+	rospy.loginfo("Ready to get service calls...");
 	rospy.spin()
 
