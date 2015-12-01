@@ -30,4 +30,4 @@ target_link_libraries(lump_tracker ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBR
 add_dependencies(lump_tracker ${catkin_EXPORTED_TARGETS})
 install(TARGETS object_tracker lump_tracker RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
-catkin_install_python(PROGRAMS scripts/fake_simulation_tracker.py.orig scripts/fake_simulation_tracker.py DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+catkin_install_python(PROGRAMS scripts/fake_simulation_tracker.py DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
