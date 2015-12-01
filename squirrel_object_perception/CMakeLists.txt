@@ -8,7 +8,6 @@ find_package(catkin REQUIRED COMPONENTS
         geometry_msgs
         pcl_conversions
         roscpp
-        roslib
         rospy
         sensor_msgs
         squirrel_object_perception_msgs
@@ -41,7 +40,6 @@ catkin_package(
         geometry_msgs
         pcl_conversions
         roscpp
-        roslib
         rospy
         sensor_msgs
         squirrel_object_perception_msgs
@@ -65,4 +63,5 @@ target_link_libraries(squirrel_look_for_objects
   ${PCL_LIBRARIES}
 )
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+install(TARGETS squirrel_look_for_objects RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 catkin_install_python(PROGRAMS src/squirrel_object_perception/squirrel_look_for_objects.py DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
