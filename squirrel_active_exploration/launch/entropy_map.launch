@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="hostname" default="localhost" />
+
+  <arg name="training_directory" default="$(find squirrel_active_exploration)/data/training_set_3/training/" />
+  <arg name="descriptor" default="esf" />
+  <arg name="classification" default="true" />
+  <arg name="inspect" default="false" />
+
+  <node name="squirrel_entropy_map"
+        pkg="squirrel_active_exploration"
+        type="squirrel_entropy_map"
+        output="screen">
+        <param name="training_directory" type="string" value="$(arg training_directory)"/>
+	<param name="descriptor" type="string" value="$(arg descriptor)"/>
+        <param name="classification" type="bool" value="$(arg classification)"/> 
+        <param name="inspect" type="bool" value="$(arg inspect)"/> 
+  </node>
+
+
+</launch>

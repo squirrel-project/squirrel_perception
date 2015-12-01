@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="hostname" default="localhost" />
+
+  <arg name="data_filename" default="/home/tpat8946/Data/TUW/maps/fr_078_tidyup/fr_078_tidyup.bt" />
+  <arg name="tree_depth" default="14" />
+  <arg name="robot_height" default="0.7" />
+  <arg name="robot_outer_range" default="2.0" />
+  <arg name="robot_inner_range" default="1.0" />
+  <arg name="robot_radius" default="0.22" />
+  <arg name="grid_step" default="0.5" />
+  <arg name="maximum_iterations" default="20" />
+  <arg name="visualize" default="true" />
+
+  <node name="squirrel_map_coverage"
+        pkg="squirrel_active_exploration"
+        type="squirrel_map_coverage"
+        output="screen">
+        <param name="data_filename" type="string" value="$(arg data_filename)"/>
+        <param name="tree_depth" type="int" value="$(arg tree_depth)"/> 
+        <param name="robot_height" type="double" value="$(arg robot_height)"/> 
+        <param name="robot_outer_range" type="double" value="$(arg robot_outer_range)"/> 
+	<param name="robot_inner_range" type="double" value="$(arg robot_inner_range)"/> 
+	<param name="robot_radius" type="double" value="$(arg robot_radius)"/> 
+	<param name="grid_step" type="double" value="$(arg grid_step)"/> 
+	<param name="maximum_iterations" type="double" value="$(arg maximum_iterations)"/> 
+	<param name="visualize" type="bool" value="$(arg visualize)"/> 
+  </node>
+
+
+</launch>

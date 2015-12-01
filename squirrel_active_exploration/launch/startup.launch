@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="hostname" default="localhost" />
+
+  <arg name="model_filename" default="$(find squirrel_segmentation)/data/ST-TrainAll.txt.model" />
+  <arg name="scaling_filename" default="$(find squirrel_segmentation)/data/ST-TrainAll.txt.scalingparams" />
+  <arg name="models_dir" default="$(find squirrel_active_exploration)/data/training_set_3/models" />
+  <arg name="training_dir" default="$(find squirrel_active_exploration)/data/training_set_3/training" />
+  <arg name="camera_image" default="/squirrel_segmentation_visualization_segmentation" />
+
+  <node name="squirrel_segmentation"
+        pkg="squirrel_segmentation"
+        type="squirrel_segmentation"
+        required="true" output="screen">
+        <param name="model_filename" type="string" value="$(arg model_filename)"/>
+        <param name="scaling_filename" type="string" value="$(arg scaling_filename)"/>
+  </node>
+
+  <node name="squirrel_segmentation_visualization"
+        pkg="squirrel_segmentation"
+        type="squirrel_segmentation_visualization">
+  </node>
+
+  <node name="image_view"
+        pkg="image_view"
+        type="image_view">
+        <remap from="image" to="$(arg camera_image)" />
+  </node>
+
+  <node name="squirrel_classification"
+        pkg="squirrel_classification"
+        type="squirrel_classification"
+        required="true" output="screen">
+        <param name="models_dir" type="string" value="$(arg models_dir)"/>
+        <param name="training_dir" type="string" value="$(arg training_dir)"/>
+  </node>
+
+  <!-- <include file="$(find squirrel_person_tracker)/launch/squirrel_person_tracker_nodelet_separate.launch" >
+  </include> -->
+
+  <!--<include file="$(find squirrel_attention)/launch/startup.launch" >
+  </include>
+
+  <include file="$(find squirrel_segmentation)/launch/startup.launch" >
+  </include>
+
+  <include file="$(find squirrel_classification)/launch/startup.launch" >
+  </include> -->
+
+  <!--
+  <include file="$(find squirrel_tracking)/launch/startup.launch" >
+  </include>
+
+  <include file="$(find squirrel_object_perception)/launch/startup.launch" >
+  </include>
+
+  <include file="$(find squirrel_planning_launch)/launch/squirrel_planning_review1.launch" >
+  </include>
+
+  <include file="$(find squirrel_object_manipulation)/launch/all.launch" >
+  </include>
+
+  <include file="$(find squirrel_navigation)/launch/navigation.launch" >
+  </include>
+  -->
+
+</launch>

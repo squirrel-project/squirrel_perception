@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="hostname" default="localhost" />
+
+  <node name="robot_controller"
+        pkg="squirrel_active_exploration"
+        type="robot_controller"
+        output="screen">
+  </node>
+
+
+</launch>
