@@ -5,7 +5,7 @@ SET(CMAKE_BUILD_TYPE Release)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp rospy cv_bridge squirrel_object_perception_msgs tf2 tf) #pcl_conversions
+find_package(catkin REQUIRED COMPONENTS roscpp rospy cv_bridge squirrel_object_perception_msgs tf2 tf pcl_conversions)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -81,7 +81,7 @@ find_package(V4R REQUIRED)
 catkin_package(
  INCLUDE_DIRS include
 #  LIBRARIES squirrel_segmentation
- CATKIN_DEPENDS squirrel_object_perception_msgs v4r tf2
+ CATKIN_DEPENDS squirrel_object_perception_msgs v4r tf2 pcl_conversions
 #  DEPENDS system_lib
 )
 
@@ -107,22 +107,13 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${V4R_INCLUDE_DIR} ${PCL_INCL
 # link_directories(${V4R_LIB_DIR})
 
 ## Declare a cpp executable
-#add_executable(squirrel_segmentation_node src/squirrel_segmentation_node.cpp)
 #add_executable(squirrel_segmentation_incremental src/squirrel_segmentation_incremental.cpp)
-##add_executable(squirrel_segmentation_test src/test.cpp)
 #add_executable(squirrel_segmentation_visualization src/squirrel_segmentation_visualization.cpp)
 #add_executable(squirrel_segmentation src/squirrel_segmentation.cpp)
 add_executable(segments_to_objects src/segments_to_objects.cpp)
 add_executable(squirrel_segmentation_popout src/squirrel_segmentation_popout.cpp)
+##add_executable(squirrel_segmentation_test src/test.cpp)
 
-## Add cmake target dependencies of the executable/library
-## as an example, message headers may need to be generated before nodes
-# add_dependencies(squirrel_segmentation_node squirrel_segmentation_generate_messages_cpp)
-
-## Specify libraries to link a library or executable target against
-# target_link_libraries(squirrel_segmentation_node
-#   ${catkin_LIBRARIES}
-# )
 #target_link_libraries(squirrel_segmentation_incremental ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${V4R_LIBS})
 #add_dependencies(squirrel_segmentation_incremental v4r)
 #
