@@ -44,7 +44,7 @@
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>libglew-dev</build_depend>
-  <build_depend>freeglut3-dev</build_depend>
+  <build_depend>glut</build_depend>
   <build_depend>rospy</build_depend>
   <build_depend>suitesparse</build_depend>  <!-- yes, it is suitesparse, no lib, no dev -->
   <build_depend>libceres-dev</build_depend>
@@ -53,7 +53,7 @@
   <run_depend>roscpp</run_depend>
   <run_depend>rospy</run_depend>
   <run_depend>libglew-dev</run_depend>
-  <run_depend>freeglut3-dev</run_depend>
+  <run_depend>glut</run_depend>
   <run_depend>suitesparse</run_depend>
   <run_depend>libceres-dev</run_depend> <!-- yes, it is libceres-dev, there is no non-dev entry in rosdep -->
   <run_depend>libpcl-all</run_depend>
