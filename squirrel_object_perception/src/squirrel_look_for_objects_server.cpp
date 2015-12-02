@@ -256,9 +256,9 @@ protected:
         !ros::service::waitForService("/squirrel_segments_to_objects", ros::Duration(5.0)))
         return false;
     ros::ServiceClient client = nh_.serviceClient<squirrel_object_perception_msgs::SegmentOnce>("/squirrel_segmentation_incremental_once");
-    ros::ServiceClient client1 = nh_.serviceClient<squirrel_object_perception_msgs::SegmentsToObjects>("/squirrel_segments_to_objects");
+    //ros::ServiceClient client1 = nh_.serviceClient<squirrel_object_perception_msgs::SegmentsToObjects>("/squirrel_segments_to_objects");
     squirrel_object_perception_msgs::SegmentOnce srv;
-    squirrel_object_perception_msgs::SegmentsToObjects srv1;
+    //squirrel_object_perception_msgs::SegmentsToObjects srv1;
     if (client.call(srv))
     {
         ROS_INFO("Called service %s: ", "/squirrel_segmentation_incremental_once");
@@ -271,6 +271,7 @@ protected:
 
     this->cluster_indices = srv.response.clusters_indices;
 
+/*
     srv1.request.cloud = *(this->scene);
     srv1.request.clusters_indices = srv.response.clusters_indices;
     if (client1.call(srv1))
@@ -279,16 +280,20 @@ protected:
         ROS_INFO("Found %ld objects", srv1.response.points.size());
         if (srv1.response.points.size() > 0)
         {
+*/
+	for(int i=0; srv.response.poses.size(); i++) {
             ROS_INFO("appending object");
             Object obj;
             obj.category = "thing";
-            obj.id = "0";
-            obj.point_indices = srv.response.clusters_indices[0];
-            obj.points = srv1.response.points[0];
-            obj.pose = srv1.response.poses[0];
+            obj.id = get_unique_object_id();
+            obj.point_indices = srv.response.clusters_indices[i];
+            obj.points = srv.response.points[i];
+            obj.pose = srv.response.poses[i];
             this->objects.push_back(obj);
             return true;
         }
+
+/*
         else
         {
             return false;
@@ -299,6 +304,7 @@ protected:
         ROS_ERROR("Failed to call service %s", "/squirrel_segments_to_objects");
         return false;
     }
+*/
   }
 
   bool update_object_in_db(Object object)
@@ -414,12 +420,13 @@ public:
         return;
     }
 
-    if (!setup_visualization())
+    //not supported by popout_segmentation
+    /*if (!setup_visualization())
     {
         result_.result_status = "unable to initialze visualization";
         as_.setAborted(result_);
         return;
-    }
+    }*/
 
 
     // TODO: find a reasonable number of times to run here
