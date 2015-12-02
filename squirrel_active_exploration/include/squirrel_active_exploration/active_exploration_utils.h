@@ -33,8 +33,8 @@
 #include <squirrel_object_perception_msgs/Segment.h>
 #include <squirrel_object_perception_msgs/SegmentInit.h>
 #include <squirrel_object_perception_msgs/Classify.h>
-#include <squirrel_active_exploration/EntropyMap.h>
-#include <squirrel_active_exploration/EntropyMapViz.h>
+#include <squirrel_object_perception_msgs/EntropyMap.h>
+#include <squirrel_object_perception_msgs/EntropyMapViz.h>
 #include <squirrel_object_perception_msgs/SegmentVisualizationInit.h>
 #include <squirrel_object_perception_msgs/SegmentVisualizationOnce.h>
 
@@ -318,7 +318,7 @@ namespace active_exploration_utils
 
     /* === DATA TYPE CONVERSION === */
 
-    bool fromROSMsg(const squirrel_active_exploration::EntropyMap &in, EntMap &out);
+    bool fromROSMsg(const squirrel_object_perception_msgs::EntropyMap &in, EntMap &out);
 
     /* === VISUALIZATION === */
 

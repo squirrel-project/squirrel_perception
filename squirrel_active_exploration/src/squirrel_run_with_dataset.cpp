@@ -5,7 +5,6 @@
 using namespace std;
 using namespace pcl;
 
-#define _DATA_DIR ""
 #define _IMAGE_FILE "test45.png"
 #define _SQUIRREL_DIRECTORY ""
 #define _VIEWS_LIMIT_FILE "views_limit.txt"
@@ -30,7 +29,7 @@ bool parse_input(const ros::NodeHandle &n, string &data_dir, string &image_file,
                  bool &do_visualize, bool &do_saving, bool &do_generate_order, bool &visualize_views_and_exit)
 {
     // Default values
-    data_dir = _DATA_DIR;
+    data_dir = "";
     image_file = _IMAGE_FILE;
     entropy_order_file = _SQUIRREL_DIRECTORY;
     views_lim_file = _VIEWS_LIMIT_FILE;
@@ -47,7 +46,11 @@ bool parse_input(const ros::NodeHandle &n, string &data_dir, string &image_file,
     do_generate_order = _GENERATE_VIEW_ORDER;
     visualize_views_and_exit = _VISUALIZE_VIEWS_EXIT;
     // Read the arguments
-    n.getParam("data_directory", data_dir);
+    if (!n.getParam("data_directory", data_dir))
+    {
+        ROS_ERROR("squirrel_run_planner::parse_input : you must enter a data directory");
+        return false;
+    }
     n.getParam("image_file", image_file);
     n.getParam("entropy_order_file", entropy_order_file);
     n.getParam("views_limit_file", views_lim_file);

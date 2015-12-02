@@ -18,13 +18,11 @@
   <build_depend>move_base</build_depend>
   <build_depend>move_base_msgs</build_depend>
   <build_depend>nav_msgs</build_depend>
-  <build_depend>octomap</build_depend>
   <build_depend>octomap_msgs</build_depend>
   <build_depend>octomap_ros</build_depend>
   <build_depend>pcl_conversions</build_depend>
   <build_depend>pcl_ros</build_depend>
   <build_depend>roscpp</build_depend>
-  <build_depend>rosplan_knowledge_msgs</build_depend>
   <build_depend>rospy</build_depend>
   <build_depend>rostest</build_depend>
   <build_depend>sensor_msgs</build_depend>
@@ -33,8 +31,8 @@
   <build_depend>std_srvs</build_depend>
   <build_depend>tf</build_depend>
   <build_depend>tf2</build_depend>
-  <build_depend>v4r</build_depend>
   <build_depend>visualization_msgs</build_depend>
+  <build_depend>v4r</build_depend>
   <run_depend>cv_bridge</run_depend>
   <run_depend>eigen_conversions</run_depend>
   <run_depend>geometry_msgs</run_depend>
@@ -43,32 +41,32 @@
   <run_depend>move_base</run_depend>
   <run_depend>move_base_msgs</run_depend>
   <run_depend>nav_msgs</run_depend>
-  <run_depend>octomap</run_depend>
   <run_depend>octomap_msgs</run_depend>
   <run_depend>octomap_ros</run_depend>
   <run_depend>pcl_conversions</run_depend>
   <run_depend>pcl_ros</run_depend>
   <run_depend>roscpp</run_depend>
-  <run_depend>rosplan_knowledge_msgs</run_depend>
   <run_depend>rospy</run_depend>
   <run_depend>sensor_msgs</run_depend>
+  <!-- Disabled until attention is fixed
   <run_depend>squirrel_attention</run_depend>
+  -->
   <run_depend>squirrel_classification</run_depend>
-  <run_depend>squirrel_navigation</run_depend>
-  <run_depend>squirrel_object_manipulation</run_depend>
   <run_depend>squirrel_object_perception</run_depend>
   <run_depend>squirrel_object_perception_msgs</run_depend>
-  <run_depend>squirrel_person_tracker</run_depend>
-  <run_depend>squirrel_planning_launch</run_depend>
   <run_depend>squirrel_segmentation</run_depend>
-  <run_depend>squirrel_segmentation_visualization</run_depend>
   <run_depend>squirrel_tracking</run_depend>
   <run_depend>std_msgs</run_depend>
   <run_depend>std_srvs</run_depend>
   <run_depend>tf</run_depend>
   <run_depend>tf2</run_depend>
-  <run_depend>v4r</run_depend>
   <run_depend>visualization_msgs</run_depend>
+  <!-- Disabled to make travis build possible
+  <run_depend>squirrel_navigation</run_depend>
+  <run_depend>squirrel_object_manipulation</run_depend>
+  <run_depend>squirrel_person_tracker</run_depend>
+  <run_depend>squirrel_planning</run_depend>
+  -->
 
   
 </package>

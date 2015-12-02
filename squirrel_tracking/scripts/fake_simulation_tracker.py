@@ -113,4 +113,3 @@ if __name__ == "__main__":
 	s2 = rospy.Service("/squirrel_stop_object_tracking", StopObjectTracking, stop_tracking)
 	rospy.loginfo("Ready to get service calls...")
 	rospy.spin()
-

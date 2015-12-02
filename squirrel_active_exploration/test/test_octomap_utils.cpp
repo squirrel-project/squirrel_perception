@@ -4,7 +4,6 @@ using namespace std;
 using namespace octomap;
 
 // Default definitions, should be replaced by program arguments
-#define _FILENAME "/home/tpat8946/Data/TUW/maps/fr_078_tidyup/"
 #define _TREE_DEPTH 14  // 14 => resolution of 0.1m, initial tree depth is 16 => 0.025m
 #define _ROBOT_HEIGHT 0.75
 #define _ROBOT_OUTER_RANGE 2.0
@@ -22,8 +21,12 @@ int main(int argc, char **argv)
     ros::NodeHandle n("~");
 
     // Get the parameters
-    string filename = _FILENAME;
-    //string dir = _FILENAME;
+    string filename = "";
+    if (!n.getParam("data_filename", filename))
+    {
+        ROS_ERROR("TEST_octomap_utils : you must enter a filename");
+        return EXIT_FAILURE;
+    }
     unsigned int tree_depth = _TREE_DEPTH;
     double robot_height = _ROBOT_HEIGHT;
     double robot_outer_range = _ROBOT_OUTER_RANGE;

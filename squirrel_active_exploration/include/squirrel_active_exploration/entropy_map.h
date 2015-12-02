@@ -29,8 +29,8 @@
 #include "octomap_utils.h"
 #include "io_utils.h"
 #include "pc_utils.h"
-#include "squirrel_active_exploration/EntropyMap.h"
-#include "squirrel_active_exploration/EntropyMapViz.h"
+#include <squirrel_object_perception_msgs/EntropyMap.h>
+#include <squirrel_object_perception_msgs/EntropyMapViz.h>
 
 #define _VIEW_PREFIX "view_"
 #define _TRANSFORM_PREFIX "pose_"
@@ -251,11 +251,11 @@ public:
 
     /* === ROS SERVICE CALLBACKS === */
 
-    bool extract_entropy_map(squirrel_active_exploration::EntropyMap::Request &req,
-                             squirrel_active_exploration::EntropyMap::Response &response);
+    bool extract_entropy_map(squirrel_object_perception_msgs::EntropyMap::Request &req,
+                             squirrel_object_perception_msgs::EntropyMap::Response &response);
 
-    bool visualize_entropy_map(squirrel_active_exploration::EntropyMapViz::Request &req,
-                               squirrel_active_exploration::EntropyMapViz::Response &response);
+    bool visualize_entropy_map(squirrel_object_perception_msgs::EntropyMapViz::Request &req,
+                               squirrel_object_perception_msgs::EntropyMapViz::Response &response);
 
 private:
     ros::NodeHandle *_n;  // ros node handle

@@ -1559,8 +1559,8 @@ map<string,ClassEntropyMap*> EntropyMap::get_class_maps() const
 
 /* === ROS SERVICE CALLBACKS === */
 
-bool EntropyMap::extract_entropy_map(squirrel_active_exploration::EntropyMap::Request &req,
-                                     squirrel_active_exploration::EntropyMap::Response &response)
+bool EntropyMap::extract_entropy_map(squirrel_object_perception_msgs::EntropyMap::Request &req,
+                                     squirrel_object_perception_msgs::EntropyMap::Response &response)
 {
     // Get the class name and instance name
     string class_name = req.class_type.data;
@@ -1581,7 +1581,7 @@ bool EntropyMap::extract_entropy_map(squirrel_active_exploration::EntropyMap::Re
     // For each instance view point
     for (size_t i = 0; i < iem->size(); ++i)
     {
-        squirrel_active_exploration::ViewpointEntropy m;
+        squirrel_object_perception_msgs::ViewpointEntropy m;
 
         sensor_msgs::PointCloud2 empty;
         m.cloud = empty;
@@ -1731,8 +1731,8 @@ bool EntropyMap::extract_entropy_map(squirrel_active_exploration::EntropyMap::Re
     return true;
 }
 
-bool EntropyMap::visualize_entropy_map(squirrel_active_exploration::EntropyMapViz::Request &req,
-                                       squirrel_active_exploration::EntropyMapViz::Response &response)
+bool EntropyMap::visualize_entropy_map(squirrel_object_perception_msgs::EntropyMapViz::Request &req,
+                                       squirrel_object_perception_msgs::EntropyMapViz::Response &response)
 {
     // Get the class name and instance name
     string class_type = req.class_type.data;

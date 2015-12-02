@@ -68,6 +68,8 @@ private:
   {
   public:
     std_msgs::Int32MultiArray indices;
+    geometry_msgs::PoseStamped pose;
+    sensor_msgs::PointCloud2 points;
     bool alreadyReturned;
     double distanceFromRobot;
     SegmentationResult()
