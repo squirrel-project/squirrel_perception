@@ -158,7 +158,7 @@ bool SegmentationPopoutNode::segment(squirrel_object_perception_msgs::SegmentIni
       {
         knownObjects.push_back(newObject);
         visualizePersistentObject(newObject);
-        ROS_INFO("%s: found new object of size %.3f with %d points at (in base_link): (%.3f %.3f %.3f)",
+        ROS_INFO("%s: found new object of size %.3f with %d points at (in map): (%.3f %.3f %.3f)",
           ros::this_node::getName().c_str(),
           newObject.size, (int)clusters[i]->points.size(), newObject.pos.x, newObject.pos.y, newObject.pos.z);   
         
@@ -167,6 +167,8 @@ bool SegmentationPopoutNode::segment(squirrel_object_perception_msgs::SegmentIni
         for(size_t k = 0; k < cluster_indices[i].indices.size(); k++)
           results.back().indices.data.push_back(cluster_indices[i].indices[k]);
         results.back().distanceFromRobot = centroid[0];
+	results.back().pose = inMap;
+	pcl::toROSMsg(*clusters[i], results.back().points);
       }
       else
       {
@@ -206,6 +208,8 @@ bool SegmentationPopoutNode::returnNextResult(squirrel_object_perception_msgs::S
     ROS_INFO("%s: returning cluster with %d points", ros::this_node::getName().c_str(), (int)results[selected].indices.data.size());
     results[selected].alreadyReturned = true;
     response.clusters_indices.push_back(results[selected].indices);
+    response.poses.push_back(results[selected].pose);
+    response.points.push_back(results[selected].points);
     return true;
   }
   return false;
