@@ -111,7 +111,6 @@ add_executable(squirrel_segmentation_incremental src/squirrel_segmentation_incre
 #add_executable(squirrel_segmentation_test src/test.cpp)
 add_executable(squirrel_segmentation_visualization src/squirrel_segmentation_visualization.cpp)
 add_executable(squirrel_segmentation src/squirrel_segmentation.cpp)
-add_executable(segments_to_objects src/segments_to_objects.cpp)
 add_executable(squirrel_segmentation_popout src/squirrel_segmentation_popout.cpp)
 
 ## Add cmake target dependencies of the executable/library
@@ -143,8 +142,6 @@ ldl
 csparse
 )
 add_dependencies(squirrel_segmentation v4r)
-
-target_link_libraries(segments_to_objects ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
 target_link_libraries(squirrel_segmentation_popout ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
