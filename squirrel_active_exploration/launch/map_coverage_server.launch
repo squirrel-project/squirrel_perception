@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="hostname" default="localhost" />
+
+  <node name="squirrel_map_coverage_server"
+        pkg="squirrel_active_exploration"
+        type="squirrel_map_coverage_server"
+        output="screen">
+  </node>
+
+
+</launch>

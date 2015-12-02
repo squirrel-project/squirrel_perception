@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="hostname" default="localhost" />
+
+  <arg name="save_directory" default="/home/tpat8946/Data/TUW/Results/testing/" />
+  <arg name="data_directory" default="/home/tpat8946/Data/TUW/Datasets/willow_dataset_training_models_gt/test_set/T_01_willow_dataset" />
+  <!--arg name="data_directory" default="/home/tpat8946/Data/TUW/willow_dataset_training_models_gt/training_data/object_34.pcd" /-->
+  <!--arg name="data_directory" default="/home/tpat8946/Data/TUW/willow_dataset_training_models_gt/test_set/T_13_willow_dataset" /-->
+  <arg name="image_file" default="$(find squirrel_active_exploration)/data/test45.png" />
+  <arg name="entropy_order_file" default="$(find squirrel_active_exploration)/data/config/entropy_order/training_set_3/T_01_willow_dataset.txt" />
+  <arg name="views_limit_file" default="$(find squirrel_active_exploration)/data/config/views_limit.txt" />
+  <arg name="single_class_test" default="" />
+  <arg name="reverse_transforms" default="true" />
+  <arg name="load_segmentation" default="true" />
+  <arg name="variance" default="0.5" />
+  <arg name="plan_type" default="min_class_entropy" />
+  <arg name="start_index" default="-1" />
+  <arg name="maximum_iterations" default="50" />
+  <arg name="loaded_views_limit" default="16" />
+  <arg name="expected_number_objects" default="6" />
+  <arg name="expected_number_classes" default="15" />
+  <arg name="visualize" default="true" />
+  <arg name="save" default="false" />
+  <arg name="generate_order" default="false" />
+  <arg name="visualize_views_and_exit" default="false" />
+  <!--
+  <arg name="max_object_distance" default="1.5" />
+  <arg name="min_object_height" default="0.075" />
+  <arg name="max_object_height" default="1.0" />
+  <arg name="min_object_length" default="0.01" />
+  <arg name="max_object_length" default="1.0" />
+  <arg name="table_height_threshold" default="0.5" />
+  <arg name="voxel_overlap" default="0.25" />
+  -->
+  <arg name="max_object_distance" default="1.5" />
+  <arg name="min_object_height" default="0.05" />
+  <arg name="max_object_height" default="2.0" />
+  <arg name="min_object_length" default="0.005" />
+  <arg name="max_object_length" default="2.0" />
+  <arg name="table_height_threshold" default="0.5" />
+  <arg name="voxel_overlap" default="0.25" />
+
+  <node name="squirrel_run_with_dataset"
+        pkg="squirrel_active_exploration"
+        type="squirrel_run_with_dataset"
+        output="screen">
+        <param name="save_directory" type="string" value="$(arg save_directory)"/>
+       	<param name="data_directory" type="string" value="$(arg data_directory)" />
+		<param name="image_file" type="string" value="$(arg image_file)" />
+		<param name="entropy_order_file" type="string" value="$(arg entropy_order_file)" />
+		<param name="views_limit_file" type="string" value="$(arg views_limit_file)" />
+		<param name="single_class_test" type="string" value="$(arg single_class_test)" />
+		<param name="reverse_transforms" type="bool" value="$(arg reverse_transforms)" />
+		<param name="load_segmentation" type="bool" value="$(arg load_segmentation)" />
+    	<param name="variance" type="double" value="$(arg variance)" />
+		<param name="plan_type" type="string" value="$(arg plan_type)" />
+		<param name="start_index" type="int" value="$(arg start_index)" />
+		<param name="maximum_iterations" type="int" value="$(arg maximum_iterations)" />
+		<param name="loaded_views_limit" type="int" value="$(arg loaded_views_limit)" />
+  		<param name="expected_number_objects" type="int" value="$(arg expected_number_objects)" />
+		<param name="expected_number_classes" type="int" value="$(arg expected_number_classes)" />
+		<param name="visualize" type="bool" value="$(arg visualize)" />
+		<param name="save" type="bool" value="$(arg save)" />
+		<param name="generate_order" type="bool" value="$(arg generate_order)" />
+		<param name="visualize_views_and_exit" type="bool" value="$(arg visualize_views_and_exit)" />
+		<param name="max_object_distance" type="double" value="$(arg max_object_distance)" />
+		<param name="min_object_height" type="double" value="$(arg min_object_height)" />
+		<param name="max_object_height" type="double" value="$(arg max_object_height)" />
+		<param name="min_object_length" type="double" value="$(arg min_object_length)" />
+		<param name="max_object_length" type="double" value="$(arg max_object_length)" />
+		<param name="table_height_threshold" type="double" value="$(arg table_height_threshold)" />
+		<param name="voxel_overlap" type="double" value="$(arg voxel_overlap)" />
+  </node>
+
+</launch>

@@ -7,7 +7,9 @@
 
   <buildtool_depend>catkin</buildtool_depend>
   
+  <!-- Disabled until attention is fixed
   <run_depend>squirrel_attention</run_depend>
+  -->
   <run_depend>squirrel_classification</run_depend>
   <run_depend>squirrel_object_perception</run_depend>
   <run_depend>squirrel_segmentation</run_depend>
