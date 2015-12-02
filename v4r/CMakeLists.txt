@@ -4,8 +4,11 @@ find_package(PCL REQUIRED)
 
 include(ExternalProject)
 externalproject_add( V4R
- GIT_REPOSITORY "git@rgit.acin.tuwien.ac.at:markus-bajones/v4r.git"
- GIT_TAG "master"
+ URL "https://rgit.acin.tuwien.ac.at/markus-bajones/v4r/repository/archive.tar.gz?ref=master"
+ URL_HASH MD5=f55b0024549ee31b3f259f497b25f6bd
+ DOWNLOAD_NAME v4r.tar.gz
+ #GIT_REPOSITORY "https://rgit.acin.tuwien.ac.at/markus-bajones/v4r.git"
+ #GIT_TAG "master"
  CMAKE_ARGS ../V4R -DCMAKE_INSTALL_PREFIX=${CATKIN_DEVEL_PREFIX}
  BUILD_COMMAND ${MAKE} 
  INSTALL_COMMAND make install
