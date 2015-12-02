@@ -23,7 +23,10 @@ install:
   # Use rosdep to install all dependencies (including ROS itself)
 before_script:
   - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+<<<<<<< HEAD
   - echo -e "Host rgit.acin.tuwien.ac.at\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+=======
+>>>>>>> upstream/indigo_dev
 script:
   - source /opt/ros/$CI_ROS_DISTRO/setup.bash
   - mkdir -p $CATKIN_WS_SRC
