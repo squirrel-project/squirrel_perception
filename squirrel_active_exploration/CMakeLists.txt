@@ -16,7 +16,6 @@ find_package(catkin REQUIRED COMPONENTS
              pcl_conversions
              pcl_ros
              roscpp
-             rosplan_knowledge_msgs
              rospy
              sensor_msgs
              squirrel_object_perception_msgs
@@ -35,7 +34,7 @@ find_package(octomap REQUIRED)
 catkin_package(
  INCLUDE_DIRS include #  LIBRARIES squirrel_segmentation
  CATKIN_DEPENDS #  DEPENDS system_lib
- cv_bridge eigen_conversions geometry_msgs message_runtime move_base move_base_msgs nav_msgs octomap_msgs octomap_ros pcl_conversions pcl_ros rosplan_knowledge_msgs sensor_msgs squirrel_object_perception_msgs std_msgs std_srvs tf tf2 visualization_msgs
+ cv_bridge eigen_conversions geometry_msgs message_runtime move_base move_base_msgs nav_msgs octomap_msgs octomap_ros pcl_conversions pcl_ros sensor_msgs squirrel_object_perception_msgs std_msgs std_srvs tf tf2 visualization_msgs
 )
 
 include_directories(include ${catkin_INCLUDE_DIRS} ${PCL_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
