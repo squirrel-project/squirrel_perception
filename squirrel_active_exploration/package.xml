@@ -50,7 +50,9 @@
   <run_depend>rosplan_knowledge_msgs</run_depend>
   <run_depend>rospy</run_depend>
   <run_depend>sensor_msgs</run_depend>
+  <!-- Disabled until attention is fixed
   <run_depend>squirrel_attention</run_depend>
+  -->
   <run_depend>squirrel_classification</run_depend>
   <run_depend>squirrel_object_perception</run_depend>
   <run_depend>squirrel_object_perception_msgs</run_depend>
