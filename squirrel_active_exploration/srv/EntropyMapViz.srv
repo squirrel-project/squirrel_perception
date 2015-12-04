@@ -1,0 +1,16 @@
+# Visualize an instance entropy map
+# author: Tim Patten, t.patten@acfr.usyd.edu.au
+
+# the class name
+std_msgs/String class_type
+
+# the instance name
+std_msgs/String instance_name
+
+# the view index
+int32 view_index
+
+# the type of score (surface area or entropy) to view the best location
+std_msgs/String score_type
+
+---
