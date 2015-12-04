@@ -16,4 +16,4 @@ Use catkin build instead.
 
 ```sudo apt-get install python-catkin-tools```
 
-```catkin build -DCAMKE_BUILD_TYPE=Release```
+```catkin build -DCMAKE_BUILD_TYPE=Release```
