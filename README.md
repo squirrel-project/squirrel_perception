@@ -17,3 +17,5 @@ Use catkin build instead.
 ```sudo apt-get install python-catkin-tools```
 
 ```catkin build -DCMAKE_BUILD_TYPE=Release```
+
+Please check the [Wiki](https://github.com/squirrel-project/squirrel_perception/wiki) for additional information.
