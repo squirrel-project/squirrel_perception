@@ -11,11 +11,11 @@ RemoveBackground::~RemoveBackground() {
         delete n_;
 }
 
-bool RemoveBackground::removeBackground (std_srvs::Empty::Request & req, squirrel_object_perception_msgs::FindDynamicObjects::Response & response) {
+bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDynamicObjects::Request & request, squirrel_object_perception_msgs::FindDynamicObjects::Response & response) {
     //    // read the input
     octomap_msgs::OctomapConstPtr current_octomap_msg = ros::topic::waitForMessage<octomap_msgs::Octomap>("/octomap_binary", *n_, ros::Duration(10));
     setCurrentOctomap(dynamic_cast<octomap::OcTree*>(octomap_msgs::msgToMap(*current_octomap_msg)));
-
+    ROS_INFO("I read the octomap");
     //TODO check if results are NULL after subtracting, comparing to grid map
     octomap::OcTree subtractedMap = subtractOctomaps();
     OctomapLib omLib;
@@ -42,6 +42,7 @@ bool RemoveBackground::removeBackground (std_srvs::Empty::Request & req, squirre
     std::vector< boost::shared_ptr<squirrel_object_perception_msgs::ObjectToDB> > object_results;
     message_store.query<squirrel_object_perception_msgs::ObjectToDB>(object_results);
 
+    std::cout << "Cluster size: " << clusters.size() << std::endl;
     for (std::vector<pcl::PointCloud<PointT>::Ptr>::iterator it = clusters.begin (); it != clusters.end (); ++it)
     {
 
@@ -50,7 +51,9 @@ bool RemoveBackground::removeBackground (std_srvs::Empty::Request & req, squirre
 
         double pose_x = min_p.x + (max_p.x - min_p.x)/2;
         double pose_y = min_p.y + (max_p.y - min_p.y)/2;
-        double pose_z = min_p.z + (max_p.z - min_p.z)/2; //this should be close to zero
+        double pose_z = min_p.z + (max_p.z - min_p.z)/2;
+
+        std::cout << "x: " << pose_x << "y: " << pose_y << "z: " << pose_z << std::endl;
 
         //TODO also check against existing objects
         geometry_msgs::Pose pose_db;
@@ -58,9 +61,10 @@ bool RemoveBackground::removeBackground (std_srvs::Empty::Request & req, squirre
         BOOST_FOREACH(boost::shared_ptr<squirrel_object_perception_msgs::LumpToDB> lump_db, lump_results) {
             pose_db = (*lump_db).stamped_dynamic_object.dynamic_object.pose;
 
-            if((std::abs(pose_db.position.x - pose_x) > POSE_THRESH) || (std::abs(pose_db.position.y - pose_y) > POSE_THRESH)
-                    || (std::abs(pose_db.position.z - pose_z) > POSE_THRESH)) {
+            if((std::abs(pose_db.position.x - pose_x) < POSE_THRESH) && (std::abs(pose_db.position.y - pose_y) < POSE_THRESH)
+                    && (std::abs(pose_db.position.z - pose_z) < POSE_THRESH)) {
                 is_lump_in_db = true;
+                std::cout << "Is in lump DB" << std::endl;
                 break;
             }
         }
@@ -71,9 +75,10 @@ bool RemoveBackground::removeBackground (std_srvs::Empty::Request & req, squirre
             BOOST_FOREACH(boost::shared_ptr<squirrel_object_perception_msgs::ObjectToDB> object_db, object_results) {
                 pose_stamped_db = (*object_db).pose;
 
-                if((std::abs(pose_stamped_db.pose.position.x - pose_x) > POSE_THRESH) || (std::abs(pose_stamped_db.pose.position.y - pose_y) > POSE_THRESH)
-                        || (std::abs(pose_stamped_db.pose.position.z - pose_z) > POSE_THRESH)) {
+                if((std::abs(pose_stamped_db.pose.position.x - pose_x) < POSE_THRESH) && (std::abs(pose_stamped_db.pose.position.y - pose_y) < POSE_THRESH)
+                        && (std::abs(pose_stamped_db.pose.position.z - pose_z) < POSE_THRESH)) {
                     is_object_in_db = true;
+                    std::cout << "Is in object DB" << std::endl;
                     break;
                 }
             }
@@ -94,6 +99,7 @@ bool RemoveBackground::removeBackground (std_srvs::Empty::Request & req, squirre
             lump.dynamic_object.z_dim.data = double(max_p.z - min_p.z);
             response.dynamic_objects.push_back(lump);
 
+            std::cout << "Is NOT in DB" << std::endl;
 
             //creates a marker that can be visualized in rviz
             visualization_msgs::Marker zyl_marker;
@@ -125,18 +131,55 @@ bool RemoveBackground::removeBackground (std_srvs::Empty::Request & req, squirre
     }
 
     std::cout << "Finished background removal" << std::endl;
+    std::cout << "Number of objects found: " << response.dynamic_objects.size() << std::endl;
     return true;
 }
 
 void RemoveBackground::initialize(int argc, char **argv) {
-    ros::init (argc, argv, "squirrel_remove_background_server");
 
     n_->getParam("static_octomap_path", staticOctomapPath_);
     markerPublisher = n_->advertise<visualization_msgs::Marker>("vis_marker_dynamic_objects", 0);
 
     setStaticOctomap(staticOctomapPath_);
 
-    Remover_ = n_->advertiseService ("/squirrel_remove_background", &RemoveBackground::removeBackground, this);
+
+    //insert some objects for testing purposes with corridor_test_edited.bt
+//    squirrel_object_perception_msgs::ObjectToDB test_object;
+
+//    test_object.id = "id1";
+//    test_object.category = "cat1";
+//    //test_object.cloud = ;
+//    test_object.pose.header.frame_id = "/map";
+//    test_object.pose.header.stamp = ros::Time();
+//    test_object.pose.pose.orientation.x = 0.0;
+//    test_object.pose.pose.orientation.y = 0.0;
+//    test_object.pose.pose.orientation.z = 0.0;
+//    test_object.pose.pose.orientation.w = 1.0;
+//    test_object.pose.pose.position.x = 11.1375;
+//    test_object.pose.pose.position.y = 5.1625;
+//    test_object.pose.pose.position.z = 0.125;
+
+//    message_store.insert(test_object);
+
+//    squirrel_object_perception_msgs::LumpToDB test_lump;
+//    test_lump.stamped_dynamic_object.header.frame_id = "/map";
+//    test_lump.stamped_dynamic_object.header.stamp = ros::Time();
+//    test_lump.stamped_dynamic_object.dynamic_object.pose.position.x = 2.01;
+//    test_lump.stamped_dynamic_object.dynamic_object.pose.position.y = 4.41;
+//    test_lump.stamped_dynamic_object.dynamic_object.pose.position.z = 0.07;
+//    test_lump.stamped_dynamic_object.dynamic_object.pose.orientation.x = 0.0;
+//    test_lump.stamped_dynamic_object.dynamic_object.pose.orientation.y = 0.0;
+//    test_lump.stamped_dynamic_object.dynamic_object.pose.orientation.z = 0.0;
+//    test_lump.stamped_dynamic_object.dynamic_object.pose.orientation.w = 1.0;
+//    test_lump.stamped_dynamic_object.dynamic_object.x_dim.data = 0;
+//    test_lump.stamped_dynamic_object.dynamic_object.y_dim.data = 0;
+//    test_lump.stamped_dynamic_object.dynamic_object.z_dim.data = 0;
+//    test_lump.is_examined.data = false;
+
+//    message_store.insert(test_lump);
+
+
+    Remover_ = n_->advertiseService ("/squirrel_find_dynamic_objects", &RemoveBackground::removeBackground, this);
 
     ROS_INFO ("Ready to get service calls...");
     ros::spin ();
@@ -144,6 +187,8 @@ void RemoveBackground::initialize(int argc, char **argv) {
 
 int main (int argc, char ** argv)
 {
+    ros::init (argc, argv, "squirrel_remove_background_server");
+
     RemoveBackground rm;
     rm.initialize(argc, argv);
 
@@ -158,8 +203,11 @@ void RemoveBackground::setStaticOctomap(std::string staticPath) {
 }
 
 void RemoveBackground::setCurrentOctomap(octomap::OcTree *currentMap) {
+
+    if (!currentMap) {
+        ROS_INFO("where is the map");
+    }
     currentMap->expand();
-    //octomap_lib.octomapExpandOccupiedNodes(currentMap); //TODO remove that
     this->currentMap = currentMap;
 }
 

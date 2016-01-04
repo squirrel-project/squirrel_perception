@@ -54,7 +54,7 @@ private:
 
     std::string staticOctomapPath_;
 
-    bool removeBackground (std_srvs::Empty::Request & req, squirrel_object_perception_msgs::FindDynamicObjects::Response & response);
+    bool removeBackground (squirrel_object_perception_msgs::FindDynamicObjects::Request &req, squirrel_object_perception_msgs::FindDynamicObjects::Response & response);
 
     mongodb_store::MessageStoreProxy message_store;
 
