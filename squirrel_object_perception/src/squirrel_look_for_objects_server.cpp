@@ -8,6 +8,7 @@
 #include <squirrel_object_perception_msgs/GetSaliency3DSymmetry.h>
 #include <squirrel_object_perception_msgs/SegmentInit.h>
 #include <squirrel_object_perception_msgs/SegmentOnce.h>
+#include <squirrel_object_perception_msgs/SegmentsToObjects.h>
 #include <squirrel_object_perception_msgs/SegmentVisualizationInit.h>
 #include <squirrel_object_perception_msgs/SegmentVisualizationOnce.h>
 #include <squirrel_object_perception_msgs/Recognize.h>
@@ -254,9 +255,7 @@ protected:
     if (!ros::service::waitForService("/squirrel_segmentation_incremental_once", ros::Duration(5.0)))
         return false;
     ros::ServiceClient client = nh_.serviceClient<squirrel_object_perception_msgs::SegmentOnce>("/squirrel_segmentation_incremental_once");
-    
     squirrel_object_perception_msgs::SegmentOnce srv;
-    
     if (client.call(srv))
     {
         ROS_INFO("Called service %s: ", "/squirrel_segmentation_incremental_once");
@@ -269,17 +268,18 @@ protected:
 
     this->cluster_indices = srv.response.clusters_indices;
 
-    for(int i=0; srv.response.poses.size(); i++) {
-        ROS_INFO("appending object");
-        Object obj;
-        obj.category = "thing";
-        obj.id = get_unique_object_id();
-        obj.point_indices = srv.response.clusters_indices[i];
-        obj.points = srv.response.points[i];
-        obj.pose = srv.response.poses[i];
-        this->objects.push_back(obj);
-        return true;
-    }
+
+	for(int i=0; srv.response.poses.size(); i++) {
+            ROS_INFO("appending object");
+            Object obj;
+            obj.category = "thing";
+            obj.id = get_unique_object_id();
+            obj.point_indices = srv.response.clusters_indices[i];
+            obj.points = srv.response.points[i];
+            obj.pose = srv.response.poses[i];
+            this->objects.push_back(obj);
+            return true;
+        }
   }
 
   bool update_object_in_db(Object object)
@@ -382,7 +382,7 @@ public:
         return;
     }
 
-    //TODO this is neede later, but not for popout_segmentation
+    //TODO we do not use attention right now
     /*if (!get_saliency_map())
     {
         result_.result_status = "unable to get saliency map";
@@ -397,7 +397,7 @@ public:
         return;
     }
 
-    //TODO needed later, not supported by popout_segmentation
+    //not supported by popout_segmentation
     /*if (!setup_visualization())
     {
         result_.result_status = "unable to initialze visualization";
@@ -410,7 +410,7 @@ public:
     for(int i=0; i<1; i++)
     {
         run_segmentation_once();
-        //run_visualization_once();
+        run_visualization_once();
     }
     if (objects.size() < 1)
     {
