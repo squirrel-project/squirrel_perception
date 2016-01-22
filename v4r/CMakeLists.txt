@@ -4,8 +4,8 @@ find_package(PCL REQUIRED)
 
 include(ExternalProject)
 externalproject_add( V4R
- URL "https://rgit.acin.tuwien.ac.at/markus-bajones/v4r/repository/archive.tar.gz?ref=squirrel_integration_meeting_january"
- URL_HASH MD5=c9962f25a38808d4ec8bc61ab6d30936
+ URL "https://rgit.acin.tuwien.ac.at/markus-bajones/v4r/repository/archive.tar.gz?ref=master"
+ URL_HASH MD5=f55b0024549ee31b3f259f497b25f6bd
  DOWNLOAD_NAME v4r.tar.gz
  #GIT_REPOSITORY "https://rgit.acin.tuwien.ac.at/markus-bajones/v4r.git"
  #GIT_TAG "master"
