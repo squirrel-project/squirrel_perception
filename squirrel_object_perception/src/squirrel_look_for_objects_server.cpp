@@ -252,13 +252,10 @@ protected:
 
   bool run_segmentation_once()
   {
-    if (!ros::service::waitForService("/squirrel_segmentation_incremental_once", ros::Duration(5.0))||
-        !ros::service::waitForService("/squirrel_segments_to_objects", ros::Duration(5.0)))
+    if (!ros::service::waitForService("/squirrel_segmentation_incremental_once", ros::Duration(5.0)))
         return false;
     ros::ServiceClient client = nh_.serviceClient<squirrel_object_perception_msgs::SegmentOnce>("/squirrel_segmentation_incremental_once");
-    //ros::ServiceClient client1 = nh_.serviceClient<squirrel_object_perception_msgs::SegmentsToObjects>("/squirrel_segments_to_objects");
     squirrel_object_perception_msgs::SegmentOnce srv;
-    //squirrel_object_perception_msgs::SegmentsToObjects srv1;
     if (client.call(srv))
     {
         ROS_INFO("Called service %s: ", "/squirrel_segmentation_incremental_once");
@@ -271,16 +268,7 @@ protected:
 
     this->cluster_indices = srv.response.clusters_indices;
 
-/*
-    srv1.request.cloud = *(this->scene);
-    srv1.request.clusters_indices = srv.response.clusters_indices;
-    if (client1.call(srv1))
-    {
-        ROS_INFO("Called service %s: ", "/squirrel_segments_to_objects");
-        ROS_INFO("Found %ld objects", srv1.response.points.size());
-        if (srv1.response.points.size() > 0)
-        {
-*/
+
 	for(int i=0; srv.response.poses.size(); i++) {
             ROS_INFO("appending object");
             Object obj;
@@ -292,19 +280,6 @@ protected:
             this->objects.push_back(obj);
             return true;
         }
-
-/*
-        else
-        {
-            return false;
-        }
-    }
-    else
-    {
-        ROS_ERROR("Failed to call service %s", "/squirrel_segments_to_objects");
-        return false;
-    }
-*/
   }
 
   bool update_object_in_db(Object object)
@@ -406,12 +381,14 @@ public:
         success = false;
         return;
     }
-    if (!get_saliency_map())
+
+    //TODO we do not use attention right now
+    /*if (!get_saliency_map())
     {
         result_.result_status = "unable to get saliency map";
         as_.setAborted(result_);
         return;
-    }
+    }*/
 
     if (!setup_segmentation())
     {
