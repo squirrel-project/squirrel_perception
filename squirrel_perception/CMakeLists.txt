@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(squirrel_perception)
 find_package(catkin REQUIRED)
-install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
 catkin_metapackage()

@@ -9,7 +9,6 @@ find_package(catkin REQUIRED COMPONENTS
         geometry_msgs
         mongodb_store
         nav_msgs
-        octomap
         octomap_msgs
         pcl_conversions
         roscpp
@@ -48,7 +47,6 @@ catkin_package(
         geometry_msgs
         mongodb_store
         nav_msgs
-        octomap
         octomap_msgs
         pcl_conversions
         roscpp
