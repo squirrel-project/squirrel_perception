@@ -60,7 +60,7 @@ bool SquirrelTrackingNode::startTracking(squirrel_object_perception_msgs::StartO
       trackedObjectId = req.object_id.data;
       // HACK: actually we hage to get the model name from the scene database
       // for now, we just take the objectId as the model name
-      string filename = modelPath + "/" + trackedObjectId + "/" + trackedObjectId + ".ao";
+      string filename = modelPath + "/" + trackedObjectId + "/tracking_model.ao";
       ROS_INFO("SquirrelTrackingNode::startTracking: loading '%s'", filename.c_str());
       v4r::ArticulatedObject::Ptr model(new v4r::ArticulatedObject());
       if(v4r::io::read(filename, model))
