@@ -266,7 +266,7 @@ class ShapeClassifier
       //mesh_source->setViewAngle (57.f);
       mesh_source->setRadiusSphere (1.f);
       mesh_source->setModelScale (1.f);
-      mesh_source->generate (training_dir_);
+      mesh_source->generate ();
 
       boost::shared_ptr<v4r::Source<PointT> > source;
       source = boost::static_pointer_cast<v4r::MeshSource<PointT> > (mesh_source);
