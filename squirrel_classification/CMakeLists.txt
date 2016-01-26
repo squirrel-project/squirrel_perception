@@ -7,12 +7,6 @@ find_package(PCL 1.7 REQUIRED)
 find_package(OpenCV 2.4 REQUIRED)
 
 find_package(V4R REQUIRED)
-IF(${V4R_FOUND})
-	message(STATUS V4R found.)
-	message(V4R_INCLUDE_DIRS: ${V4R_INCLUDE_DIRS})
-ELSE()
-	message(STATUS V4R not found)
-ENDIF (${V4R_FOUND})
 catkin_package(
   INCLUDE_DIRS include #  LIBRARIES squirrel_classification
  CATKIN_DEPENDS #  DEPENDS system_lib
@@ -28,3 +22,9 @@ target_link_libraries(squirrel_classification ${catkin_LIBRARIES} ${OpenCV_LIBS}
 add_dependencies(squirrel_classification ${catkin_EXPORTED_TARGETS})
 install(TARGETS squirrel_classification RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+IF(${V4R_FOUND})
+	message(STATUS V4R found.)
+	message(V4R_INCLUDE_DIRS: ${V4R_INCLUDE_DIRS})
+ELSE()
+	message(STATUS V4R not found)
+ENDIF(${V4R_FOUND})
