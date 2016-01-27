@@ -11,7 +11,7 @@
 #include <sstream>
 
 #include "sensor_msgs/PointCloud2.h"
-#include <squirrel_segmentation/pcl_conversions.h>
+#include <pcl_conversions/pcl_conversions.h>
 
 #include "squirrel_object_perception_msgs/SegmentInit.h"
 #include "squirrel_object_perception_msgs/SegmentOnce.h"
