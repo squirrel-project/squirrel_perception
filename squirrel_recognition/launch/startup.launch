@@ -1,0 +1,7 @@
+<launch>
+  <arg name="models_dir" value="/home/mz/work/SQUIRREL/code/catkin_ws/data/models"/>
+  <!-- Single-View Object Recognizer -->
+  <node pkg="squirrel_recognition" type="squirrel_recognizer" name="squirrel_recognizer" output="screen" respawn="true">
+    --models_dir=$(arg models_dir) />
+  </node>
+</launch>
