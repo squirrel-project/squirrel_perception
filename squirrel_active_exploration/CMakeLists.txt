@@ -30,6 +30,7 @@ find_package(Boost REQUIRED COMPONENTS system)
 find_package(PCL 1.7 REQUIRED)
 find_package(OpenCV 2.4 REQUIRED)
 find_package(octomap REQUIRED)
+find_package(v4r REQUIRED)
 
 catkin_package(
  INCLUDE_DIRS include #  LIBRARIES squirrel_segmentation
