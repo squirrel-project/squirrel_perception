@@ -32,7 +32,6 @@
   <build_depend>tf</build_depend>
   <build_depend>tf2</build_depend>
   <build_depend>visualization_msgs</build_depend>
-  <build_depend>v4r</build_depend>
   <run_depend>cv_bridge</run_depend>
   <run_depend>eigen_conversions</run_depend>
   <run_depend>geometry_msgs</run_depend>
@@ -48,9 +47,6 @@
   <run_depend>roscpp</run_depend>
   <run_depend>rospy</run_depend>
   <run_depend>sensor_msgs</run_depend>
-  <!-- Disabled until attention is fixed
-  <run_depend>squirrel_attention</run_depend>
-  -->
   <run_depend>squirrel_classification</run_depend>
   <run_depend>squirrel_object_perception</run_depend>
   <run_depend>squirrel_object_perception_msgs</run_depend>
@@ -61,12 +57,6 @@
   <run_depend>tf</run_depend>
   <run_depend>tf2</run_depend>
   <run_depend>visualization_msgs</run_depend>
-  <!-- Disabled to make travis build possible
-  <run_depend>squirrel_navigation</run_depend>
-  <run_depend>squirrel_object_manipulation</run_depend>
-  <run_depend>squirrel_person_tracker</run_depend>
-  <run_depend>squirrel_planning</run_depend>
-  -->
 
   
 </package>

@@ -9,7 +9,6 @@ find_package(PCL 1.7 REQUIRED)
 find_package(OpenCV 2.4 REQUIRED)
 
 add_definitions(-DEIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET)
-#find_package(Boost 1.54.0 EXACT REQUIRED COMPONENTS thread program_options serialization regex filesystem system)
 
 catkin_package(
  INCLUDE_DIRS include #  LIBRARIES squirrel_tracking
