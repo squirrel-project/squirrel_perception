@@ -1,18 +1,18 @@
 <launch>
 
-  <arg name="model_path" default="$(find squirrel_tracking)/data" />
+  <arg name="model_path" default="$(find squirrel_object_perception)/data/models" />
 
-  <!--<node name="object_tracker"
+  <node name="object_tracker"
         pkg="squirrel_tracking"
         type="object_tracker"
         required="true" output="screen">
         <param name="model_path" type="string" value="$(arg model_path)"/>
-  </node>-->
+  </node>
 
-  <node name="lump_tracker"
+  <!-- <node name="lump_tracker"
         pkg="squirrel_tracking"
         type="lump_tracker"
         required="true" output="screen">
-  </node>
+  </node> -->
 
 </launch>
