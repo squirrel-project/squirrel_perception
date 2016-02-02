@@ -20,7 +20,7 @@ def add_object_to_db(id, category, pose, size):
         request.id = id
         request.category = category
         request.pose = pose
-        #request.size = size
+        request.size = size
         # note: we leave the cloud empty: request.cloud
         resp = add_object(request)
     except rospy.ServiceException as exc:
@@ -53,7 +53,7 @@ if __name__ == '__main__':
             elif o == "-c":
                 category = a
             elif o == "-s":
-                size = a
+                size = float(a)
             elif o in ("-h", "--help"):
                 usage()
                 sys.exit()
