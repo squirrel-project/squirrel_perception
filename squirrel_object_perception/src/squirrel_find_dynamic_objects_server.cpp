@@ -12,25 +12,34 @@ RemoveBackground::~RemoveBackground() {
 }
 
 bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDynamicObjects::Request & request, squirrel_object_perception_msgs::FindDynamicObjects::Response & response) {
-    //    // read the input
+    OctomapLib omLib;
+
+    //read the input
     octomap_msgs::OctomapConstPtr current_octomap_msg = ros::topic::waitForMessage<octomap_msgs::Octomap>("/octomap_binary", *n_, ros::Duration(10));
     setCurrentOctomap(dynamic_cast<octomap::OcTree*>(octomap_msgs::msgToMap(*current_octomap_msg)));
-    ROS_INFO("I read the octomap");
-    //TODO check if results are NULL after subtracting, comparing to grid map
+    ROS_INFO("TUW: Current octomap read");
+
     octomap::OcTree subtractedMap = subtractOctomaps();
-    OctomapLib omLib;
-    omLib.writeOctomap(&subtractedMap, "/home/edith/SQUIRREL/corridor_subtracted.bt", true);
+    if (omLib.getNumberOccupiedLeafNodes(&subtractedMap) == 0) {
+        ROS_INFO("TUW: Static and current octomap are the same");
+        return false;
+    }
+
+    omLib.writeOctomap(&subtractedMap, "corridor_subtracted.bt", true);
 
     //remove voxels close to indicated obstacles in the map
     nav_msgs::OccupancyGridConstPtr grid_map = ros::topic::waitForMessage<nav_msgs::OccupancyGrid>("/map", *n_, ros::Duration(10));
 
-
     pcl::PointCloud<PointT>::Ptr filtered_cloud = compareOctomapToGrid(&subtractedMap, grid_map);
-    pcl::io::savePCDFileASCII ("/home/edith/SQUIRREL/cloud_after_map_comp.pcd", *filtered_cloud);
+    if (filtered_cloud->size() == 0) {
+        ROS_INFO("TUW: Current octomap and occupancy grid are very similar - no lump to detect");
+        return false;
+    }
+    pcl::io::savePCDFileASCII ("cloud_after_map_comp.pcd", *filtered_cloud);
 
     //clustering, remove noise and cluster which are not connected to the floor
     std::vector<pcl::PointCloud<PointT>::Ptr> clusters = removeClusters(filtered_cloud);
-    pcl::io::savePCDFileASCII ("/home/edith/SQUIRREL/cloud_final.pcd", *filtered_cloud);
+    pcl::io::savePCDFileASCII ("cloud_final.pcd", *filtered_cloud);
 
     //Response possible object positions
     int cnt = 0;
@@ -42,10 +51,9 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
     std::vector< boost::shared_ptr<squirrel_object_perception_msgs::ObjectToDB> > object_results;
     message_store.query<squirrel_object_perception_msgs::ObjectToDB>(object_results);
 
-    std::cout << "Cluster size: " << clusters.size() << std::endl;
+    ROS_INFO("TUW: Number of found lumps: %zu", clusters.size());
     for (std::vector<pcl::PointCloud<PointT>::Ptr>::iterator it = clusters.begin (); it != clusters.end (); ++it)
     {
-
         PointT min_p, max_p;
         pcl::getMinMax3D(*(*it), min_p, max_p);
 
@@ -53,9 +61,6 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
         double pose_y = min_p.y + (max_p.y - min_p.y)/2;
         double pose_z = min_p.z + (max_p.z - min_p.z)/2;
 
-        std::cout << "x: " << pose_x << "y: " << pose_y << "z: " << pose_z << std::endl;
-
-        //TODO also check against existing objects
         geometry_msgs::Pose pose_db;
         bool is_lump_in_db = false;
         BOOST_FOREACH(boost::shared_ptr<squirrel_object_perception_msgs::LumpToDB> lump_db, lump_results) {
@@ -64,7 +69,7 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
             if((std::abs(pose_db.position.x - pose_x) < POSE_THRESH) && (std::abs(pose_db.position.y - pose_y) < POSE_THRESH)
                     && (std::abs(pose_db.position.z - pose_z) < POSE_THRESH)) {
                 is_lump_in_db = true;
-                std::cout << "Is in lump DB" << std::endl;
+                ROS_INFO("TUW: Lump at pose (x,y,z) = (%f, %f, %f) is already in lump DB", pose_x, pose_y, pose_z);
                 break;
             }
         }
@@ -78,7 +83,7 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
                 if((std::abs(pose_stamped_db.pose.position.x - pose_x) < POSE_THRESH) && (std::abs(pose_stamped_db.pose.position.y - pose_y) < POSE_THRESH)
                         && (std::abs(pose_stamped_db.pose.position.z - pose_z) < POSE_THRESH)) {
                     is_object_in_db = true;
-                    std::cout << "Is in object DB" << std::endl;
+                    ROS_INFO("TUW: Lump at pose (x,y,z) = (%f, %f, %f) is already in object DB", pose_x, pose_y, pose_z);
                     break;
                 }
             }
@@ -98,8 +103,6 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
             lump.dynamic_object.y_dim.data = double(max_p.y - min_p.y);
             lump.dynamic_object.z_dim.data = double(max_p.z - min_p.z);
             response.dynamic_objects.push_back(lump);
-
-            std::cout << "Is NOT in DB" << std::endl;
 
             //creates a marker that can be visualized in rviz
             visualization_msgs::Marker zyl_marker;
@@ -130,8 +133,7 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
         }
     }
 
-    std::cout << "Finished background removal" << std::endl;
-    std::cout << "Number of objects found: " << response.dynamic_objects.size() << std::endl;
+    ROS_INFO("TUW: Found %zu new lumps", response.dynamic_objects.size());
     return true;
 }
 
@@ -181,7 +183,7 @@ void RemoveBackground::initialize(int argc, char **argv) {
 
     Remover_ = n_->advertiseService ("/squirrel_find_dynamic_objects", &RemoveBackground::removeBackground, this);
 
-    ROS_INFO ("Ready to get service calls...");
+    ROS_INFO ("TUW: squirrel_find_dynamic_objects ready to get service calls...");
     ros::spin ();
 }
 
@@ -198,14 +200,12 @@ int main (int argc, char ** argv)
 void RemoveBackground::setStaticOctomap(std::string staticPath) {
     octomap_lib.readOctoMapFromFile(staticPath, this->staticMap, ends_with(staticPath, "bt"));
     staticMap->expand();
-    //octomap_lib.octomapExpandOccupiedNodes(staticMap);
-    //cout << "after expanding" << endl;
 }
 
 void RemoveBackground::setCurrentOctomap(octomap::OcTree *currentMap) {
 
     if (!currentMap) {
-        ROS_INFO("where is the map");
+        ROS_INFO("TUW: no current octomap");
     }
     currentMap->expand();
     this->currentMap = currentMap;
@@ -359,7 +359,7 @@ std::vector<pcl::PointCloud<PointT>::Ptr> RemoveBackground::removeClusters(pcl::
 
         std::cout << "PointCloud representing the Cluster: " << cloud_cluster->points.size () << " data points." << std::endl;
         std::stringstream ss;
-        ss << "/home/edith/SQUIRREL/cloud_cluster_" << j << ".pcd";
+        ss << "cloud_cluster_" << j << ".pcd";
         writer.write<PointT> (ss.str (), *cloud_cluster, false); //*
         j++;
 
