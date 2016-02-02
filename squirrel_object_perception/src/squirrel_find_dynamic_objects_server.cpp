@@ -12,25 +12,25 @@ RemoveBackground::~RemoveBackground() {
 }
 
 bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDynamicObjects::Request & request, squirrel_object_perception_msgs::FindDynamicObjects::Response & response) {
-    OctomapLib omLib;
 
     //read the input
     octomap_msgs::OctomapConstPtr current_octomap_msg = ros::topic::waitForMessage<octomap_msgs::Octomap>("/octomap_binary", *n_, ros::Duration(10));
     setCurrentOctomap(dynamic_cast<octomap::OcTree*>(octomap_msgs::msgToMap(*current_octomap_msg)));
     ROS_INFO("TUW: Current octomap read");
 
-    octomap::OcTree subtractedMap = subtractOctomaps();
-    if (omLib.getNumberOccupiedLeafNodes(&subtractedMap) == 0) {
+    octomap::OcTree subtractedMapVar = subtractOctomaps();
+    if (octomap_lib.getNumberOccupiedLeafNodes(&subtractedMapVar) == 0) {
         ROS_INFO("TUW: Static and current octomap are the same");
         return false;
     }
 
-    omLib.writeOctomap(&subtractedMap, "corridor_subtracted.bt", true);
+    octomap::OcTree* subtractedMap = &subtractedMapVar;
+    //octomap_lib.writeOctomap(&subtractedMap, "corridor_subtracted.bt", true);
 
     //remove voxels close to indicated obstacles in the map
     nav_msgs::OccupancyGridConstPtr grid_map = ros::topic::waitForMessage<nav_msgs::OccupancyGrid>("/map", *n_, ros::Duration(10));
 
-    pcl::PointCloud<PointT>::Ptr filtered_cloud = compareOctomapToGrid(&subtractedMap, grid_map);
+    pcl::PointCloud<PointT>::Ptr filtered_cloud = compareOctomapToGrid(subtractedMap, grid_map);
     if (filtered_cloud->size() == 0) {
         ROS_INFO("TUW: Current octomap and occupancy grid are very similar - no lump to detect");
         return false;
@@ -51,7 +51,7 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
     std::vector< boost::shared_ptr<squirrel_object_perception_msgs::ObjectToDB> > object_results;
     message_store.query<squirrel_object_perception_msgs::ObjectToDB>(object_results);
 
-    ROS_INFO("TUW: Number of found lumps: %zu", clusters.size());
+    ROS_INFO("TUW: Number of lumps identified: %zu", clusters.size());
     for (std::vector<pcl::PointCloud<PointT>::Ptr>::iterator it = clusters.begin (); it != clusters.end (); ++it)
     {
         PointT min_p, max_p;
@@ -183,7 +183,7 @@ void RemoveBackground::initialize(int argc, char **argv) {
 
     Remover_ = n_->advertiseService ("/squirrel_find_dynamic_objects", &RemoveBackground::removeBackground, this);
 
-    ROS_INFO ("TUW: squirrel_find_dynamic_objects ready to get service calls...");
+    ROS_INFO ("TUW: /squirrel_find_dynamic_objects ready to get service calls...");
     ros::spin ();
 }
 
@@ -334,8 +334,6 @@ std::vector<pcl::PointCloud<PointT>::Ptr> RemoveBackground::removeClusters(pcl::
     ec.setSearchMethod (tree);
     ec.setInputCloud (cloud);
     ec.extract (cluster_indices);
-
-    cout << cluster_indices.size() << " clusters found" << endl;
 
     pcl::ExtractIndices<PointT> extract;
     extract.setInputCloud (cloud);
