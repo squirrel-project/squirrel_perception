@@ -7,15 +7,10 @@ Technical Maintainer: bajo (Markus "Bajo" Bajones, TU Wien)
 
 Repository for object perception related SQUIRREL packages.
 
-Install dependencies for v4r.
+Install dependencies and download the latest v4r debian package before you build squirrel_perception
 
 ```rosdep install --from-paths $CATKIN_WS/src/squirrel_perception -i -y```
 
-As v4r is a CMake based package, we can not use catkin_make to build the packages.
-Use catkin build instead.
-
-```sudo apt-get install python-catkin-tools```
-
-```catkin build -DCMAKE_BUILD_TYPE=Release```
+```roscd squirrel_perception && python get_v4r.py && ./install.sh```
 
 Please check the [Wiki](https://github.com/squirrel-project/squirrel_perception/wiki) for additional information.

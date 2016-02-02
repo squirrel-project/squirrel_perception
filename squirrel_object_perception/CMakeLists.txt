@@ -4,9 +4,12 @@ project(squirrel_object_perception)
 find_package(catkin REQUIRED COMPONENTS
         actionlib
         actionlib_msgs
+        cv_bridge
         dynamic_reconfigure
         geometry_msgs
-	mongodb_store
+        mongodb_store
+        nav_msgs
+        octomap_msgs
         pcl_conversions
         roscpp
         rospy
@@ -17,6 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
         std_srvs
         tf
         tf2
+        visualization_msgs
 )
 find_package(PCL 1.7 REQUIRED)
 find_package(octomap REQUIRED)
@@ -35,14 +39,15 @@ catkin_python_setup()
 generate_dynamic_reconfigure_options(cfg/squirrel_look_for_objects.cfg)
 
 catkin_package(
-  INCLUDE_DIRS include 
- CATKIN_DEPENDS
+  INCLUDE_DIRS include CATKIN_DEPENDS
         actionlib
         actionlib_msgs
+        cv_bridge
         dynamic_reconfigure
         geometry_msgs
-	mongodb_store
-	octomap_msgs
+        mongodb_store
+        nav_msgs
+        octomap_msgs
         pcl_conversions
         roscpp
         rospy
@@ -53,7 +58,7 @@ catkin_package(
         std_srvs
         tf
         tf2
-	visualization_msgs
+        visualization_msgs
 )
 
 include_directories(include)
@@ -74,5 +79,5 @@ target_link_libraries(squirrel_look_for_objects
 target_link_libraries(squirrel_find_dynamic_objects ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${OCTOMAP_LIBRARIES})
 
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
-install(TARGETS squirrel_look_for_objects RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+install(TARGETS squirrel_look_for_objects squirrel_find_dynamic_objects RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 catkin_install_python(PROGRAMS src/squirrel_object_perception/squirrel_look_for_objects.py DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
