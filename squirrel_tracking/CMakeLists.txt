@@ -3,7 +3,7 @@ project(squirrel_tracking)
 
 find_package(catkin REQUIRED)
 find_package(V4R REQUIRED)
-find_package(catkin REQUIRED COMPONENTS cv_bridge gazebo_msgs image_transport pcl_conversions roscpp rospy sensor_msgs squirrel_object_perception_msgs tf tf2)
+find_package(catkin REQUIRED COMPONENTS cv_bridge gazebo_msgs image_transport pcl_conversions roscpp rospy sensor_msgs squirrel_object_perception_msgs tf tf2 mongodb_store)
 
 find_package(PCL 1.7 REQUIRED)
 find_package(OpenCV 2.4 REQUIRED)
@@ -14,7 +14,7 @@ add_definitions(-DEIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET)
 catkin_package(
  INCLUDE_DIRS include #  LIBRARIES squirrel_tracking
  CATKIN_DEPENDS #  DEPENDS system_lib
- cv_bridge gazebo_msgs image_transport pcl_conversions rospy sensor_msgs squirrel_object_perception_msgs tf tf2
+ cv_bridge gazebo_msgs image_transport pcl_conversions rospy sensor_msgs squirrel_object_perception_msgs tf tf2 mongodb_store
 )
 
 include_directories(include ${catkin_INCLUDE_DIRS} ${V4R_INCLUDE_DIRS} ${PCL_INCLUDE_DIRS})
