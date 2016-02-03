@@ -12,9 +12,9 @@
 #include <math.h>
 
 #include "std_srvs/Empty.h"
-#include "squirrel_tests/ExamineWaypoint.h"
-#include "squirrel_tests/ExamineWaypointRequest.h"
-#include "squirrel_tests/ExamineWaypointResponse.h"
+#include "squirrel_waypoint_msgs/ExamineWaypoint.h"
+#include "squirrel_waypoint_msgs/ExamineWaypointRequest.h"
+#include "squirrel_waypoint_msgs/ExamineWaypointResponse.h"
 
 class CreateExamineWaypoint {
 
@@ -33,9 +33,9 @@ public:
     ~CreateExamineWaypoint ();
 
     void initialize (int argc, char ** argv);
-    bool createExamineWaypoints(squirrel_tests::ExamineWaypointRequest &req, squirrel_tests::ExamineWaypointResponse &resp);
+    bool createExamineWaypoints(squirrel_waypoint_msgs::ExamineWaypointRequest &req, squirrel_waypoint_msgs::ExamineWaypointResponse &resp);
 
-    void visualizeWayPoints(geometry_msgs::PoseStamped lump_pose, squirrel_tests::ExamineWaypointResponse &resp);
+    void visualizeWayPoints(geometry_msgs::PoseStamped lump_pose, squirrel_waypoint_msgs::ExamineWaypointResponse &resp);
 };
 
 #endif

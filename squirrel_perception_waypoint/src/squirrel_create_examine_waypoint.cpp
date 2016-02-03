@@ -27,7 +27,7 @@ void CreateExamineWaypoint::initialize(int argc, char **argv) {
 //    //Tims code?
 //}
 
-bool CreateExamineWaypoint::createExamineWaypoints(squirrel_tests::ExamineWaypointRequest &req, squirrel_tests::ExamineWaypointResponse &resp) {
+bool CreateExamineWaypoint::createExamineWaypoints(squirrel_waypoint_msgs::ExamineWaypointRequest &req, squirrel_waypoint_msgs::ExamineWaypointResponse &resp) {
     //circle around lump
     tf::Transform tf;
     geometry_msgs::PoseStamped lump_pose = req.object_pose;
@@ -78,7 +78,7 @@ bool CreateExamineWaypoint::createExamineWaypoints(squirrel_tests::ExamineWaypoi
 
 }
 
-void CreateExamineWaypoint::visualizeWayPoints(geometry_msgs::PoseStamped lump_pose, squirrel_tests::ExamineWaypointResponse &resp) {
+void CreateExamineWaypoint::visualizeWayPoints(geometry_msgs::PoseStamped lump_pose, squirrel_waypoint_msgs::ExamineWaypointResponse &resp) {
     visualization_msgs::MarkerArray marker_array;
     geometry_msgs::PoseArray pose_array;
 
