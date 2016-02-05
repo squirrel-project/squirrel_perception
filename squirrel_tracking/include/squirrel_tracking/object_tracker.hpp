@@ -13,6 +13,7 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/CameraInfo.h>
+#include <mongodb_store/message_store.h>
 #include <v4r/tracking/ObjectTrackerMono.h>
 #include <squirrel_object_perception_msgs/StartObjectTracking.h>
 #include <squirrel_object_perception_msgs/StopObjectTracking.h>
@@ -26,11 +27,14 @@ private:
   ros::ServiceServer stopTrackingService_;
   ros::Subscriber imageSubscriber;
   ros::Subscriber caminfoSubscriber;
+  // Scene database
+  mongodb_store::MessageStoreProxy *messageStore;
   bool haveCameraInfo;
   bool startedTracking;
   std::string modelPath;
   tf::TransformBroadcaster tfBroadcast;
   std::string trackedObjectId;
+  std::string trackedObjectClass;
   cv::Mat intrinsic;
   cv::Mat dist;
 
