@@ -144,6 +144,9 @@ void RemoveBackground::initialize(int argc, char **argv) {
 
     setStaticOctomap(staticOctomapPath_);
 
+    if (staticMap->getNumLeafNodes() == 0) {
+        ROS_WARN("The static octomap is empty! You probably try to use the default octomap.");
+    }
 
     //insert some objects for testing purposes with corridor_test_edited.bt
 //    squirrel_object_perception_msgs::ObjectToDB test_object;
