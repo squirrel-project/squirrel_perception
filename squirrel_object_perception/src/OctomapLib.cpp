@@ -26,7 +26,7 @@ bool OctomapLib::readOctoMapFromFile(std::string filename, OcTree *&ocTree, bool
     if (!ocTree){
         return EXIT_FAILURE;
     } else {
-        std::cout << "Octomap was read successfully" << std::endl;
+        std::cout << "Octomap was read successfully from file" << std::endl;
         return true;
     }
 }
@@ -34,7 +34,6 @@ bool OctomapLib::readOctoMapFromFile(std::string filename, OcTree *&ocTree, bool
 void OctomapLib::tranformCloud2Map(pcl::PointCloud<PointT>::Ptr &cloud) {
     try
       {
-        tf::TransformListener tf_listener; //TODO create the listener only once, e.g. in the header file
         ros::Duration(1.0).sleep();
         tf_listener.waitForTransform("/kinect_depth_optical_frame","/map", ros::Time(0), ros::Duration(1.0));
         for(size_t i = 0; i < cloud->points.size(); i++)
@@ -85,7 +84,18 @@ void OctomapLib::checkCloudAgainstOctomap(const pcl::PointCloud<PointT>::Ptr &cl
         }
     }
     std::cout << "Number of points that are NaN: " << countNaNs << std::endl;
-    pcl::io::savePCDFileASCII ("/home/edith/SQUIRREL/workspace/src/squirrel_edith_tests/data/octomap/result_cloud.pcd", *cloud_copy);
+    pcl::io::savePCDFileASCII ("cloud_against_octomap.pcd", *cloud_copy);
+}
+
+int OctomapLib::getNumberOccupiedLeafNodes(const OcTree *octomap) {
+    int counter = 0;
+    for(OcTree::leaf_iterator it = octomap->begin_leafs(), end = octomap->end_leafs(); it != end; ++it) {
+        OcTreeNode node = *it;
+        if(octomap->isNodeOccupied(node)) {
+           counter += 1;
+        }
+    }
+    return counter;
 }
 
 OcTree OctomapLib::subtractOctomap(const OcTree *minuendMap, OcTree subtrahendMap) {
@@ -102,6 +112,7 @@ OcTree OctomapLib::subtractOctomap(const OcTree *minuendMap, OcTree subtrahendMa
             }
         } else {
             //std::cout << "Node outside of minuen map" << std::endl;
+            it->setLogOdds(logodds(subtrahendMap.getClampingThresMin()));
         }
     }
     subtrahendMap.updateInnerOccupancy();
@@ -122,7 +133,7 @@ void OctomapLib::octomapToPointcloud(OcTree *octomap, pcl::PointCloud<PointT>::P
            cloud->push_back(point);
         }
     }
-    pcl::io::savePCDFileASCII ("/home/edith/SQUIRREL/cloud.pcd", *cloud);
+    pcl::io::savePCDFileASCII ("cloud_from_octomap.pcd", *cloud);
 }
 
 void OctomapLib::octomapExpandOccupiedNodes(OcTree *octomap) {
@@ -188,7 +199,7 @@ void OctomapLib::getOctomapDimension(OcTree *octomap, unsigned int &width, unsig
     x = x/res;
     y = y/res;
     z= z/res;
-    std::cout << "MMetric Size. Res: " << res << "; X: " << x << "; Y: " << y << "; Z: " << z << std::endl;
+    std::cout << "Metric Size. Res: " << res << "; X: " << x << "; Y: " << y << "; Z: " << z << std::endl;
 
 
     std::cout << "Octomap - Width: " << width << "; Height: " << height << "; Depth: " << depth << std::endl;
