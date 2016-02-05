@@ -22,7 +22,6 @@
   <build_depend>squirrel_object_perception_msgs</build_depend>
   <build_depend>tf</build_depend>
   <build_depend>tf2</build_depend>
-  <build_depend>v4r</build_depend>
   <build_depend>suitesparse</build_depend>
   <build_depend>libceres-dev</build_depend>
   <build_depend>boost</build_depend>
@@ -38,7 +37,6 @@
   <run_depend>squirrel_object_perception_msgs</run_depend>
   <run_depend>tf</run_depend>
   <run_depend>tf2</run_depend>
-  <run_depend>v4r</run_depend>
   <run_depend>suitesparse</run_depend>
   <run_depend>libceres-dev</run_depend>
   <run_depend>boost</run_depend>
