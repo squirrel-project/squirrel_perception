@@ -1,0 +1,4 @@
+This is the place to store the octomap of the cleaned room!
+
+The file default_octomap.bt is just an empty octomap. 
+Please copy a real octomap to this folder and change the parameter static_octomap_path in the startup.launch.
