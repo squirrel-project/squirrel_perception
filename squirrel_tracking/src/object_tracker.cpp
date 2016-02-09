@@ -17,6 +17,7 @@ using namespace std;
 SquirrelTrackingNode::SquirrelTrackingNode()
 {
   n_ = 0;
+  messageStore = 0;
   haveCameraInfo = false;
   startedTracking = false;
   intrinsic = cv::Mat::zeros(3, 3, CV_32F);
@@ -25,6 +26,7 @@ SquirrelTrackingNode::SquirrelTrackingNode()
 
 SquirrelTrackingNode::~SquirrelTrackingNode()
 {
+  delete messageStore;
   delete n_;
 }
 
@@ -33,6 +35,7 @@ void SquirrelTrackingNode::initialize(int argc, char ** argv)
   ROS_INFO("initialize");
   ROS_INFO("ros::init called");
   n_ = new ros::NodeHandle("~");
+  messageStore = new mongodb_store::MessageStoreProxy(*n_);
   ROS_INFO("node handle created");
   n_->getParam("model_path", modelPath);
   startTrackingService_ = n_->advertiseService("/squirrel_start_object_tracking", &SquirrelTrackingNode::startTracking, this);
@@ -57,23 +60,41 @@ bool SquirrelTrackingNode::startTracking(squirrel_object_perception_msgs::StartO
       tracker.reset(new v4r::ObjectTrackerMono(param));
       tracker->setCameraParameter(intrinsic, dist);
 
+      // Note that the object_id is just a unique identifier. What the tracker needs is essentially
+      // the file name of the model to be loaded. This, in scene database terminology, is the object class.
+      // So, first we have to get the class from the scene database.
+      trackedObjectClass = "";
       trackedObjectId = req.object_id.data;
-      // HACK: actually we hage to get the model name from the scene database
-      // for now, we just take the objectId as the model name
-      string filename = modelPath + "/" + trackedObjectId + "/tracking_model.ao";
-      ROS_INFO("SquirrelTrackingNode::startTracking: loading '%s'", filename.c_str());
-      v4r::ArticulatedObject::Ptr model(new v4r::ArticulatedObject());
-      if(v4r::io::read(filename, model))
+      std::vector< boost::shared_ptr<std_msgs::String> > results;
+      if(messageStore->queryNamed<std_msgs::String>(req.object_id.data, results))
       {
-        tracker->setObjectModel(model);
-        imageSubscriber = n_->subscribe("/kinect/rgb/image_rect_color", 5, &SquirrelTrackingNode::receiveImage, this);
-        startedTracking = true;
-        ret = true;
-        ROS_INFO("SquirrelTrackingNode::startTracking: started");
+        if(results.size() == 1)
+          trackedObjectClass = results[0]->data;
+        else
+          ROS_ERROR("SquirrelTrackingNode::startTracking: multiple objects with same ID '%s'", trackedObjectId.c_str());
       }
       else
       {
-        ROS_ERROR("SquirrelTrackingNode::startTracking: failed to load object model '%s'", filename.c_str());
+        ROS_ERROR("SquirrelTrackingNode::startTracking: failed to get class for object '%s'", trackedObjectId.c_str());
+      }
+
+      if(!trackedObjectClass.empty())
+      {
+        string filename = modelPath + "/" + trackedObjectClass + "/tracking_model.ao";
+        ROS_INFO("SquirrelTrackingNode::startTracking: loading '%s'", filename.c_str());
+        v4r::ArticulatedObject::Ptr model(new v4r::ArticulatedObject());
+        if(v4r::io::read(filename, model))
+        {
+          tracker->setObjectModel(model);
+          imageSubscriber = n_->subscribe("/kinect/rgb/image_rect_color", 5, &SquirrelTrackingNode::receiveImage, this);
+          startedTracking = true;
+          ret = true;
+          ROS_INFO("SquirrelTrackingNode::startTracking: started");
+        }
+        else
+        {
+          ROS_ERROR("SquirrelTrackingNode::startTracking: failed to load object model '%s'", filename.c_str());
+        }
       }
     }
     else
@@ -93,6 +114,7 @@ bool SquirrelTrackingNode::stopTracking(squirrel_object_perception_msgs::StopObj
   if(startedTracking)
   {
     trackedObjectId = "";
+    trackedObjectClass = "";
     startedTracking = false;
     imageSubscriber.shutdown();
     ROS_INFO("SquirrelTrackingNode::stopTracking: stopped");
