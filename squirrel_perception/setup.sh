@@ -15,7 +15,9 @@ generate_path () {
 }
 
 write_file () {
-sudo cp rosdep/31-squirrel_perception.list $FILE
+  sudo mkdir -p /etc/ros/rosdep/mapping/
+  sudo cp rosdep/private.yaml /etc/ros/rosdep/mapping/private_perception.yaml
+  sudo cp rosdep/31-squirrel_perception.list $FILE
 }
 
 check_file () {
