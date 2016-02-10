@@ -11,6 +11,10 @@ Install dependencies and download the latest v4r debian package before you build
 
 ```rosdep install --from-paths $CATKIN_WS/src/squirrel_perception -i -y```
 
-```roscd squirrel_perception && python get_v4r.py && ./install.sh```
+```roscd squirrel_perception ```
+
+bash: ``` ./setup.bash```
+
+zsh: ```./setup.zsh```
 
 Please check the [Wiki](https://github.com/squirrel-project/squirrel_perception/wiki) for additional information.
