@@ -15,8 +15,7 @@ generate_path () {
 }
 
 write_file () {
-sudo touch $FILE
-echo $YAML |sudo tee -a $FILE
+sudo cp rosdep/31-squirrel_perception.list $FILE
 }
 
 check_file () {
@@ -29,11 +28,8 @@ check_file () {
   else
       # code if not found
       echo "not in there yet"
-      if [ $? -ne 0 ]; then
-        echo "Exit with error"
-        return 1 
-      fi 
       write_file
+      rosdep update
       return 0
   fi
 }
@@ -41,6 +37,7 @@ check_file () {
 add_repo () {
   curl -s http://lcas.lincoln.ac.uk/repos/public.key | sudo apt-key add -
   sudo apt-add-repository $REPO
+  sudo apt-get update
 }
 
 check_repo () {

@@ -1,8 +1,10 @@
 #!/usr/bin/env zsh
-source setup.sh
-source ~/.zshrc
-# The call to squirrel alias is only needed on bajo's computer
-#squirrel
+source setup.sh && source `pwd`/../../../devel/setup.zsh
+
+if [ $? -ne 0 ]; then
+  echo "Unable to source setup.zsh in your catkin workspace. Please run this script from within the squirrel_perception directory."
+  exit 1
+fi
 
 generate_path
 check_file
