@@ -8,14 +8,14 @@ find_package(OpenCV 2.4 REQUIRED)
 find_package(V4R REQUIRED)
 
 #target_link_libraries(squirrel_segmentation_test ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${V4R_LIBS})
-#add_dependencies(squirrel_segmentation_test v4r)
+#add_dependencies(squirrel_segmentation_test )
 
 find_package(rostest REQUIRED)
 
 catkin_package(
  INCLUDE_DIRS include #  LIBRARIES squirrel_segmentation
  CATKIN_DEPENDS #  DEPENDS system_lib
- cv_bridge pcl_conversions sensor_msgs squirrel_object_perception_msgs std_msgs tf tf2 v4r visualization_msgs
+ cv_bridge pcl_conversions sensor_msgs squirrel_object_perception_msgs std_msgs tf tf2 visualization_msgs
 )
 
 #message(STATUS "MY PCL_INCLUDE_DIRS" ${PCL_INCLUDE_DIRS})
@@ -35,10 +35,10 @@ add_executable(squirrel_segmentation_popout src/squirrel_segmentation_popout.cpp
 ##add_executable(squirrel_segmentation_test src/test.cpp)
 
 #target_link_libraries(squirrel_segmentation_incremental ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${V4R_LIBS})
-#add_dependencies(squirrel_segmentation_incremental v4r)
+#add_dependencies(squirrel_segmentation_incremental )
 #
 #target_link_libraries(squirrel_segmentation_visualization ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${V4R_LIBS})
-#add_dependencies(squirrel_segmentation_visualization v4r)
+#add_dependencies(squirrel_segmentation_visualization )
 #
 #target_link_libraries(squirrel_segmentation ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${V4R_LIBS}
 #cholmod
@@ -54,7 +54,7 @@ add_executable(squirrel_segmentation_popout src/squirrel_segmentation_popout.cpp
 #ldl
 #csparse
 #)
-#add_dependencies(squirrel_segmentation v4r)
+#add_dependencies(squirrel_segmentation )
 #
 
 target_link_libraries(squirrel_segmentation_popout ${catkin_LIBRARIES} ${PCL_LIBRARIES})
