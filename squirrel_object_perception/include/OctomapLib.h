@@ -17,6 +17,7 @@
 #include <iostream>
 #include <tf/transform_listener.h>
 #include <sensor_msgs/PointCloud2.h>
+#include <fstream>
 
 class OctomapLib {
 public:
@@ -35,6 +36,7 @@ public:
     void octomapToMat(octomap::OcTree *octomap, cv::Mat &mat);
     void octomapExpandOccupiedNodes(octomap::OcTree *octomap);
     int getNumberOccupiedLeafNodes(const octomap::OcTree *octomap);
+    octomap::OcTree dilateOctomap(octomap::OcTree *octomap);
 
     void addNodes(octomap::OcTree *ocTree);
 
