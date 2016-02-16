@@ -214,10 +214,11 @@ protected:
           return false;
       ros::ServiceClient client = nh_.serviceClient<squirrel_planning_knowledge_msgs::AddObjectService>("/kcl_rosplan/add_object");
       squirrel_planning_knowledge_msgs::AddObjectService srv;
-      srv.request.id = object.id;
-      srv.request.category = object.category;
-      srv.request.pose = object.pose;
-      srv.request.cloud = object.points;
+      srv.request.object.header = object.pose.header;
+      srv.request.object.id = object.id;
+      srv.request.object.category = object.category;
+      srv.request.object.pose = object.pose.pose;
+      srv.request.object.cloud = object.points;
       if (client.call(srv))
       {
           ROS_INFO("Called service %s: ", "/kcl_rosplan/add_object");
@@ -288,10 +289,11 @@ protected:
           return false;
       ros::ServiceClient client = nh_.serviceClient<squirrel_planning_knowledge_msgs::UpdateObjectService>("/kcl_rosplan/update_object");
       squirrel_planning_knowledge_msgs::UpdateObjectService srv;
-      srv.request.id = object.id;
-      srv.request.category = object.category;
-      srv.request.pose = object.pose;
-      srv.request.cloud = object.points;
+      srv.request.object.header = object.pose.header;
+      srv.request.object.id = object.id;
+      srv.request.object.category = object.category;
+      srv.request.object.pose = object.pose.pose;
+      srv.request.object.cloud = object.points;
       if (client.call(srv))
       {
           return true;
