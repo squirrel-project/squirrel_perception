@@ -14,6 +14,7 @@
 #include <boost/thread/mutex.hpp>
 #include <ros/ros.h>
 #include <dynamixel_msgs/JointState.h>
+#include <tf/transform_listener.h>
 
 #include <squirrel_object_perception_msgs/LookAtImagePosition.h>
 #include <squirrel_object_perception_msgs/LookAtPosition.h>
@@ -32,6 +33,7 @@ private:
   ros::Publisher panPub_, tiltPub_;
   ros::ServiceServer lookImageSrv_, lookSrv_, fixateSrv_, clearSrv_;
   ros::Subscriber panStateSub_, tiltStateSub_;
+  tf::TransformListener listener_;
   boost::mutex jointMutex_;
   float pan_, tilt_;
 

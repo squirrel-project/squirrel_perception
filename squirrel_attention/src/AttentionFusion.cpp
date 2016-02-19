@@ -41,7 +41,7 @@ void AttentionFusion::observeTimerCallback(const ros::TimerEvent&)
   ros::Duration diff;
   observeMutex_.lock();
   diff = ros::Time::now() - last_observation_;
-  if (diff > ros::Duration(10.0))
+  if (diff > ros::Duration(2.0))
   {
     // rotate robot
     ROS_INFO("Turn camera towards the other person");
@@ -52,7 +52,7 @@ void AttentionFusion::observeTimerCallback(const ros::TimerEvent&)
     
     if (controllerSrv_.call(srv))
     {
-      ROS_INFO("call service /attention/look_at_position");
+      ROS_INFO("call service /attention/look_at_position with: %f %f %f", next_.point.x, next_.point.y, next_.point.z);
     }
     else
     {
@@ -74,12 +74,12 @@ void AttentionFusion::legsCallback(const std_msgs::String& msg)
   poss >> x >> y;
   ROS_INFO("look at person at %.3f %.3f", x, y);
   observeMutex_.lock();
-  last_observation_ = ros::Time::now();
   observeMutex_.unlock();
 }
 
 void AttentionFusion::legsCallback2(const people_msgs::People& msg)
 {
+  ROS_INFO("legsCallback2");
   for (size_t i = 0; i < msg.people.size(); i++)
   {
     ROS_INFO("possible person at %.3f %.3f", msg.people[i].position.x, msg.people[i].position.y);
@@ -96,6 +96,7 @@ void AttentionFusion::legsCallback2(const people_msgs::People& msg)
     tmp_point.point.z = msg.people[i].position.z;
     try{
       // service expects a geometry_msgs::Point in base_link instead of kinect_rgb_optical_frame
+      listener_.waitForTransform("base_link", "hokuyo_link", ros::Time::now(), ros::Duration(3.0));
       listener_.transformPoint("base_link", tmp_point, next_); 
       ROS_INFO("hokuyo_link: (%.2f, %.2f. %.2f) -----> base_link: (%.2f, %.2f, %.2f) at time %.2f",
 	       tmp_point.point.x, tmp_point.point.y, tmp_point.point.z, next_.point.x, next_.point.y, next_.point.z, next_.header.stamp.toSec());
