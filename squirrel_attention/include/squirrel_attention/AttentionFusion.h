@@ -14,6 +14,8 @@
 #include <std_msgs/String.h>
 #include <boost/thread/mutex.hpp>
 #include <people_msgs/People.h>
+#include <geometry_msgs/Point.h>
+#include <tf/transform_listener.h>
 
 class AttentionFusion
 {
@@ -30,8 +32,8 @@ private:
   ros::Time last_observation_;
   boost::mutex observeMutex_;
   ros::Timer timer;
-  float next_x_;
-  float next_y_;
+  tf::TransformListener listener_;
+  geometry_msgs::PointStamped next_;
   std::string reason_;
 
   void legsCallback(const std_msgs::String& msg);
