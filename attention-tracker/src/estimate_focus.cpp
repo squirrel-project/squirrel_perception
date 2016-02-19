@@ -102,6 +102,9 @@ int main( int argc, char** argv )
     ros::Publisher marker_pub = n.advertise<visualization_msgs::Marker>("estimate_focus", 1);
     ros::Publisher fov_pub = n.advertise<sensor_msgs::Range>("face_0_field_of_view", 1);
     ros::Publisher frames_in_fov_pub = n.advertise<std_msgs::String>("actual_focus_of_attention", 1);
+    ros::Publisher faces_in_fov_pub = n.advertise<std_msgs::String>("faces_looking_at_robot", 1);
+    std_msgs::String pos;
+    std::stringstream poss;
 
     tf::TransformListener listener;
     vector<string> frames;
@@ -159,6 +162,9 @@ int main( int argc, char** argv )
                     if(isInFieldOfView(listener, monitored_frames[i], frame)) {
                         ROS_INFO_STREAM(monitored_frames[i] << " is in the field of view of " << frame);
                         marker_pub.publish(makeMarker(i, monitored_frames[i], colors[i]));
+                        poss << i;
+                        pos.data = poss.str();
+                        faces_in_fov_pub.publish(pos);
                         // create new marker with special color for the observed frame ? 
                         if (ss.str().empty()) ss << "_";
                         ss << monitored_frames[i];

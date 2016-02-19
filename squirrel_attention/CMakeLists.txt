@@ -116,7 +116,7 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${V4R_INCLUDE_DIR} ${PCL_INCL
 # add_executable(squirrel_attention_surfaceorientation src/squirrel_attention_surfaceorientation.cpp)
 add_executable(attention_controller src/AttentionController.cpp)
 add_executable(attention_motion src/AttentionMotion.cpp)
-add_executable(attention_legs src/AttentionLegs.cpp)
+add_executable(attention_fusion src/AttentionFusion.cpp)
 
 #add_executable(squirrel_attention_test src/test.cpp)
 
@@ -153,7 +153,7 @@ target_link_libraries(attention_controller ${catkin_LIBRARIES})
 
 target_link_libraries(attention_motion ${catkin_LIBRARIES})
 
-target_link_libraries(attention_legs ${catkin_LIBRARIES})
+target_link_libraries(attention_fusion ${catkin_LIBRARIES})
 
 #target_link_libraries(squirrel_attention_test ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
 #add_dependencies(squirrel_attention_test v4r)
