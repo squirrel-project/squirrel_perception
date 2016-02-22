@@ -24,6 +24,7 @@ AttentionFusion::AttentionFusion()
   legsSub2_ = nh_.subscribe("/leg_persons", 2, &AttentionFusion::legsCallback2, this);
   controllerSrv_ = nh_.serviceClient<squirrel_object_perception_msgs::LookAtPosition>("/attention/look_at_position");
   timer = nh_.createTimer(ros::Duration(5.0), &AttentionFusion::observeTimerCallback, this);
+  facetimer = nh_.createTimer(ros::Duration(1.5), &AttentionFusion::faceTimerCallback, this);
   last_observation_ = ros::Time::now();
 }
 
@@ -34,6 +35,34 @@ AttentionFusion::~AttentionFusion()
 void AttentionFusion::run()
 {
   ros::spin();
+}
+
+void AttentionFusion::faceTimerCallback(const ros::TimerEvent&)
+{
+  // face_0 detected
+  geometry_msgs::PointStamped tmp_point;
+  tmp_point.header.frame_id = "face_0";
+  tmp_point.header.stamp = ros::Time::now();
+  tmp_point.point.x = 0.0;
+  tmp_point.point.y = 0.0;
+  tmp_point.point.z = 0.0;
+  try{
+    // service expects a geometry_msgs::Point in base_link instead of kinect_rgb_optical_frame
+    listener_.waitForTransform("base_link", "face_0", ros::Time::now(), ros::Duration(1.0));
+    listener_.transformPoint("base_link", tmp_point, next_); 
+    ROS_INFO("face_0: (%.2f, %.2f. %.2f) -----> base_link: (%.2f, %.2f, %.2f) at time %.2f",
+             tmp_point.point.x, tmp_point.point.y, tmp_point.point.z, next_.point.x, next_.point.y, next_.point.z, next_.header.stamp.toSec());
+  }
+  catch (tf::TransformException ex){
+    ROS_ERROR("%s",ex.what());
+    ros::Duration(1.0).sleep();
+  }
+  
+  ROS_INFO("look at person at %.3f %.3f", next_.point.x, next_.point.y);
+  observeMutex_.lock();
+  reason_ = "face";
+  observeMutex_.unlock();
+  
 }
 
 void AttentionFusion::observeTimerCallback(const ros::TimerEvent&)
@@ -108,9 +137,13 @@ void AttentionFusion::legsCallback2(const people_msgs::People& msg)
     
     ROS_INFO("look at person at %.3f %.3f", next_.point.x, next_.point.y);
     observeMutex_.lock();
-    reason_ = "leg detection";
+    reason_ = "leg";
     observeMutex_.unlock();
   }
+}
+
+void faceCallback(const people_msgs::People& msg)
+{
 }
 
 void AttentionFusion::robotInFovCallback(const std_msgs::String& msg)
