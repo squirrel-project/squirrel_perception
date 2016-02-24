@@ -14,6 +14,7 @@ bool OctomapLib::readOctoMapFromFile(std::string filename, OcTree *&ocTree, bool
     *octomap_msgs::Octomap map_msg;
     *AbstractOcTree* tree = octomap_msgs::msgToMap(map_msg);
     */
+
     if(isBinary) {
         ocTree = new OcTree(filename);
     } else {
@@ -105,25 +106,26 @@ OcTree OctomapLib::dilateOctomap(OcTree *octomap) {
     for(OcTree::leaf_iterator it = octomap->begin_leafs(), end = octomap->end_leafs(); it != end; ++it) {
         OcTreeNode node = *it;
         OcTreeKey key = it.getKey();
-        octomath::Vector3 coord = dilated_map.keyToCoord(key);
+        //octomath::Vector3 coord = dilated_map.keyToCoord(key);
         //set all neighbors to occupied
         if(dilated_map.isNodeOccupied(node)) {
             for (int i = -1; i <= 1; i++) {
                 for (int j = -1; j <= 1; j++) {
-                    for (int k = -1; k <= 1; k++) {
+                    //for (int k = -1; k <= 1; k++) {
                         OcTreeKey neighbor_key = key;
                         neighbor_key[0] += i;
                         neighbor_key[1] += j;
-                        neighbor_key[2] += k;
+                    //    neighbor_key[2] += k;
 
                         OcTreeNode* neighbor_node = dilated_map.search(neighbor_key);
                         if (neighbor_node == NULL) {
-                            dilated_map.insertRay(coord, dilated_map.keyToCoord(neighbor_key));
+                            dilated_map.setNodeValue(neighbor_key,logodds(dilated_map.getClampingThresMax()));
+                            //dilated_map.insertRay(coord, dilated_map.keyToCoord(neighbor_key));
                         }
                         else if (!dilated_map.isNodeOccupied(neighbor_node)) {
                             neighbor_node->setLogOdds(logodds(dilated_map.getClampingThresMax()));
                         }
-                    }
+                   // }
                 }
             }
         }

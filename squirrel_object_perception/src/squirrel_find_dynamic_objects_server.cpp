@@ -14,18 +14,27 @@ RemoveBackground::~RemoveBackground() {
 bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDynamicObjects::Request & request, squirrel_object_perception_msgs::FindDynamicObjects::Response & response) {
 
     //read the input
-    octomap_msgs::OctomapConstPtr current_octomap_msg = ros::topic::waitForMessage<octomap_msgs::Octomap>("/octomap_binary", *n_, ros::Duration(10));
-    setCurrentOctomap(dynamic_cast<octomap::OcTree*>(octomap_msgs::msgToMap(*current_octomap_msg)));
+    //octomap_msgs::OctomapConstPtr current_octomap_msg = ros::topic::waitForMessage<octomap_msgs::Octomap>("/octomap_binary", *n_, ros::Duration(10));
+    //setCurrentOctomap(dynamic_cast<octomap::OcTree*>(octomap_msgs::msgToMap(*current_octomap_msg)));
+    std::string currentOctomapPath = "/home/edith/SQUIRREL/workspace/test5.bt";
+    n_->getParam("current_octomap_path", currentOctomapPath);
+
+    octomap_lib.readOctoMapFromFile(currentOctomapPath, currentMap , true);
+
     ROS_INFO("TUW: Current octomap read");
 
+    octomap_lib.writeOctomap(staticMap, "/home/edith/static.bt", true);
+    octomap_lib.writeOctomap(currentMap, "/home/edith/current.bt", true);
     octomap::OcTree subtractedMapVar = subtractOctomaps();
     if (octomap_lib.getNumberOccupiedLeafNodes(&subtractedMapVar) == 0) {
         ROS_INFO("TUW: Static and current octomap are the same");
         return false;
     }
 
+
     octomap::OcTree* subtractedMap = &subtractedMapVar;
-    //octomap_lib.writeOctomap(&subtractedMap, "corridor_subtracted.bt", true);
+
+    octomap_lib.writeOctomap(subtractedMap, "/home/edith/subtracted.bt", true);
 
     //remove voxels close to indicated obstacles in the map
     nav_msgs::OccupancyGridConstPtr grid_map = ros::topic::waitForMessage<nav_msgs::OccupancyGrid>("/map", *n_, ros::Duration(10));
@@ -37,6 +46,9 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
     }
     pcl::io::savePCDFileASCII ("cloud_after_map_comp.pcd", *filtered_cloud);
 
+
+    //pcl::PointCloud<PointT>::Ptr filtered_cloud(new pcl::PointCloud<PointT>);
+    //octomap_lib.octomapToPointcloud(subtractedMap, filtered_cloud);
     //clustering, remove noise and cluster which are not connected to the floor
     std::vector<pcl::PointCloud<PointT>::Ptr> clusters = removeClusters(filtered_cloud);
     pcl::io::savePCDFileASCII ("cloud_final.pcd", *filtered_cloud);
@@ -120,9 +132,9 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
             zyl_marker.pose.orientation.y = 0.0;
             zyl_marker.pose.orientation.z = 0.0;
             zyl_marker.pose.orientation.w = 1.0;
-            zyl_marker.scale.x = max_p.x - min_p.x;
-            zyl_marker.scale.y = max_p.y - min_p.y;
-            zyl_marker.scale.z = max_p.z - min_p.z;
+            zyl_marker.scale.x = std::max((float) (max_p.x - min_p.x + octomap_lib.leaf_size), (float) octomap_lib.leaf_size);
+            zyl_marker.scale.y = std::max((float) (max_p.y - min_p.y + octomap_lib.leaf_size), (float) octomap_lib.leaf_size);
+            zyl_marker.scale.z = std::max((float) (max_p.z - min_p.z + octomap_lib.leaf_size), (float) octomap_lib.leaf_size);
             zyl_marker.color.r = 1.0;
             zyl_marker.color.g = 0.0;
             zyl_marker.color.b = 0.0;
@@ -203,6 +215,7 @@ int main (int argc, char ** argv)
 void RemoveBackground::setStaticOctomap(std::string staticPath) {
     octomap_lib.readOctoMapFromFile(staticPath, this->staticMap, ends_with(staticPath, "bt"));
     staticMap->expand();
+    octomap_lib.leaf_size = staticMap->getNodeSize(octomap_lib.tree_depth);
 }
 
 void RemoveBackground::setCurrentOctomap(octomap::OcTree *currentMap) {
@@ -331,7 +344,7 @@ std::vector<pcl::PointCloud<PointT>::Ptr> RemoveBackground::removeClusters(pcl::
 
     std::vector<pcl::PointIndices> cluster_indices;
     pcl::EuclideanClusterExtraction<PointT> ec;
-    ec.setClusterTolerance (0.03); // circle radius in cm
+    ec.setClusterTolerance (std::sqrt(2) * octomap_lib.leaf_size); // circle radius in cm
     ec.setMinClusterSize (5);
     ec.setMaxClusterSize (25000);
     ec.setSearchMethod (tree);
@@ -343,7 +356,7 @@ std::vector<pcl::PointCloud<PointT>::Ptr> RemoveBackground::removeClusters(pcl::
 
     pcl::PointCloud<PointT>::Ptr cloud_filtered(new pcl::PointCloud<PointT>);
     std::vector<pcl::PointCloud<PointT>::Ptr> clusters;
-
+    std::cout << "Cluster indices size: " << cluster_indices.size() << std::endl;
     int j = 0;
     pcl::PCDWriter writer;
     for (std::vector<pcl::PointIndices>::iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
@@ -361,7 +374,7 @@ std::vector<pcl::PointCloud<PointT>::Ptr> RemoveBackground::removeClusters(pcl::
         std::cout << "PointCloud representing the Cluster: " << cloud_cluster->points.size () << " data points." << std::endl;
         std::stringstream ss;
         ss << "cloud_cluster_" << j << ".pcd";
-        writer.write<PointT> (ss.str (), *cloud_cluster, false); //*
+        writer.write<PointT> (ss.str (), *cloud_cluster, false);
         j++;
 
         PointT min_p, max_p;

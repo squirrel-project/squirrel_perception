@@ -24,6 +24,8 @@ public:
     typedef pcl::PointXYZRGB PointT;
     static const int tree_depth = 16;
 
+    double leaf_size;
+
     tf::TransformListener tf_listener;
 
     bool readOctoMapFromFile(std::string, octomap::OcTree *&ocTree, bool binary);
