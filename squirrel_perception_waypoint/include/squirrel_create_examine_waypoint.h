@@ -15,6 +15,7 @@
 #include "squirrel_waypoint_msgs/ExamineWaypoint.h"
 #include "squirrel_waypoint_msgs/ExamineWaypointRequest.h"
 #include "squirrel_waypoint_msgs/ExamineWaypointResponse.h"
+#include "squirrel_object_perception_msgs/BCylinder.h"
 
 class CreateExamineWaypoint {
 
@@ -35,7 +36,7 @@ public:
     void initialize (int argc, char ** argv);
     bool createExamineWaypoints(squirrel_waypoint_msgs::ExamineWaypointRequest &req, squirrel_waypoint_msgs::ExamineWaypointResponse &resp);
 
-    void visualizeWayPoints(geometry_msgs::PoseStamped lump_pose, squirrel_waypoint_msgs::ExamineWaypointResponse &resp);
+    void visualizeWayPoints(squirrel_waypoint_msgs::ExamineWaypointRequest &req, squirrel_waypoint_msgs::ExamineWaypointResponse &resp);
 };
 
 #endif
