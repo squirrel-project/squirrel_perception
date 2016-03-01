@@ -32,6 +32,7 @@ private:
   ros::Time last_observation_;
   boost::mutex observeMutex_;
   ros::Timer timer;
+  ros::Timer facetimer;
   tf::TransformListener listener_;
   geometry_msgs::PointStamped next_;
   std::string reason_;
@@ -40,6 +41,7 @@ private:
   void legsCallback2(const people_msgs::People& msg);
   void robotInFovCallback(const std_msgs::String& msg);
   void observeTimerCallback(const ros::TimerEvent&);
+  void faceTimerCallback(const ros::TimerEvent&);
 };
 
 #endif
