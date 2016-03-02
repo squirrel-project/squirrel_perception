@@ -1,12 +1,14 @@
 <launch>
 
   <arg name="model_path" default="$(find squirrel_object_perception)/data/models" />
+  <arg name="camera_name" default="kinect" />
 
   <node name="object_tracker"
         pkg="squirrel_tracking"
         type="object_tracker"
         required="true" output="screen">
         <param name="model_path" type="string" value="$(arg model_path)"/>
+        <param name="camera_name" type="string" value="$(arg camera_name)"/>
   </node>
 
   <!-- <node name="lump_tracker"
