@@ -13,6 +13,7 @@ kinect_rgb_optical_frame
 
 The tracker will need the scene database running, which happens when the whole scenario system is started up, or e.g. using:
 ```
+sudo service mongodb stop
 roslaunch squirrel_planning_launch squirrel_planning_system.launch
 ```
 
