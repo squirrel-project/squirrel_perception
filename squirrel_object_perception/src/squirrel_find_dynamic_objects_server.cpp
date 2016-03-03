@@ -18,8 +18,7 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
     setCurrentOctomap(dynamic_cast<octomap::OcTree*>(octomap_msgs::msgToMap(*current_octomap_msg)));
     //std::string currentOctomapPath = "/home/edith/SQUIRREL/workspace/test5.bt";
     //n_->getParam("current_octomap_path", currentOctomapPath);
-
-    octomap_lib.readOctoMapFromFile(currentOctomapPath, currentMap , true);
+    //octomap_lib.readOctoMapFromFile(currentOctomapPath, currentMap , true);
 
     ROS_INFO("TUW: Current octomap read");
 
