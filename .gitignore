@@ -5,3 +5,6 @@
 *.pyc
 */bin/
 *~
+data
+*.bt
+*.ot

@@ -19,7 +19,7 @@
 
 class CreateExamineWaypoint {
 
-    static const double distance_to_lump = 0.30; //in meters
+    static const double distance_to_lump = 0.40; //in meters
     static const int nr_of_waypoints = 5;
 
 private:
