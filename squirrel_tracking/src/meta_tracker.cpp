@@ -6,6 +6,7 @@
  * @date 2016-02
  */
 
+#include <squirrel_object_perception_msgs/SceneObject.h>
 #include <squirrel_object_perception_msgs/StartInstanceTracking.h>
 #include <squirrel_object_perception_msgs/StopInstanceTracking.h>
 #include <squirrel_object_perception_msgs/StartLumpTracking.h>
@@ -55,18 +56,17 @@ bool MetaTracker::startTracking(squirrel_object_perception_msgs::StartObjectTrac
     // So, first we have to get the class from the scene database.
     trackedObjectClass = "";
     trackedObjectId = req.object_id.data;
-    std::vector< boost::shared_ptr<std_msgs::String> > results;
-    if(messageStore->queryNamed<std_msgs::String>(req.object_id.data, results))
+    std::vector< boost::shared_ptr<squirrel_object_perception_msgs::SceneObject> > results;
+    if(messageStore->queryNamed<squirrel_object_perception_msgs::SceneObject>(req.object_id.data, results))
     {
       if(results.size() == 1)
-        trackedObjectClass = results[0]->data;
+        trackedObjectClass = results[0]->category;
       else
         ROS_ERROR("MetaTracker::startTracking: multiple objects with same ID '%s'", trackedObjectId.c_str());
     }
     else
     {
-      ROS_INFO("MetaTracker::startTracking: have no class/model for object '%s', using default tracker", trackedObjectId.c_str());
-      trackedObjectClass = "unknown";
+      ROS_INFO("MetaTracker::startTracking: object '%s' is not in the scene database", trackedObjectId.c_str());
     }
 
     if(!trackedObjectClass.empty())
