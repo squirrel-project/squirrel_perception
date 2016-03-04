@@ -39,8 +39,12 @@ bool CreateExamineWaypoint::createExamineWaypoints(squirrel_waypoint_msgs::Exami
         geometry_msgs::PoseWithCovarianceStamped waypoint;
         waypoint.header = lump_pose.header;
 
-        waypoint.pose.pose.position.x = lump_pose.pose.position.x + distance_to_lump*sin(angle*i);
-        waypoint.pose.pose.position.y = lump_pose.pose.position.y + distance_to_lump*cos(angle*i);
+        /*
+         *  float x = radius*sin(angle*i)+width/2;
+         *   float y = radius*cos(angle*i)+height/2;
+        */
+        waypoint.pose.pose.position.x = lump_pose.pose.position.x + (distance_to_lump + req.bounding_cylinder.diameter/2)*sin(angle*i);
+        waypoint.pose.pose.position.y = lump_pose.pose.position.y + (distance_to_lump + req.bounding_cylinder.diameter/2)*cos(angle*i);
         waypoint.pose.pose.position.z = 0.0;
 
         float yaw_angle;
@@ -73,12 +77,15 @@ bool CreateExamineWaypoint::createExamineWaypoints(squirrel_waypoint_msgs::Exami
 
         resp.poses.push_back(waypoint);
     }
-    visualizeWayPoints(lump_pose, resp);
+    visualizeWayPoints(req, resp);
     return true;
 
 }
 
-void CreateExamineWaypoint::visualizeWayPoints(geometry_msgs::PoseStamped lump_pose, squirrel_waypoint_msgs::ExamineWaypointResponse &resp) {
+void CreateExamineWaypoint::visualizeWayPoints(squirrel_waypoint_msgs::ExamineWaypointRequest &req, squirrel_waypoint_msgs::ExamineWaypointResponse &resp) {
+    geometry_msgs::PoseStamped lump_pose = req.object_pose;
+    squirrel_object_perception_msgs::BCylinder bounding_cylinder = req.bounding_cylinder;
+
     visualization_msgs::MarkerArray marker_array;
     geometry_msgs::PoseArray pose_array;
 
@@ -98,8 +105,8 @@ void CreateExamineWaypoint::visualizeWayPoints(geometry_msgs::PoseStamped lump_p
     marker.pose.orientation.y = 0.0;
     marker.pose.orientation.z = 0.0;
     marker.pose.orientation.w = 1.0;
-    marker.scale.x = 0.2;
-    marker.scale.y = 0.2;
+    marker.scale.x = bounding_cylinder.diameter;
+    marker.scale.y = bounding_cylinder.diameter;
     marker.scale.z = 0.2;
     marker.color.a = 1.0;
     marker.color.r = 1.0;
