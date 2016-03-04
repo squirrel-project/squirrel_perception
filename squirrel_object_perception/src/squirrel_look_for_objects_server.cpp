@@ -24,6 +24,10 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <vector>
 
+
+//TODO set the header for sceneobject (pose used to be stamped, but is not anymore)
+
+
 class Object
 {
 
@@ -214,7 +218,6 @@ protected:
           return false;
       ros::ServiceClient client = nh_.serviceClient<squirrel_planning_knowledge_msgs::AddObjectService>("/kcl_rosplan/add_object");
       squirrel_planning_knowledge_msgs::AddObjectService srv;
-      srv.request.object.header = object.pose.header;
       srv.request.object.id = object.id;
       srv.request.object.category = object.category;
       srv.request.object.pose = object.pose.pose;
@@ -289,7 +292,6 @@ protected:
           return false;
       ros::ServiceClient client = nh_.serviceClient<squirrel_planning_knowledge_msgs::UpdateObjectService>("/kcl_rosplan/update_object");
       squirrel_planning_knowledge_msgs::UpdateObjectService srv;
-      srv.request.object.header = object.pose.header;
       srv.request.object.id = object.id;
       srv.request.object.category = object.category;
       srv.request.object.pose = object.pose.pose;
