@@ -15,7 +15,6 @@
 #include <squirrel_planning_knowledge_msgs/UpdateObjectService.h>
 #include <squirrel_planning_knowledge_msgs/AddObjectService.h>
 #include <std_msgs/Int32MultiArray.h>
-#include <geometry_msgs/PoseStamped.h>
 #include <sstream>
 #include <algorithm>
 #include <tf/transform_listener.h>
@@ -25,8 +24,6 @@
 #include <vector>
 
 
-//TODO set the header for sceneobject (pose used to be stamped, but is not anymore)
-
 
 class Object
 {
@@ -34,7 +31,8 @@ class Object
 public:
     std::string id;
     std::string category;
-    geometry_msgs::PoseStamped pose;
+    std_msgs::Header header;
+    geometry_msgs::Pose pose;
     sensor_msgs::PointCloud2 points;
     std_msgs::Int32MultiArray point_indices;
 };
@@ -211,7 +209,6 @@ protected:
 
     return true;
   }
-
   bool add_object_to_db(Object object)
   {
       if (!ros::service::waitForService("/kcl_rosplan/add_object", ros::Duration(5.0)))
@@ -220,7 +217,8 @@ protected:
       squirrel_planning_knowledge_msgs::AddObjectService srv;
       srv.request.object.id = object.id;
       srv.request.object.category = object.category;
-      srv.request.object.pose = object.pose.pose;
+      srv.request.object.header = object.header;
+      srv.request.object.pose = object.pose;
       srv.request.object.cloud = object.points;
       if (client.call(srv))
       {
@@ -278,9 +276,10 @@ protected:
             Object obj;
             obj.category = "thing";
             obj.id = get_unique_object_id();
+            obj.header = srv.response.poses[i].header;
             obj.point_indices = srv.response.clusters_indices[i];
             obj.points = srv.response.points[i];
-            obj.pose = srv.response.poses[i];
+            obj.pose = srv.response.poses[i].pose;
             this->objects.push_back(obj);
             return true;
         }
@@ -294,7 +293,8 @@ protected:
       squirrel_planning_knowledge_msgs::UpdateObjectService srv;
       srv.request.object.id = object.id;
       srv.request.object.category = object.category;
-      srv.request.object.pose = object.pose.pose;
+      srv.request.object.header = object.header;
+      srv.request.object.pose = object.pose;
       srv.request.object.cloud = object.points;
       if (client.call(srv))
       {
