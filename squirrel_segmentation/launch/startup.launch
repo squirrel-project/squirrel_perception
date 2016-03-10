@@ -22,9 +22,5 @@
         type="squirrel_segmentation_popout">
   </node>
 
-  <node name="segments_to_objects"
-        pkg="squirrel_segmentation"
-        type="segments_to_objects">
-  </node>
 
 </launch>

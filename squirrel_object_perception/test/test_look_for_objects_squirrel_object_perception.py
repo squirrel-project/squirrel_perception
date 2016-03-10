@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import roslib; roslib.load_manifest('squirrel_object_perception')
 import rospy
 
 import actionlib

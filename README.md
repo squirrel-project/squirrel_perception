@@ -1,8 +1,20 @@
 squirrel_perception
 ===================
 
+[![Build Status](https://travis-ci.com/squirrel-project/squirrel_perception.svg?token=ZW4zPsKpxxD4UyghzW3C&branch=indigo_dev)](https://travis-ci.com/squirrel-project/squirrel_perception)
+
 Technical Maintainer: bajo (Markus "Bajo" Bajones, TU Wien)
 
 Repository for object perception related SQUIRREL packages.
 
-Please check v4r/README.md regarding issues with PCL.
+Install dependencies and download the latest v4r debian package before you build squirrel_perception
+
+```rosdep install --from-paths $CATKIN_WS/src/squirrel_perception -i -y```
+
+```roscd squirrel_perception ```
+
+bash: ``` ./setup.bash```
+
+zsh: ```./setup.zsh```
+
+Please check the [Wiki](https://github.com/squirrel-project/squirrel_perception/wiki) for additional information.

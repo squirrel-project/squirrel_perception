@@ -22,6 +22,11 @@
 #include <pcl/point_types.h>
 #include <pcl/common/centroid.h>
 #include <pcl_conversions/pcl_conversions.h>
+#include <vector>
+
+
+//TODO set the header for sceneobject (pose used to be stamped, but is not anymore)
+
 
 class Object
 {
@@ -56,6 +61,7 @@ protected:
   std::vector<Object>::iterator objectIterator;
   // just for now
   std::vector<squirrel_object_perception_msgs::RecognizeResponse> recognized_object;
+  std::vector<std_msgs::Int32MultiArray> cluster_indices;
   int id_cnt_;
 
   void set_publish_feedback(std::string phase, std::string status, int percent)
@@ -120,7 +126,7 @@ protected:
           return false;
       ros::ServiceClient client = nh_.serviceClient<squirrel_object_perception_msgs::SegmentVisualizationOnce>("/squirrel_segmentation_visualization_once");
       squirrel_object_perception_msgs::SegmentVisualizationOnce srv;
-     // srv.request.clusters_indices = this->;
+      srv.request.clusters_indices = this->cluster_indices;
       if (client.call(srv))
       {
           ROS_INFO("Called service %s: ", "/squirrel_segmentation_visualization_once");
@@ -134,20 +140,20 @@ protected:
 
   bool get_saliency_map()
   {
-      if (!ros::service::waitForService("/squirrel_attention_3Dsymmetry", ros::Duration(5.0)))
+      if (!ros::service::waitForService("/squirrel_attention_itti", ros::Duration(5.0)))
           return false;
-      ros::ServiceClient client = nh_.serviceClient<squirrel_object_perception_msgs::GetSaliency3DSymmetry>("/squirrel_attention_3Dsymmetry");
+      ros::ServiceClient client = nh_.serviceClient<squirrel_object_perception_msgs::GetSaliency3DSymmetry>("/squirrel_attention_itti");
       squirrel_object_perception_msgs::GetSaliency3DSymmetry srv;
       srv.request.cloud = *(this->scene);
       if (client.call(srv))
       {
-          ROS_INFO("Called service %s: ", "/squirrel_attention_3Dsymmetry");
+          ROS_INFO("Called service %s: ", "/squirrel_attention_itti");
           this->saliency_map = srv.response.saliency_map;
           return true;
       }
       else
       {
-          ROS_ERROR("Failed to call service %s", "/squirrel_attention_3Dsymmetry");
+          ROS_ERROR("Failed to call service %s", "/squirrel_attention_itti");
           return false;
       }
   }
@@ -212,10 +218,10 @@ protected:
           return false;
       ros::ServiceClient client = nh_.serviceClient<squirrel_planning_knowledge_msgs::AddObjectService>("/kcl_rosplan/add_object");
       squirrel_planning_knowledge_msgs::AddObjectService srv;
-      srv.request.id = object.id;
-      srv.request.category = object.category;
-      srv.request.pose = object.pose;
-      srv.request.cloud = object.points;
+      srv.request.object.id = object.id;
+      srv.request.object.category = object.category;
+      srv.request.object.pose = object.pose.pose;
+      srv.request.object.cloud = object.points;
       if (client.call(srv))
       {
           ROS_INFO("Called service %s: ", "/kcl_rosplan/add_object");
@@ -250,51 +256,34 @@ protected:
 
   bool run_segmentation_once()
   {
-    if (!ros::service::waitForService("/squirrel_segmentation_incremental_once", ros::Duration(5.0))||
-        !ros::service::waitForService("/squirrel_segments_to_objects", ros::Duration(5.0)))
+    if (!ros::service::waitForService("/squirrel_segmentation_incremental_once", ros::Duration(5.0)))
         return false;
     ros::ServiceClient client = nh_.serviceClient<squirrel_object_perception_msgs::SegmentOnce>("/squirrel_segmentation_incremental_once");
-    ros::ServiceClient client1 = nh_.serviceClient<squirrel_object_perception_msgs::SegmentsToObjects>("/squirrel_segments_to_objects");
     squirrel_object_perception_msgs::SegmentOnce srv;
-    squirrel_object_perception_msgs::SegmentsToObjects srv1;
     if (client.call(srv))
     {
         ROS_INFO("Called service %s: ", "/squirrel_segmentation_incremental_once");
-        return true;
     }
     else
     {
         ROS_ERROR("Failed to call service %s", "/squirrel_segmentation_incremental_once");
         return false;
     }
-    srv1.request.cloud = *(this->scene);
-    srv1.request.clusters_indices = srv.response.clusters_indices;
-    if (client1.call(srv1))
-    {
-        ROS_INFO("Called service %s: ", "/squirrel_segments_to_objects");
-        ROS_INFO("Found %ld objects", srv1.response.points.size());
-        if (srv1.response.points.size() > 0)
-        {
+
+    this->cluster_indices = srv.response.clusters_indices;
+
+
+	for(int i=0; srv.response.poses.size(); i++) {
             ROS_INFO("appending object");
             Object obj;
             obj.category = "thing";
-            obj.id = "0";
-            obj.point_indices = srv.response.clusters_indices[0];
-            obj.points = srv1.response.points[0];
-            obj.pose = srv1.response.poses[0];
+            obj.id = get_unique_object_id();
+            obj.point_indices = srv.response.clusters_indices[i];
+            obj.points = srv.response.points[i];
+            obj.pose = srv.response.poses[i];
             this->objects.push_back(obj);
             return true;
         }
-        else
-        {
-            return false;
-        }
-    }
-    else
-    {
-        ROS_ERROR("Failed to call service %s", "/squirrel_segments_to_objects");
-        return false;
-    }
   }
 
   bool update_object_in_db(Object object)
@@ -303,10 +292,10 @@ protected:
           return false;
       ros::ServiceClient client = nh_.serviceClient<squirrel_planning_knowledge_msgs::UpdateObjectService>("/kcl_rosplan/update_object");
       squirrel_planning_knowledge_msgs::UpdateObjectService srv;
-      srv.request.id = object.id;
-      srv.request.category = object.category;
-      srv.request.pose = object.pose;
-      srv.request.cloud = object.points;
+      srv.request.object.id = object.id;
+      srv.request.object.category = object.category;
+      srv.request.object.pose = object.pose.pose;
+      srv.request.object.cloud = object.points;
       if (client.call(srv))
       {
           return true;
@@ -374,6 +363,8 @@ public:
 
     ROS_INFO("%s: executeCB started", action_name_.c_str());
 
+    sleep(2); // HACK: Michael Zillich
+
     if (as_.isPreemptRequested())
     {
         ROS_INFO("%s: Preempted", action_name_.c_str());
@@ -394,12 +385,14 @@ public:
         success = false;
         return;
     }
-    if (!get_saliency_map())
+
+    //TODO we do not use attention right now
+    /*if (!get_saliency_map())
     {
         result_.result_status = "unable to get saliency map";
         as_.setAborted(result_);
         return;
-    }
+    }*/
 
     if (!setup_segmentation())
     {
@@ -408,10 +401,20 @@ public:
         return;
     }
 
+    //not supported by popout_segmentation
+    /*if (!setup_visualization())
+    {
+        result_.result_status = "unable to initialze visualization";
+        as_.setAborted(result_);
+        return;
+    }*/
+
+
     // TODO: find a reasonable number of times to run here
     for(int i=0; i<1; i++)
     {
         run_segmentation_once();
+        run_visualization_once();
     }
     if (objects.size() < 1)
     {

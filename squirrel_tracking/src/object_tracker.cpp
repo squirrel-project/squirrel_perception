@@ -5,7 +5,7 @@
  * @date 2015-03
  */
 
-#include <v4r/KeypointSlam/io.hh>
+#include <v4r/keypoints/io.h>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
@@ -19,6 +19,7 @@ SquirrelTrackingNode::SquirrelTrackingNode()
   n_ = 0;
   haveCameraInfo = false;
   startedTracking = false;
+  cameraName = "kinect";
   intrinsic = cv::Mat::zeros(3, 3, CV_32F);
   dist = cv::Mat::zeros(4, 1, CV_32F);
 }
@@ -31,49 +32,66 @@ SquirrelTrackingNode::~SquirrelTrackingNode()
 void SquirrelTrackingNode::initialize(int argc, char ** argv)
 {
   ROS_INFO("initialize");
-  ROS_INFO("ros::init called");
   n_ = new ros::NodeHandle("~");
-  ROS_INFO("node handle created");
   n_->getParam("model_path", modelPath);
-  startTrackingService_ = n_->advertiseService("/squirrel_start_object_tracking", &SquirrelTrackingNode::startTracking, this);
-  stopTrackingService_ = n_->advertiseService("/squirrel_stop_object_tracking", &SquirrelTrackingNode::stopTracking, this);
-  ROS_INFO("Ready to get service calls...");
+  n_->getParam("camera_name", cameraName);
+  startTrackingService_ = n_->advertiseService("/squirrel_start_instance_tracking", &SquirrelTrackingNode::startTracking, this);
+  stopTrackingService_ = n_->advertiseService("/squirrel_stop_instance_tracking", &SquirrelTrackingNode::stopTracking, this);
 
-  caminfoSubscriber = n_->subscribe("/kinect/rgb/camera_info", 1, &SquirrelTrackingNode::receiveCameraInfo, this);
+  stringstream topic;
+  topic << "/" << cameraName << "/rgb/camera_info";
+  ROS_INFO("subscribing to topic '%s'", topic.str().c_str());
+  caminfoSubscriber = n_->subscribe(topic.str(), 1, &SquirrelTrackingNode::receiveCameraInfo, this);
+
+  ROS_INFO("Ready to receive service calls.");
 
   ros::spin();
 }
 
-bool SquirrelTrackingNode::startTracking(squirrel_object_perception_msgs::StartObjectTracking::Request &req, squirrel_object_perception_msgs::StartObjectTracking::Response &response)
+bool SquirrelTrackingNode::startTracking(squirrel_object_perception_msgs::StartInstanceTracking::Request &req, squirrel_object_perception_msgs::StartInstanceTracking::Response &response)
 {
   bool ret = false;
   if(haveCameraInfo)
   {
     if(!startedTracking)
     {
-      kp::ObjectTrackerMono::Parameter param;
+      v4r::ObjectTrackerMono::Parameter param;
       param.kt_param.plk_param.use_ncc = true;
       param.kt_param.plk_param.ncc_residual = .6;
-      tracker.reset(new kp::ObjectTrackerMono(param));
+      tracker.reset(new v4r::ObjectTrackerMono(param));
       tracker->setCameraParameter(intrinsic, dist);
 
+      // Note that the object_id is just a unique identifier. What the tracker needs is essentially
+      // the file name of the model to be loaded. This is the object class.
       trackedObjectId = req.object_id.data;
-      // HACK: actually we hage to get the model name from the scene database
-      // for now, we just take the objectId as the model name
-      string filename = modelPath + "/" + trackedObjectId + "/" + trackedObjectId + ".ao";
-      ROS_INFO("SquirrelTrackingNode::startTracking: loading '%s'", filename.c_str());
-      kp::ArticulatedObject::Ptr model(new kp::ArticulatedObject());
-      if(kp::io::read(filename, model))
+      trackedObjectClass = req.object_class.data;
+      if(!trackedObjectClass.empty() && !trackedObjectId.empty())
       {
-        tracker->setObjectModel(model);
-        imageSubscriber = n_->subscribe("/kinect/rgb/image_rect_color", 5, &SquirrelTrackingNode::receiveImage, this);
-        startedTracking = true;
-        ret = true;
-        ROS_INFO("SquirrelTrackingNode::startTracking: started");
+        string filename = modelPath + "/" + trackedObjectClass + "/tracking_model.ao";
+        ROS_INFO("SquirrelTrackingNode::startTracking: loading '%s'", filename.c_str());
+        v4r::ArticulatedObject::Ptr model(new v4r::ArticulatedObject());
+        if(v4r::io::read(filename, model))
+        {
+          stringstream topic;
+          topic << "/" << cameraName << "/rgb/image_rect_color";
+          ROS_INFO("subscribing to topic '%s'", topic.str().c_str());
+          tracker->setObjectModel(model);
+          imageSubscriber = n_->subscribe(topic.str(), 5, &SquirrelTrackingNode::receiveImage, this);
+          startedTracking = true;
+          ret = true;
+          ROS_INFO("SquirrelTrackingNode::startTracking: started");
+        }
+        else
+        {
+          ROS_ERROR("SquirrelTrackingNode::startTracking: failed to load object model '%s'", filename.c_str());
+        }
       }
       else
       {
-        ROS_ERROR("SquirrelTrackingNode::startTracking: failed to load object model '%s'", filename.c_str());
+        if(trackedObjectClass.empty())
+          ROS_ERROR("SquirrelTrackingNode::startTracking: missing object class");
+        else
+          ROS_ERROR("SquirrelTrackingNode::startTracking: missing object ID");
       }
     }
     else
@@ -88,11 +106,12 @@ bool SquirrelTrackingNode::startTracking(squirrel_object_perception_msgs::StartO
   return ret;
 }
 
-bool SquirrelTrackingNode::stopTracking(squirrel_object_perception_msgs::StopObjectTracking::Request &req, squirrel_object_perception_msgs::StopObjectTracking::Response &response)
+bool SquirrelTrackingNode::stopTracking(squirrel_object_perception_msgs::StopInstanceTracking::Request &req, squirrel_object_perception_msgs::StopInstanceTracking::Response &response)
 {
   if(startedTracking)
   {
     trackedObjectId = "";
+    trackedObjectClass = "";
     startedTracking = false;
     imageSubscriber.shutdown();
     ROS_INFO("SquirrelTrackingNode::stopTracking: stopped");
@@ -146,7 +165,10 @@ void SquirrelTrackingNode::receiveImage(const sensor_msgs::Image::ConstPtr &msg)
     R.getRotation(q);
     transform.setOrigin(p);
     transform.setRotation(q);
-    tfBroadcast.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "kinect_rgb_optical_frame", trackedObjectId));
+
+    stringstream frame;
+    frame << cameraName << "_rgb_optical_frame";
+    tfBroadcast.sendTransform(tf::StampedTransform(transform, ros::Time::now(), frame.str(), trackedObjectId));
     // for debugging
     // cv::imwrite("tracking.jpg", image);
   }

@@ -14,6 +14,7 @@
 #include <pcl/visualization/pcl_visualizer.h>
 #include "squirrel_active_exploration/pcl_conversions.h"
 
+/*
 #include <rosplan_knowledge_msgs/GetInstanceService.h>
 #include <rosplan_knowledge_msgs/GetAttributeService.h>
 #include <rosplan_knowledge_msgs/KnowledgeUpdateService.h>
@@ -21,6 +22,7 @@
 #include <rosplan_knowledge_msgs/CreatePRM.h>
 #include <rosplan_knowledge_msgs/AddWaypoint.h>
 #include <rosplan_knowledge_msgs/Filter.h>
+*/
 #include <std_srvs/Empty.h>
 
 #include <move_base/move_base.h>

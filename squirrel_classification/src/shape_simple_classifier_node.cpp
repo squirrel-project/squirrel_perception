@@ -22,12 +22,12 @@
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
 
-#include <v4r/ORFramework/mesh_source.h>
-#include <v4r/ORFramework/vfh_estimator.h>
-#include <v4r/ORFramework/esf_estimator.h>
-#include <v4r/ORFramework/cvfh_estimator.h>
-#include <v4r/ORFramework/metrics.h>
-#include <v4r/ORFramework/global_nn_classifier.h>
+#include <v4r/recognition/mesh_source.h>
+//#include <v4r/features/vfh_estimator.h>
+#include <v4r/features/esf_estimator.h>
+//#include <v4r/features/cvfh_estimator.h>
+#include <v4r/recognition/metrics.h>
+#include <v4r/recognition/global_nn_classifier.h>
 
 #include <squirrel_object_perception_msgs/Classify.h>
 #include <squirrel_object_perception_msgs/Classification.h>
@@ -48,7 +48,7 @@ class ShapeClassifier
     std::vector<std::string> entropies_;  // TP
     std::vector<std::string> poses_;  // TP
 
-    boost::shared_ptr<faat_pcl::rec_3d_framework::GlobalNNPipeline<flann::L1, PointT, pcl::ESFSignature640> > classifier_;
+    v4r::GlobalNNClassifier<flann::L1, PointT> classifier_;
     ros::ServiceServer segment_and_classify_service_;
     ros::ServiceServer classify_service_;
     ros::NodeHandle *n_;
@@ -76,7 +76,7 @@ class ShapeClassifier
           frame_->width = 640;
         }
       }
-      classifier_->setInputCloud(frame_);
+      classifier_.setInputCloud(frame_);
 
       pcl::PointCloud<pcl::PointXYZRGB>::Ptr pClusteredPCl (new pcl::PointCloud<pcl::PointXYZRGB>());
       pcl::copyPointCloud(*frame_, *pClusteredPCl);
@@ -106,13 +106,14 @@ class ShapeClassifier
           pClusteredPCl->at(req.clusters_indices[i].data[kk]).b = b;
         }
 
-        classifier_->setIndices(cluster_indices_int);
-        classifier_->classify ();
-        classifier_->getCategory (categories_);
-        classifier_->getConfidence (conf_);
-        classifier_->getEntropy(entropies_);  // TP
-        classifier_->getPose(poses_);  // TP
-
+        classifier_.setIndices(cluster_indices_int);
+        classifier_.classify ();
+        classifier_.getCategory (categories_);
+        classifier_.getConfidence (conf_);
+/* Not ported yet. bajo
+        classifier_.getEntropy(entropies_);  // TP
+        classifier_.getPose(poses_);  // TP
+*/
         std::cout << "for cluster " << i << " with size " << cluster_indices_int.size() << ", I have following hypotheses: " << std::endl;
 
         squirrel_object_perception_msgs::Classification class_tmp;
@@ -258,31 +259,31 @@ class ShapeClassifier
         return;
       }
 
-      boost::shared_ptr<faat_pcl::rec_3d_framework::MeshSource<PointT> > mesh_source (new faat_pcl::rec_3d_framework::MeshSource<PointT>);
+      boost::shared_ptr<v4r::MeshSource<PointT> > mesh_source (new v4r::MeshSource<PointT>);
       mesh_source->setPath (models_dir_);
       mesh_source->setResolution (150);
       mesh_source->setTesselationLevel (0);
-      mesh_source->setViewAngle (57.f);
+      //mesh_source->setViewAngle (57.f);
       mesh_source->setRadiusSphere (1.f);
       mesh_source->setModelScale (1.f);
-      mesh_source->generate (training_dir_);
+      mesh_source->generate ();
 
-      boost::shared_ptr<faat_pcl::rec_3d_framework::Source<PointT> > cast_source;
-      cast_source = boost::static_pointer_cast<faat_pcl::rec_3d_framework::MeshSource<PointT> > (mesh_source);
+      boost::shared_ptr<v4r::Source<PointT> > source;
+      source = boost::static_pointer_cast<v4r::MeshSource<PointT> > (mesh_source);
 
-      boost::shared_ptr<faat_pcl::rec_3d_framework::ESFEstimation<PointT, pcl::ESFSignature640> > estimator;
-      estimator.reset (new faat_pcl::rec_3d_framework::ESFEstimation<PointT, pcl::ESFSignature640>);
+      boost::shared_ptr<v4r::ESFEstimation<PointT> > estimator;
+      estimator.reset (new v4r::ESFEstimation<PointT>);
 
-      boost::shared_ptr<faat_pcl::rec_3d_framework::GlobalEstimator<PointT, pcl::ESFSignature640> > cast_estimator;
-      cast_estimator = boost::dynamic_pointer_cast<faat_pcl::rec_3d_framework::ESFEstimation<PointT, pcl::ESFSignature640> > (estimator);
+      boost::shared_ptr<v4r::GlobalEstimator<PointT> > cast_estimator;
+      cast_estimator = boost::dynamic_pointer_cast<v4r::ESFEstimation<PointT> > (estimator);
 
-      classifier_.reset(new faat_pcl::rec_3d_framework::GlobalNNPipeline<flann::L1, PointT, pcl::ESFSignature640>);
-      classifier_->setDataSource (cast_source);
-      classifier_->setTrainingDir (training_dir_);
-      classifier_->setDescriptorName (desc_name_);
-      classifier_->setFeatureEstimator (cast_estimator);
-      classifier_->setNN (NN_);
-      classifier_->initialize (false);
+      v4r::GlobalNNClassifier<flann::L1, PointT> esf_classifier;
+      esf_classifier.setDataSource(source);
+      esf_classifier.setTrainingDir(training_dir_);
+      esf_classifier.setDescriptorName(desc_name_);
+      esf_classifier.setFeatureEstimator (cast_estimator);
+      esf_classifier.setNN(NN_);
+      esf_classifier.initialize (false);
 
       classify_service_ = n_->advertiseService("/squirrel_classify", &ShapeClassifier::classify, this);
       vis_pub_ = n_->advertise<visualization_msgs::MarkerArray>( "visualization_marker", 0 );
