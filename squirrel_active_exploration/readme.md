@@ -35,7 +35,7 @@ Robot controller (only for real experiments with a robot) from [robot_controller
 These components communicate with the squirrel_active_exploration module through [ros services](http://wiki.ros.org/Services). <br />
 Before running active_exploration, these other ros nodes must be running.
 
-## Entropy Maps
+## Entropy maps
 This is precomputed training data. It stores an entropy values for each viewpoint of a training model. These entropy values are looked up, during the viewpoint evaluation process, to determine the utility of candidate viewpoints. <br />
 How to train:
   * Perform training as per [squirrel_classification] (https://github.com/squirrel-project/squirrel_perception/tree/indigo_dev/squirrel_classification) by creating a directory containing all model files.
