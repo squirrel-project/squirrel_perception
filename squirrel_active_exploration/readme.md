@@ -51,7 +51,7 @@ is saved that stores information summarising each viewpoint. The format for each
 x_pos	y_pos	z_pos	num_observed_objects	total_entropy	total_entropy+entropy_unseen_objects
 ```
 
-[Click here] (https://github.com/squirrel-project/squirrel_perception/) file for an explanation about the parameters.
+[Click here] (https://github.com/tpatten/squirrel_perception/blob/indigo_dev/squirrel_active_exploration/parameters_run_with_dataset.txt) file for an explanation about the parameters.
 
 ## Running with robot
 Run the launch file `run_robot_experiment.launch`, remembering that `robot_controller.launch` is also running first. <br />
@@ -60,7 +60,7 @@ This will load a file that contains the viewpoints in the environment to treat a
 x_pos	y_pos	z_pos	num_observed_objects	total_entropy	total_entropy+entropy_unseen_objects
 ```
 
-[Click here] (https://github.com/squirrel-project/squirrel_perception/) file for an explanation about the parameters.
+[Click here] (https://github.com/tpatten/squirrel_perception/blob/indigo_dev/squirrel_active_exploration/parameters_run_with_robot.txt) file for an explanation about the parameters.
 
 ## Running as a ros service
 TODO
