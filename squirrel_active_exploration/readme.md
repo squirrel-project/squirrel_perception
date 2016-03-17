@@ -6,11 +6,11 @@ Tim Patten, t.patten@acfr.usyd.edu.au
 
 ## Overview
 
-The squirrel_active_exploration package evaluates the utility of potential viewpoints in an environment. It can be used to plan the next-best-view by comparing the utility of candidate viewpoints and selecting the one with the highest utility. The package operates with RGB-D data in the form of point clouds (.pcd). This can be from a dataset or from a hardware device. For use with a dataset, the clouds must be aligned to a common map frame with a set of transformation files (see [example](https://repo.acin.tuwien.ac.at/tmp/permanent/dataset_index.php for an example)). <br />
+The squirrel_active_exploration package evaluates the utility of potential viewpoints in an environment. It can be used to plan the next-best-view by comparing the utility of candidate viewpoints and selecting the one with the highest utility. The package operates with RGB-D data in the form of point clouds (.pcd). This can be from a dataset or from a hardware device. For use with a dataset, the clouds must be aligned to a common map frame with a set of transformation files (see [Willow Garage dataset](https://repo.acin.tuwien.ac.at/tmp/permanent/dataset_index.php for an example) for an example). <br />
 During the online operation, a belief about each object is maintained consisting of its pose and class. The planner considers future viewpoints and determines the next view that will best improve the beliefs. This is done by maximising a utility function. <br />
 A number of alternative planning strategies are implemented and can be chosen by the user.
 
-For details, see [paper](http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=7349156&filter%3DAND%28p_IS_Number%3A7163696%29)
+For details, see [Patten et al.](http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=7349156&filter%3DAND%28p_IS_Number%3A7163696%29)
 
 Bibtex <br />
 @article {Patten2016, <br />
@@ -35,25 +35,23 @@ Before running active_exploration, these other ros nodes must be running.
 ## Entropy Maps
 This is precomputed training data. It stores an entropy values for each viewpoint of a training model. These entropy values are looked up, during the viewpoint evaluation process, to determine the utility of candidate viewpoints. <br />
 How to train:
-  * Perform training as per squirrel_classification by creating a directory containing all model files.
-  * Run `entropy_map.launch` with the same directory and descriptor parameters as in (1). Set classification parameter to TRUE
-and inspect parameter to FALSE (this prints out the data for each model).
+  * Perform training as per [squirrel_classification] (https://github.com/squirrel-project/squirrel_perception/tree/indigo_dev/squirrel_classification) by creating a directory containing all model files.
+  * Run `entropy_map.launch` with the same directory and descriptor parameters as used for training the classifier. Set *classification* parameter to TRUE and *inspect* parameter to FALSE (this prints out the data for each model).
   * `entropy_map.launch` will generate files with in the training directory that contain the entropy information as well information
 about pose, point clouds, point cloud centroids, classification probablities and an occupancy tree file.
 
 ## Running with dataset
 Run the launch file `run_dataset.launch`. <br />
-This will load the point cloud and transform files specified in the data directory. The transforms will be used to convert each point cloud into a common frame and the viewpoint locations will be computed. Each viewpoint will be considered a candidate viewpoint during planning. As the program runs it will be selecting the next best view and each view will be removed from the future options. The program will save each viewpoint along with the observed objects with their class distribution. Additionally, a results.txt file
+This will load the point cloud and transform files specified in the data directory. The transforms will be used to convert each point cloud into a common frame and the viewpoint locations will be computed. Each viewpoint will be considered a candidate viewpoint during planning. As the program runs it will be selecting the next best view and each view will be removed from the future options. The program will save each viewpoint along with the observed objects with their class distribution. Additionally, a *results.txt* file
 is saved that stores information summarising each viewpoint. The format for each line is
 ```
-x_position	y_position	z_position	number_observed_objects	total_entropy	total_entropy_+_entropy_of_unseen_objects
+x_pos	y_pos	z_pos	num_observed_objects	total_entropy	total_entropy+entropy_unseen_objects
 ```
-The entropy of the unseen objects adds extra entropy to the total entropy. This is helpful because it makes the total entropy at each
-viewpoint consistent as it is measuring the entropy of the same number of objects.
+
 The parameters are:
   * *save_directory*: the directory to save all data (point clouds, probabilities and results)
   * *data_directory*: the directory to load all data from (point clouds and transformations)
-  * *image_file: a necassary file for call the segmentation algorithm
+  * *image_file*: a necassary file for call the segmentation algorithm
   * entropy_order_file*: a precomputed file that specifies the individual entropy of each view (only necessary for best_to_worst and
 worst_to_best methods)
   * *views_limit_file*: a file specifying the number of views within each dataset, the dataset used will automatically be found in this file
@@ -92,9 +90,9 @@ verify that the dataset is in working order
 Run the launch file `run_robot_experiment.launch`, remembering that `robot_controll.launch` is also running first. <br />
 This will load a file that contains the viewpoints in the environment to treat as candidate viewpoints (for experiments in Patten et al. these were determined as points on a circle that encompassed the objects). Each viewpoint is considered a candidate viewpoint by the planner. As each location is visited it is removed from the list. The point clouds are captured and saved to a file. The planner then loads the file. Helper files for improving the alignment is provided by manual_adjust_point_cloud.cpp. The program will save each viewpoint along with the observed objects with their class distribution. Additionally, a results.txt file is saved that stores information summarising each viewpoint. The format for each line is
 ```
-x_position	y_position	z_position	number_observed_objects	total_entropy	total_entropy_+_entropy_of_unseen_objects
+x_pos	y_pos	z_pos	num_observed_objects	total_entropy	total_entropy+entropy_unseen_objects
 ```
-The entropy of the unseen objects adds extra entropy to the total entropy. This is helpful because it makes the total entropy at each viewpoint consistent as it is measuring the entropy of the same number of objects. <br />
+
 The parameters are:
   * *save_directory*: the directory to save all data (point clouds, probabilities and results)
   * *map_locations_file*: the file that stores the absolute locations of the candidate viewpoints
