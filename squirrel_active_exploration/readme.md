@@ -14,7 +14,7 @@ For details, see [paper](http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnum
 
 Bibtex <br />
 @article{Patten2016, <br />
-    author = {T. Patten and M. Zillich and R. Fitch and M. Vincze and S. Sukkarieh}, <br />
+<space> author = {T. Patten and M. Zillich and R. Fitch and M. Vincze and S. Sukkarieh}, <br />
     journal = {IEEE Robotics and Automation Letters}, <br />
     title = {Viewpoint Evaluation for Online 3-D Active Object Classification}, <br />
     year = {2016}, <br />
