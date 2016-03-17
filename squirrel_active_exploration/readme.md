@@ -1,26 +1,27 @@
 squirrel_active_exploration
 ===========================
 
-Maintanier:
+Maintanier: <br />
 Tim Patten, t.patten@acfr.usyd.edu.au
 
-1. Overview
-The squirrel_active_exploration package evaluates the utility of potential viewpoints in an environment. It can be used to plan the next-best-view by comparing the utility of candidate viewpoints and selecting the one with the highest utility. The package operates with RGB-D data in the form of point clouds (.pcd). This can be from a dataset or from a hardware device. For use with a dataset, the clouds must be aligned to a common map frame with a set of transformation files (see [example](https://repo.acin.tuwien.ac.at/tmp/permanent/dataset_index.php for an example)).
-During the online operation, a belief about each object is maintained consisting of its pose and class. The planner considers future viewpoints and determines the next view that will best improve the beliefs. This is done by maximising a utility function.
+## Overview
+
+The squirrel_active_exploration package evaluates the utility of potential viewpoints in an environment. It can be used to plan the next-best-view by comparing the utility of candidate viewpoints and selecting the one with the highest utility. The package operates with RGB-D data in the form of point clouds (.pcd). This can be from a dataset or from a hardware device. For use with a dataset, the clouds must be aligned to a common map frame with a set of transformation files (see [example](https://repo.acin.tuwien.ac.at/tmp/permanent/dataset_index.php for an example)). <br />
+During the online operation, a belief about each object is maintained consisting of its pose and class. The planner considers future viewpoints and determines the next view that will best improve the beliefs. This is done by maximising a utility function. <br />
 A number of alternative planning strategies are implemented and can be chosen by the user.
 
 For details, see [paper](http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=7349156&filter%3DAND%28p_IS_Number%3A7163696%29)
 
-Bibtex
-@article{Patten2016,
-    author = {T. Patten and M. Zillich and R. Fitch and M. Vincze and S. Sukkarieh},
-    journal = {IEEE Robotics and Automation Letters},
-    title = {Viewpoint Evaluation for Online 3-D Active Object Classification},
-    year = {2016},
-    volume = {1},
-    number = {1},
-    pages = {73-81},
-    month = {Jan}
+Bibtex <br />
+@article{Patten2016, <br />
+    author = {T. Patten and M. Zillich and R. Fitch and M. Vincze and S. Sukkarieh}, <br />
+    journal = {IEEE Robotics and Automation Letters}, <br />
+    title = {Viewpoint Evaluation for Online 3-D Active Object Classification}, <br />
+    year = {2016}, <br />
+    volume = {1}, <br />
+    number = {1}, <br />
+    pages = {73-81}, <br />
+    month = {Jan} <br />
 }
 
 2. Requirements
