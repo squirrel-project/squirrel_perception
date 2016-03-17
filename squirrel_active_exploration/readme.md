@@ -64,3 +64,32 @@ x_pos	y_pos	z_pos	num_observed_objects	total_entropy	total_entropy+entropy_unsee
 
 ## Running as a ros service
 TODO
+
+## Map coverage
+The map coverage component generates a list of waypoints that when combined view all parts of a map. The algorithm assumes a sensor with a 360 degree field of view, so it is expected that the robot performs a 360 degree turn at each waypoint. <br />
+The algorithm works be ray tracing through an [octomap](http://octomap.github.io/) occupancy grid. Initially a grid search is performed in the map to determine a set of locations that are free for the robot to move to (i.e. locations in the map that are occupied or unreachable are not considered). At each location, the number of grid cells that will be observed are counted. For speed ups, ray tracing is oinly performed for locations on the floor of the map. <br />
+Once the locations are analysed, a subset of locations are selected that maximally cover the map. The optimization process greedily selects locations that will add the most number of unobserved grid cells to the observed set. <br />
+First run
+```
+roslaunch squirrel_active_exploration squirrel_map_coverge_server.launch
+````
+This starts the map coverage server. Each call to this will generate the waypoints that cover the input map. This is a ros service that can be called in a number of different ways. <br />
+An example is provided by running
+```
+roslaunch squirrel_active_exploration squirrel_map_coverge.launch
+````
+which will call the map coverage server with a map file (.bt or .ot). This launch specifies some important parameters.
+* *tree_depth*: is the resolution of the tree to perform the ray tracing search, setting it to 14 rather than the default 16 returns a result much faster with similar quality
+* *robot_height*: specifies the height of the sensor and seeds the start point for every ray tracing operation
+* *robot_outer_range*: specifies the range of the onboard sensor
+* *robot_inner_range*: specifies an inner radius of which the robot cannot observe (e.g. the sensor cannot observe locations on the floor that are too close due to the specific angle of the sensor)
+* *robot_radius*: specifies the size of the robot, used to determine how near the map locations be to occupied space
+* *grid_step*: the resolution of the grid search of the locations in the map
+* *maximum_iterations*: specifies the maximum number of iterations in the optimization for the subset of locations
+* *visualize*: boolean flag to visualize the resulting waypoints
+
+The server also operates with [ros octomap](http://wiki.ros.org/octomap) messages. This is offered by a different service that takes as input the same as previously described but instead a ros octomap topic instead of a file. Internally, a tree object is extracted from the topic and the function is exatcly the same as if the input were a file.
+
+The output of the ros service is a list of points.
+
+The definitions for the messages are found in [CoveragePlanFile.srv](https://github.com/squirrel-project/squirrel_common/blob/indigo_dev/squirrel_object_perception_msgs/srv/CoveragePlanFile.srv) and [CoveragePlan.srv](https://github.com/squirrel-project/squirrel_common/blob/indigo_dev/squirrel_object_perception_msgs/srv/CoveragePlan.srv) for usage with an input file or a ros topic.
