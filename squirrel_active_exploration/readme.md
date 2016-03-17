@@ -1,8 +1,11 @@
 squirrel_active_exploration
 ===========================
 
+
 Maintanier: <br />
-Tim Patten, t.patten@acfr.usyd.edu.au
+Tim Patten <br />
+t.patten@acfr.usyd.edu.au <br />
+Australian Centre for Field Robotics, The University of Sydney
 
 ## Overview
 
