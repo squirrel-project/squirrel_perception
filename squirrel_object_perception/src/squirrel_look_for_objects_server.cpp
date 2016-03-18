@@ -23,6 +23,7 @@
 #include <pcl/common/common.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <vector>
+#include <pcl/filters/passthrough.h>
 
 
 
@@ -82,17 +83,43 @@ protected:
         return (std::string("object") + str);
     }
 
-    bool do_recognition()
+    bool do_recognition(Object &object)
     {
-        if (!ros::service::waitForService("/mp_recognition", ros::Duration(5.0)))
+        if (!ros::service::waitForService("/squirrel_recognizer/squirrel_recognize_objects", ros::Duration(5.0)))
             return false;
-        ros::ServiceClient client = nh_.serviceClient<squirrel_object_perception_msgs::Recognize>("/mp_recognition");
+        ros::ServiceClient client = nh_.serviceClient<squirrel_object_perception_msgs::Recognize>("/squirrel_recognizer/squirrel_recognize_objects");
+
+        pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
+        pcl::fromROSMsg(*scene, *cloud);
+
+        PointT min_p, max_p;
+        pcl::getMinMax3D(*cloud, min_p, max_p);
+
+        //TODO maybe add some buffer to the min/max points if segmentation method was not accurate
+        pcl::PassThrough<PointT> pass;
+        pass.setKeepOrganized(true);
+        pass.setFilterFieldName("x");
+        pass.setFilterLimits(min_p.x, max_p.x);
+        pass.setInputCloud(cloud);
+        pass.filter(*cloud);
+        pass.setFilterFieldName("y");
+        pass.setFilterLimits(min_p.y, max_p.y);
+        pass.setInputCloud(cloud);
+        pass.filter(*cloud);
+        pass.setFilterFieldName("z");
+        pass.setFilterLimits(min_p.z, max_p.z);
+        pass.setInputCloud(cloud);
+        pass.filter(*cloud);
+
+
         squirrel_object_perception_msgs::Recognize srv;
-        srv.request.cloud = *(this->scene);
+        pcl::toROSMsg(*cloud, srv.request.cloud);
         if (client.call(srv))
         {
-            ROS_INFO("Called service %s: ", "/mp_recognition");
+            ROS_INFO("Called service %s: ", "/squirrel_recognizer/squirrel_recognize_objects");
             this->recognized_object.push_back(srv.response);
+            object.category = srv.response.ids.at(0).data; //this is only ok, when just one object gets recognized
+            std::cout << "Category: " << object.category << std::endl;
             return true;
         }
         else
@@ -249,7 +276,7 @@ protected:
         for(int i=0; srv.response.poses.size(); i++) {
             ROS_INFO("appending object");
             Object obj;
-            obj.category = "thing";
+            obj.category = "unknown";
             obj.id = get_unique_object_id();
             obj.header = srv.response.poses[i].header;
             obj.point_indices = srv.response.clusters_indices[i];
@@ -403,7 +430,7 @@ public:
         for(int i=0; i<1; i++)
         {
             run_segmentation_once();
-            run_visualization_once();
+            //run_visualization_once();
         }
         if (objects.size() < 1)
         {
@@ -413,6 +440,7 @@ public:
         }
         for(objectIterator = objects.begin(); objectIterator != objects.end(); objectIterator++)
         {
+            do_recognition(*objectIterator);
             success = add_object_to_db(*objectIterator);
             if (!success)
                 break;
