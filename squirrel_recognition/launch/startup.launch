@@ -1,6 +1,6 @@
 <launch>
   <arg name="models_dir" value="$(find squirrel_object_perception)/data/models" />
   <node pkg="squirrel_recognition" type="squirrel_recognizer" name="squirrel_recognizer" output="screen" respawn="true"
-    args="--models_dir=$(arg models_dir) --do_shot 1 --knn_sift 3 -z 2.5" />
+    args="--models_dir=$(arg models_dir) --do_shot 1 --hv_ignore_color 1 --knn_sift 3 -z 1.5 -r 0.1" />
 </launch>
 

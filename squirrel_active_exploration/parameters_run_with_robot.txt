@@ -1,0 +1,26 @@
+run_robot_experiment.launch parameters
+
+  * save_directory: the directory to save all data (point clouds, probabilities and results)
+  * map_locations_file: the file that stores the absolute locations of the candidate viewpoints
+  * store_points_directory: the directory to store the point cloud files captured from the sensor (stored as .pcd)
+  * image_file: a necassary file for calling the segmentation algorithm
+  * variance: the sigma value for exponential factor in the utility function (see Patten et al.)
+  * plan_type: sets the planning mode (the options are worst_to_best_entropy, best_to_worst_entropy, worst_to_best_probability,
+best_to_worst_probability, nearest_location_area, nearest_location_min_entropy, nearest_location_max_probability, random, max_area,
+max_area_unoccluded, min_class_entropy, min_class_entropy_unoccluded, max_class_probability, max_class_probability_unoccluded,
+min_view_classification_entropy, max_view_classification_probability, clockwise, anticlockwise)
+  * expected_number_objects: the number of objects in the scene (Willow Garage dataset all have 6 objects)
+  * expected_number_classes: the number of classes that were used for training (this and the previous parameter are only important when
+computing the entropy of unseen objects, these can be ignored of that is not important)
+  * scene_center_x: the x location of the center of the scene, required in order to focus the gaze of the robot when viewing the objects
+  * scene_center_y: the y location of the center of the scene
+  * kinect_height: the height of the sensor on the robot, relative to the floor
+  * visualize: boolean flag to view the intermediate steps of the algorithm (the user must then interact in order to move onto next stages)
+  * save*: boolean flag to save results data
+  * max_object_distance: after segmentation, remove objects further away than this distance (helpful to ignore walls, etc)
+  * min_object_height: after segmentation, remove objects that have a height less than this value
+  * max_object_height: after segmentation, remove objects that have a height greater than this value
+  * min_object_length: after segmentation, remove objects that have a length less than this value
+  * max_object_lenght: after segmentation, remove objects that have a length greater than this value
+  * table_height_threshold: after segmentation, remove objects that have a centroid below the table height (not used)
+  * voxel_overlap: the amount of overlap between segments in different frames to be considered the same object (see Patten et al.)

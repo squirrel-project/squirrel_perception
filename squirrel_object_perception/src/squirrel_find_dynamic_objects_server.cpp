@@ -31,7 +31,7 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
 
     octomap::OcTree* subtractedMap = &subtractedMapVar;
 
-    //octomap_lib.writeOctomap(subtractedMap, "/home/edith/subtracted.bt", true);
+    octomap_lib.writeOctomap(subtractedMap, "subtracted.bt", true);
 
     //remove voxels close to indicated obstacles in the map
     nav_msgs::OccupancyGridConstPtr grid_map = ros::topic::waitForMessage<nav_msgs::OccupancyGrid>("/map", *n_, ros::Duration(10));
@@ -75,11 +75,15 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
         double pose_y = min_p.y + (max_p.y - min_p.y)/2;
         double pose_z = min_p.z + (max_p.z - min_p.z)/2;
 
-        double x_diam = double(max_p.x - min_p.x);
-        double y_diam = double(max_p.y - min_p.y);
-        double z_diam = double(max_p.z - min_p.z);
+        double x_diam = double(max_p.x - min_p.x + octomap_lib.leaf_size);
+        double y_diam = double(max_p.y - min_p.y + octomap_lib.leaf_size);
+        double diam = std::sqrt(std::pow(x_diam,2) + std::pow(y_diam,2));
+//        double x_diam =  double(max_p.x - min_p.x + octomap_lib.leaf_size);
+//        double y_diam =  double(max_p.y - min_p.y + octomap_lib.leaf_size);
+//        double diam = std::max(x_diam, y_diam);
+        double z_diam = double(max_p.z - min_p.z + octomap_lib.leaf_size);
 
-        double diam = std::max((float)x_diam, (float)y_diam);
+        //double diam = std::max((float)x_diam, (float)y_diam);
 
         geometry_msgs::Pose pose_db;
         bool is_lump_in_db = false;
@@ -169,16 +173,19 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
             zyl_marker.lifetime = ros::Duration();
             zyl_marker.type = visualization_msgs::Marker::CYLINDER;
             zyl_marker.action = visualization_msgs::Marker::ADD;
-            zyl_marker.pose.position.x = min_p.x + (max_p.x - min_p.x)/2;
-            zyl_marker.pose.position.y = min_p.y + (max_p.y - min_p.y)/2;
-            zyl_marker.pose.position.z = min_p.z + (max_p.z - min_p.z)/2;
+            zyl_marker.pose.position.x = pose_x;
+            zyl_marker.pose.position.y = pose_y;
+            zyl_marker.pose.position.z = pose_z;
             zyl_marker.pose.orientation.x = 0.0;
             zyl_marker.pose.orientation.y = 0.0;
             zyl_marker.pose.orientation.z = 0.0;
             zyl_marker.pose.orientation.w = 1.0;
-            zyl_marker.scale.x = std::max((float) (diam + octomap_lib.leaf_size), (float) octomap_lib.leaf_size);
-            zyl_marker.scale.y = std::max((float) (diam + octomap_lib.leaf_size), (float) octomap_lib.leaf_size);
-            zyl_marker.scale.z = std::max((float) (max_p.z - min_p.z + octomap_lib.leaf_size), (float) octomap_lib.leaf_size);
+            zyl_marker.scale.x = diam;
+            zyl_marker.scale.y = diam;
+            zyl_marker.scale.z = z_diam;
+//            zyl_marker.scale.x = std::max((float) (diam + octomap_lib.leaf_size), (float) octomap_lib.leaf_size);
+//            zyl_marker.scale.y = std::max((float) (diam + octomap_lib.leaf_size), (float) octomap_lib.leaf_size);
+//            zyl_marker.scale.z = std::max((float) (max_p.z - min_p.z + octomap_lib.leaf_size), (float) octomap_lib.leaf_size);
             zyl_marker.color.r = 1.0;
             zyl_marker.color.g = 0.9;
             zyl_marker.color.b = 0.1;
