@@ -1,3 +1,0 @@
-geometry_msgs/Vector3 approach_vector	# defines the direction from where a grasp should be executed 
----
-bool result
