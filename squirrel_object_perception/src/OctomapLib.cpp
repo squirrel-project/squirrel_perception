@@ -14,13 +14,14 @@ bool OctomapLib::readOctoMapFromFile(std::string filename, OcTree *&ocTree, bool
     *octomap_msgs::Octomap map_msg;
     *AbstractOcTree* tree = octomap_msgs::msgToMap(map_msg);
     */
+
     if(isBinary) {
         ocTree = new OcTree(filename);
     } else {
-         AbstractOcTree* tree = AbstractOcTree::read(filename);
-         if(tree){ // read error returns NULL
-             ocTree = dynamic_cast<OcTree*>(tree);
-         }
+        AbstractOcTree* tree = AbstractOcTree::read(filename);
+        if(tree){ // read error returns NULL
+            ocTree = dynamic_cast<OcTree*>(tree);
+        }
 
     }
     if (!ocTree){
@@ -33,28 +34,28 @@ bool OctomapLib::readOctoMapFromFile(std::string filename, OcTree *&ocTree, bool
 
 void OctomapLib::tranformCloud2Map(pcl::PointCloud<PointT>::Ptr &cloud) {
     try
-      {
+    {
         ros::Duration(1.0).sleep();
         tf_listener.waitForTransform("/kinect_depth_optical_frame","/map", ros::Time(0), ros::Duration(1.0));
         for(size_t i = 0; i < cloud->points.size(); i++)
         {
-          geometry_msgs::PointStamped p, pb;
-          p.point.x = cloud->points[i].x;
-          p.point.y = cloud->points[i].y;
-          p.point.z = cloud->points[i].z;
-          p.header.frame_id = "/kinect_depth_optical_frame";
-          tf_listener.transformPoint("/map", p, pb);
+            geometry_msgs::PointStamped p, pb;
+            p.point.x = cloud->points[i].x;
+            p.point.y = cloud->points[i].y;
+            p.point.z = cloud->points[i].z;
+            p.header.frame_id = "/kinect_depth_optical_frame";
+            tf_listener.transformPoint("/map", p, pb);
 
-          cloud->points[i].x = pb.point.x;
-          cloud->points[i].y = pb.point.y;
-          cloud->points[i].z = pb.point.z;
+            cloud->points[i].x = pb.point.x;
+            cloud->points[i].y = pb.point.y;
+            cloud->points[i].z = pb.point.z;
         }
-      }
-      catch (tf::TransformException& ex)
-      {
+    }
+    catch (tf::TransformException& ex)
+    {
         std::cout << "Transformation error: " << ex.what() << std::endl;
         return;
-      }
+    }
 }
 
 void OctomapLib::checkCloudAgainstOctomap(const pcl::PointCloud<PointT>::Ptr &cloud, OcTree *ocTree) {
@@ -92,27 +93,64 @@ int OctomapLib::getNumberOccupiedLeafNodes(const OcTree *octomap) {
     for(OcTree::leaf_iterator it = octomap->begin_leafs(), end = octomap->end_leafs(); it != end; ++it) {
         OcTreeNode node = *it;
         if(octomap->isNodeOccupied(node)) {
-           counter += 1;
+            counter += 1;
         }
     }
     return counter;
 }
 
-OcTree OctomapLib::subtractOctomap(const OcTree *minuendMap, OcTree subtrahendMap) {
+OcTree OctomapLib::dilateOctomap(OcTree *octomap) {
 
-    //traverse through the map that is subtrahended (smaller than the static map)
-    for (OcTree::leaf_iterator it = subtrahendMap.begin_leafs(), end=subtrahendMap.end_leafs(); it!=end; ++it) {
-        octomath::Vector3 nodeCoordinates = it.getCoordinate();
-        OcTreeNode* node = minuendMap->search(nodeCoordinates);
-        if(node) {
-            if(minuendMap->isNodeOccupied(node)) {//then the node is probably background --> remove it
-                it->setLogOdds(logodds(subtrahendMap.getClampingThresMin())); //sets occupancyProbability
-            } else {
-                //std::cout << "keep the node" << std::endl;
+    OcTree dilated_map = *octomap;
+    dilated_map.expand();
+    for(OcTree::leaf_iterator it = octomap->begin_leafs(), end = octomap->end_leafs(); it != end; ++it) {
+        OcTreeNode node = *it;
+        OcTreeKey key = it.getKey();
+        //octomath::Vector3 coord = dilated_map.keyToCoord(key);
+        //set all neighbors to occupied
+        if(dilated_map.isNodeOccupied(node)) {
+            for (int i = -1; i <= 1; i++) {
+                for (int j = -1; j <= 1; j++) {
+                    //for (int k = -1; k <= 1; k++) {
+                        OcTreeKey neighbor_key = key;
+                        neighbor_key[0] += i;
+                        neighbor_key[1] += j;
+                    //    neighbor_key[2] += k;
+
+                        OcTreeNode* neighbor_node = dilated_map.search(neighbor_key);
+                        if (neighbor_node == NULL) {
+                            dilated_map.setNodeValue(neighbor_key,logodds(dilated_map.getClampingThresMax()));
+                            //dilated_map.insertRay(coord, dilated_map.keyToCoord(neighbor_key));
+                        }
+                        else if (!dilated_map.isNodeOccupied(neighbor_node)) {
+                            neighbor_node->setLogOdds(logodds(dilated_map.getClampingThresMax()));
+                        }
+                   // }
+                }
             }
-        } else {
-            //std::cout << "Node outside of minuen map" << std::endl;
-            it->setLogOdds(logodds(subtrahendMap.getClampingThresMin()));
+        }
+    }
+    //writeOctomap(&dilated_map, "/home/edith/SQUIRREL/workspace/src/squirrel_perception/squirrel_object_perception/data/octomaps/dilated.bt",true);
+    return dilated_map;
+}
+
+OcTree OctomapLib::subtractOctomap(const OcTree *minuendMap, OcTree subtrahendMap) {
+    //traverse through the map that is subtrahended
+    for (OcTree::leaf_iterator it = subtrahendMap.begin_leafs(), end=subtrahendMap.end_leafs(); it!=end; ++it) {
+        if(subtrahendMap.isNodeOccupied(*it)) {
+            octomath::Vector3 nodeCoordinates = it.getCoordinate();
+            OcTreeNode* node = minuendMap->search(nodeCoordinates);
+            if(node) {
+                if(minuendMap->isNodeOccupied(node)) {//then the node is probably background --> remove it
+                    it->setLogOdds(logodds(subtrahendMap.getClampingThresMin())); //sets occupancyProbability
+                } else { //static map node is free
+                    //std::cout << "keep the node" << std::endl;
+
+                }
+            } else { //static map node is unknown
+                //std::cout << "Node outside of minuen map" << std::endl;
+                //it->setLogOdds(logodds(subtrahendMap.getClampingThresMin()));
+            }
         }
     }
     subtrahendMap.updateInnerOccupancy();
@@ -125,26 +163,17 @@ void OctomapLib::octomapToPointcloud(OcTree *octomap, pcl::PointCloud<PointT>::P
     for(OcTree::leaf_iterator it = octomap->begin_leafs(), end = octomap->end_leafs(); it != end; ++it) {
         OcTreeNode node = *it;
         if(octomap->isNodeOccupied(node)) {
-           octomath::Vector3 coordinates = it.getCoordinate();
-           PointT point = PointT(255, 255, 255);
-           point.x = coordinates.x();
-           point.y = coordinates.y();
-           point.z = coordinates.z();
-           cloud->push_back(point);
+            octomath::Vector3 coordinates = it.getCoordinate();
+            PointT point = PointT(255, 255, 255);
+            point.x = coordinates.x();
+            point.y = coordinates.y();
+            point.z = coordinates.z();
+            cloud->push_back(point);
         }
     }
     pcl::io::savePCDFileASCII ("cloud_from_octomap.pcd", *cloud);
 }
 
-void OctomapLib::octomapExpandOccupiedNodes(OcTree *octomap) {
-    for(OcTree::leaf_iterator it = octomap->begin_leafs(), end = octomap->end_leafs(); it != end; ++it) {
-        OcTreeNode node = *it;
-        if (octomap->isNodeOccupied(node)) {
-                octomap->expand();
-        }
-
-    }
-}
 
 //void OctomapLib::octomapToMat(OcTree *octomap, cv::Mat &mat) {
 //    unsigned int width, height, depth;
@@ -234,6 +263,7 @@ void OctomapLib::writeOctomap(OcTree *ocTree, std::string path, bool binary) {
     } else {
         ocTree->write(path);
     }
+    ocTree->expand();
 }
 
 OctomapLib::~OctomapLib() {
