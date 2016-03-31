@@ -121,6 +121,24 @@ public:
         return _bb_max;
     }
 
+    std::vector<Eigen::Vector4f> get_surrounding_locations(const double &radius, const int &num, const double &height) const
+    {
+        std::vector<Eigen::Vector4f> res;
+        double ang_increment = 2.0 * M_PI / static_cast<double>(num);
+        double a = 0;
+        while (a < 2.0 * M_PI)
+        {
+            Eigen::Vector4f p;
+            p[0] = _centroid[0] + radius * cos(a);
+            p[1] = _centroid[1] + radius * sin(a);
+            p[2] = height;
+            p[3] = 0;
+            res.push_back(p);
+            a += ang_increment;
+        }
+        return res;
+    }
+
     bool is_valid()
     {
         return valid;
@@ -273,14 +291,32 @@ namespace active_exploration_utils
 
     /* === PLANNING === */
 
+    bool next_best_view(int &next_best_index, std::vector<double> &utilities, const octomap::OcTree &tree, const Hypothesis &hypothesis,
+                        const SIM_TYPE &sim, const std::vector<Eigen::Vector4f> &map_locations, const double &variance,
+                        const bool &do_visualize = false);
+
     bool next_best_view(int &next_best_index, const octomap::OcTree &tree, const Hypothesis &hypothesis, const SIM_TYPE &sim,
                         const std::vector<Eigen::Vector4f> &map_locations, const double &variance, const bool &do_visualize = false);
+
+    int nearest_next_best_view(std::vector<double> &utilities,
+                               const std::vector<squirrel_object_perception_msgs::Classification> &class_estimates,
+                               const std::vector<Eigen::Vector4f> &map_locations, const std::vector<int> &seg_indices,
+                               const std::vector<std::vector<std::pair<std::vector<pcl::PointCloud<PointT> >,std::vector<Eigen::Vector4f> > > > &model_views,
+                               const std::vector<std::vector<std::vector<double> > > &scaled_model_utilities,
+                               const std::vector<double> &uncertainty_weight);
 
     int nearest_next_best_view(const std::vector<squirrel_object_perception_msgs::Classification> &class_estimates,
                                const std::vector<Eigen::Vector4f> &map_locations, const std::vector<int> &seg_indices,
                                const std::vector<std::vector<std::pair<std::vector<pcl::PointCloud<PointT> >,std::vector<Eigen::Vector4f> > > > &model_views,
                                const std::vector<std::vector<std::vector<double> > > &scaled_model_utilities,
                                const std::vector<double> &uncertainty_weight);
+
+    int gaussian_weighted_next_best_view(std::vector<double> &utilities, const octomap::OcTree &tree, const Hypothesis &hypothesis,
+                                         const std::vector<Eigen::Vector4f> &map_locations, const std::vector<int> &seg_indices,
+                                         const std::vector<std::vector<std::pair<std::vector<pcl::PointCloud<PointT> >,std::vector<Eigen::Vector4f> > > > &model_views,
+                                         const std::vector<std::vector<std::vector<double> > > &scaled_model_utilities,
+                                         const std::vector<double> &uncertainty_weight, const double &variance, const bool &unoccluded,
+                                         const bool &do_visualize = false);
 
     int gaussian_weighted_next_best_view(const octomap::OcTree &tree, const Hypothesis &hypothesis, const std::vector<Eigen::Vector4f> &map_locations,
                                          const std::vector<int> &seg_indices,
