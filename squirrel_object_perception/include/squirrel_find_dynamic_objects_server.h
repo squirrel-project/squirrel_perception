@@ -30,10 +30,8 @@
 #include <pcl/common/common.h>
 #include <pcl/filters/extract_indices.h>
 #include "OctomapLib.h"
+#include "squirrel_object_perception_msgs/SceneObject.h"
 #include "squirrel_object_perception_msgs/FindDynamicObjects.h"
-#include "squirrel_object_perception_msgs/StampedDynamicObject.h"
-#include "squirrel_object_perception_msgs/LumpToDB.h"
-#include "squirrel_object_perception_msgs/ObjectToDB.h"
 #include <boost/foreach.hpp>
 #include "mongodb_store/message_store.h"
 
@@ -58,6 +56,8 @@ private:
 
     mongodb_store::MessageStoreProxy message_store;
 
+    int id_cnt_;
+
     inline bool ends_with(std::string const & value, std::string const & ending)
     {
         if (ending.size() > value.size()) return false;
@@ -69,7 +69,7 @@ public:
     ~RemoveBackground ();
 
     void initialize (int argc, char ** argv);
-
+    std::string get_unique_object_id();
     void setStaticOctomap(std::string staticPath);
     void setCurrentOctomap(octomap::OcTree *currentMap);
     void init();
@@ -80,5 +80,6 @@ public:
     octomap::OcTree subtractOctomaps();
     pcl::PointCloud<PointT>::Ptr compareOctomapToGrid(octomap::OcTree *octomap, const nav_msgs::OccupancyGridConstPtr& grid_map);
 };
+
 
 #endif
