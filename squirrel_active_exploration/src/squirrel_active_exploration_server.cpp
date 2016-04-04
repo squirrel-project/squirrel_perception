@@ -34,21 +34,13 @@ public:
         ros::init (argc, argv ,"squirrel_active_exploration_server");
         ros::NodeHandle *_n (new ros::NodeHandle("~"));
 
-        // Read the parameters
-        if (!_n->getParam("variance", _variance))
-        {
-            _variance = _DEFAULT_VARIANCE;
-            ROS_WARN("squirrel_active_exploration_server : no variance specified, using default value %.2f",
-                     static_cast<double>(_DEFAULT_VARIANCE));
-        }
-
         // Visualization is always FALSE
         _visualization = false;
 
         // Subscribe to the entropy map client
         _em_client = _n->serviceClient<squirrel_object_perception_msgs::EntropyMap>("/squirrel_entropy_map");
 
-        // Create the services
+        // Create the service
         _service = _n->advertiseService("/squirrel_active_exploration", &ActiveExplorationServer::next_best_view, this);
 
         ROS_INFO("squirrel_active_exploration_server : ready to receive service calls...");
@@ -81,6 +73,14 @@ private:
 
     /* === FUNCTIONS === */
 
+    /*
+     * Next best view service function.
+     * Determine the next best view by computing the utility value of each given location and selecting the location with
+     * the highest utility.
+     * If no locations are given, then generate the locations in the map as specified by the parameters in the request.
+     *
+     * Return true on success or false on failure.
+     */
     bool next_best_view(squirrel_object_perception_msgs::ActiveExplorationNBV::Request &request,
                         squirrel_object_perception_msgs::ActiveExplorationNBV::Response &response)
     {
@@ -93,6 +93,13 @@ private:
             ROS_INFO("Number of candidate locations = %lu", request.locations.size());
         else
             ROS_WARN("Number of candidate locations = %lu", request.locations.size());
+
+        // Read the variance
+        if (request.variance > 0)
+            _variance = request.variance;
+        else
+            ROS_WARN("squirrel_active_exploration_server : variance %.2f is invalid, using default value %.2f",
+                     request.variance, static_cast<double>(_DEFAULT_VARIANCE));
 
         // Convert the input cloud to a pcl point cloud
         PCLPointCloud2 pcl_pc2;
@@ -330,19 +337,31 @@ private:
         return true;
     }
 
+    /*
+     * Generate locations in a map.
+     * Determine a set of valid observation locations by generating locations around each identified segment.
+     * Segment centers are specified by the poses vector.
+     * Locations are removed if they are occupied as determined by the octree. If this is an empty tree, then
+     * occupancy checking does not occur.
+     * The locations are returned in the vector map_locations.
+     *
+     * Return true on success or false on failure.
+     */
     bool generate_map_locations(const OcTree &tree, const vector<Pose> &poses, vector<Eigen::Vector4f> &map_locations)
     {
-        // Generate locations around each segment centre at 2m from the centre
-        vector<Eigen::Vector4f> circle_poses;
+        // Generate locations around each segment centre at _distance_from_center from the centre
+        vector<vector<Eigen::Vector4f> > circle_poses;
         for (size_t i = 0; i < poses.size(); ++i)
         {
+            // Get the surrounding locations
             vector<Eigen::Vector4f> p = poses[i].get_surrounding_locations(_distance_from_center,
                                                                            _num_locations,
                                                                            _robot_height);
-            circle_poses.insert(circle_poses.end(), p.begin(), p.end());
+            // Add to the set of locations
+            circle_poses.push_back(p);
         }
 
-        // Remove locations too near object centers
+        // Remove locations that are too near object centers
         if (tree.size() > 0)
         {
             if (!remove_occupied_locations(tree, _robot_height, _robot_radius, circle_poses))
@@ -352,23 +371,75 @@ private:
             }
         }
 
-        // Merge locations near each other
+        // Merge locations near each other (greedily)
+        double min_dist = 2.0 * M_PI * _distance_from_center / static_cast<double>(_num_locations);  // circumference divided by number of intervals
+        // Loop through the sets of locations and merge locations that are less than the min dist
+        for (size_t i = 0; i < circle_poses.size(); ++i)
+        {
+            // If this is the first set, then always add
+            if (i == 0)
+            {
+                map_locations.insert(map_locations.end(), circle_poses[i].begin(), circle_poses[i].end());
+            }
+            // Otherwise iterate through the already added poses and merrge if necessary
+            else
+            {
+                // For each location around the object
+                for (size_t j = 0; j < circle_poses[i].size(); ++j)
+                {
+                    int merge_ix = -1;
+                    // For each location already added to the list
+                    for (size_t k = 0; k < map_locations.size(); ++k)
+                    {
+                        // If the distance is less than min_dist
+                        if (eigdistance3D(circle_poses[i][j], map_locations[k]) < min_dist)
+                        {
+                            merge_ix = k;
+                            break;
+                        }
+                    }
+                    // If the location needs to be merged
+                    if (merge_ix >= 0 && merge_ix < map_locations.size())
+                    {
+                        Eigen::Vector4f p;
+                        p[0] = (circle_poses[i][j][0] + map_locations[merge_ix][0]) / 2;
+                        p[1] = (circle_poses[i][j][1] + map_locations[merge_ix][1]) / 2;
+                        p[2] = circle_poses[i][j][2];
+                        p[3] = 0;
+                        map_locations.push_back(p);
+                    }
+                    // Otherwise add to the list
+                    else
+                    {
+                        map_locations.push_back(circle_poses[i][j]);
+                    }
+                }
+            }
+        }
 
         return true;
     }
 
+    /*
+     * Remove locations from a list that are occupied in an octree.
+     * Compare each location to the occupied cells in an octree. If the cell is occupied then remove it from
+     * the list of locations.
+     * The locations are returned by the locations vector.
+     *
+     * Return true on success or false on failure.
+     */
     bool remove_occupied_locations(const OcTree &tree, const double &robot_height, const double robot_radius,
-                                   vector<Eigen::Vector4f> &locations)
+                                   vector<vector<Eigen::Vector4f> > &locations)
     {
+        // Construct a point cloud representation of the tree
         PointCloud<PointT> occupied_cloud = octree_to_cloud(tree);
+        // Determine the height of the ground and the minimum z values from the tree
         double zground = octree_ground_height(tree, _TREE_SEARCH_DEPTH);
         double zmin = zground  + _GROUND_THRESH;
         double zmax = zground + robot_height;
         double zheight = zmin + tree.getResolution();
-        int radinc = 4;
-        int numang = 8;
 
-        // Min-max map
+        // Get the points in the point cloud that are within the z bounds
         PointCloud<PointT> inrange_cloud;
         inrange_cloud.resize(occupied_cloud.size());
         int n_size = 0;
@@ -387,16 +458,26 @@ private:
         PointT minr, maxr;
         getMinMax3D (inrange_cloud, minr, maxr);
 
-        vector<Eigen::Vector4f> keep_locations;
+        // Iterate through the locations and only retain the locations that are not occupied
+        vector<vector<Eigen::Vector4f> > keep_locations;
         double z = zmax;
         for (size_t i = 0; i < locations.size(); ++i)
         {
-            point3d p (locations[i][0], locations[i][1], z);  // z or locations[i][2] ??
-            // Check if valid on ground
-            if (valid_on_ground(tree, robot_radius, zmin, zmax, zheight, p, valid))
+            vector<Eigen::Vector4f> kp;
+            for (size_t j = 0; j < locations[i].size(); ++j)
             {
-                keep_locations.push_back(locations[i]);
+                point3d p (locations[i][j][0], locations[i][j][1], z);  // z or locations[i][2] ??
+                // Check if valid on ground
+                bool valid;
+                valid_on_ground(tree, robot_radius, zmin, zmax, zheight, p, valid);
+                if (valid)
+                {
+                    kp.push_back(locations[i][j]);
+                }
             }
+            // If kp has elements
+            if (kp.size() > 0)
+                keep_locations.push_back(kp);
         }
 
         // Set the locations to the locations that were valid
@@ -408,7 +489,9 @@ private:
 };
 
 
-// Run Main
+/*
+ * Main function
+ */
 int main(int argc, char **argv)
 {
     ROS_INFO("*** STARTING SQUIRREL_ACTIVE_EXPLORATION_SERVER ***");
