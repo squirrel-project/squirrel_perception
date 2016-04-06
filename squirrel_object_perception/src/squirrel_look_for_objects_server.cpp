@@ -93,8 +93,11 @@ protected:
         pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
         pcl::fromROSMsg(*scene, *cloud);
 
+        pcl::PointCloud<PointT>::Ptr segmented_object(new pcl::PointCloud<PointT>);
+        pcl::fromROSMsg(object.points, *segmented_object);
+
         PointT min_p, max_p;
-        pcl::getMinMax3D(*cloud, min_p, max_p);
+        pcl::getMinMax3D(*segmented_object, min_p, max_p);
 
         //TODO maybe add some buffer to the min/max points if segmentation method was not accurate
         pcl::PassThrough<PointT> pass;
@@ -426,6 +429,10 @@ public:
         if (scene)
         {
             ROS_DEBUG("%s: Received data", action_name_.c_str());
+//            if (as_.Goal == squirrel_object_perception_msgs::LookForObjectsGoal::EXPLORE) {
+//                //get lump size from DB and filter cloud for segmentation to cut off unnecessary parts
+
+//            }
         }
         else
         {
