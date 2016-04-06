@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(squirrel_segmentation)
 
-find_package(catkin REQUIRED COMPONENTS cv_bridge pcl_conversions roscpp rospy sensor_msgs squirrel_object_perception_msgs std_msgs tf tf2 visualization_msgs)
+find_package(catkin REQUIRED COMPONENTS cv_bridge pcl_conversions pcl_ros roscpp rospy sensor_msgs squirrel_object_perception_msgs std_msgs tf tf2 visualization_msgs)
 
 find_package(PCL 1.7 REQUIRED)
 find_package(OpenCV 2.4 REQUIRED)
@@ -15,7 +15,7 @@ find_package(rostest REQUIRED)
 catkin_package(
  INCLUDE_DIRS include #  LIBRARIES squirrel_segmentation
  CATKIN_DEPENDS #  DEPENDS system_lib
- cv_bridge pcl_conversions sensor_msgs squirrel_object_perception_msgs std_msgs tf tf2 visualization_msgs
+ cv_bridge pcl_conversions pcl_ros sensor_msgs squirrel_object_perception_msgs std_msgs tf tf2 visualization_msgs 
 )
 
 #message(STATUS "MY PCL_INCLUDE_DIRS" ${PCL_INCLUDE_DIRS})

@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
         nav_msgs
         octomap_msgs
         pcl_conversions
+	pcl_ros
         roscpp
         rospy
         sensor_msgs
@@ -49,6 +50,7 @@ catkin_package(
         nav_msgs
         octomap_msgs
         pcl_conversions
+	pcl_ros
         roscpp
         rospy
         sensor_msgs

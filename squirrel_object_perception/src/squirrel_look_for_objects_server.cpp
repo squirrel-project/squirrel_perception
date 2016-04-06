@@ -24,6 +24,7 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <vector>
 #include <pcl/filters/passthrough.h>
+#include<pcl_ros/transforms.h>
 
 
 
@@ -209,6 +210,32 @@ protected:
         return after;
     }
 
+    //transforms a whole point cloud and saves the result in the same object
+    void transformPointCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_cluster, const std::string &from, const std::string &to) {
+        try
+        {
+            tf_listener.waitForTransform(from, to, ros::Time::now(), ros::Duration(1.0));
+            pcl_ros::transformPointCloud(to, *cloud_cluster, *cloud_cluster, tf_listener);
+        }
+        catch (tf::TransformException& ex)
+        {
+            ROS_ERROR("%s: %s", ros::this_node::getName().c_str(), ex.what());
+        }
+    }
+
+    //transforms a whole point cloud and saves the result in the same object
+    void transformPointCloud(sensor_msgs::PointCloud2 &cloud_cluster, const std::string &from, const std::string &to) {
+        try
+        {
+            tf_listener.waitForTransform(from, to, ros::Time::now(), ros::Duration(1.0));
+            pcl_ros::transformPointCloud(to, cloud_cluster, cloud_cluster, tf_listener);
+        }
+        catch (tf::TransformException& ex)
+        {
+            ROS_ERROR("%s: %s", ros::this_node::getName().c_str(), ex.what());
+        }
+    }
+
 
     bool add_object_to_db(Object object)
     {
@@ -217,9 +244,11 @@ protected:
         ros::ServiceClient client = nh_.serviceClient<squirrel_planning_knowledge_msgs::AddObjectService>("/kcl_rosplan/add_object");
         squirrel_planning_knowledge_msgs::AddObjectService srv;
         srv.request.object.header = object.header;
+        srv.request.object.header.frame_id = "/map";
         srv.request.object.id = object.id;
         srv.request.object.category = object.category;
-        srv.request.object.pose = object.pose;
+        srv.request.object.pose = transform(object.pose.position.x, object.pose.position.y, object.pose.position.z, object.header.frame_id, "/map").pose;
+        transformPointCloud(object.points, object.points.header.frame_id, "/map");
         srv.request.object.cloud = object.points;
         srv.request.object.bounding_cylinder = object.bounding_cylinder;
         if (client.call(srv))
@@ -289,13 +318,15 @@ protected:
             PointT min_p, max_p;
             pcl::getMinMax3D(*cloud, min_p, max_p);
 
+            //it is in kinect-optical-frame! (x=z, y=x, z=y)
             double x_diam = double(max_p.x - min_p.x + 1);
             double y_diam = double(max_p.y - min_p.y + 1);
-            double diam = std::sqrt(std::pow(x_diam,2) + std::pow(y_diam,2));
             double z_diam = double(max_p.z - min_p.z + 1);
 
+            double diam = std::sqrt(std::pow(x_diam,2) + std::pow(z_diam,2));
+
             obj.bounding_cylinder.diameter = diam;
-            obj.bounding_cylinder.height = z_diam;
+            obj.bounding_cylinder.height = y_diam;
             this->objects.push_back(obj);
             return true;
         }
@@ -307,11 +338,14 @@ protected:
             return false;
         ros::ServiceClient client = nh_.serviceClient<squirrel_planning_knowledge_msgs::UpdateObjectService>("/kcl_rosplan/update_object");
         squirrel_planning_knowledge_msgs::UpdateObjectService srv;
+        srv.request.object.header = object.header;
+        srv.request.object.header.frame_id = "/map";
         srv.request.object.id = object.id;
         srv.request.object.category = object.category;
-        srv.request.object.header = object.header;
-        srv.request.object.pose = object.pose;
+        srv.request.object.pose = transform(object.pose.position.x, object.pose.position.y, object.pose.position.z, object.header.frame_id, "/map").pose;
+        transformPointCloud(object.points, object.points.header.frame_id, "/map");
         srv.request.object.cloud = object.points;
+
         if (client.call(srv))
         {
             return true;
