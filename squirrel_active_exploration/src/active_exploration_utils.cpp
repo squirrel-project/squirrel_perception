@@ -1672,7 +1672,7 @@ namespace active_exploration_utils
                     segs_max_ent = entropies[i];
             }
         }
-        // If segs for planning is empty then just plan for the objct with the  highest entropy
+        // If segs for planning is empty then just plan for the objct with the highest entropy
         if (segs_for_planning.size() == 0)
         {
             // If there are no rankings available
@@ -1942,6 +1942,8 @@ namespace active_exploration_utils
         vector<vector<InstLookUp> > instance_directories = hypothesis._instance_directories;
         vector<vector<OcTreeKey> > octree_keys = hypothesis._octree_keys;
         vector<vector<InstToMapTF> > transforms = hypothesis._transforms;
+        utilities.clear();
+        utilities.resize(map_locations.size());
 
         // Do one visualization if do_visualize is set to true
         bool single_vis = false;
@@ -1950,7 +1952,7 @@ namespace active_exploration_utils
             single_vis = true;
         for (vector<Eigen::Vector4f>::size_type i = 0; i < map_locations.size(); ++i)
         {
-            //cout << " * * * LOCATION " << i << endl;
+            cout << " * * * LOCATION " << i << endl;
             utilities[i] = 0;
             // Consider the contribution from each segment that needs to be viewed
             vector<vector<PointCloud<PointT> > > expected_clouds;

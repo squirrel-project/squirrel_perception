@@ -53,6 +53,7 @@ private:
     ros::ServiceClient _em_client;  // service client for entropy map
     Hypothesis _hyp;  // structure to store hypothesis information
     SIM_TYPE _plan_type;  // the method for planning the next best view
+    Eigen::Vector4f _camera_pose;  // the current pose of the camera (sensor on robot)
     vector<Eigen::Vector4f> _map_locations;  // the locations in the map to evaluate
     double _variance;  // variance in the utility function
     double _robot_height;  // height of the robot (and therefore sensor)
@@ -86,6 +87,8 @@ private:
     {
         // Print out the input
         ROS_INFO("squirrel_active_exploration_server : input to service");
+        ROS_INFO("Pose = %.2f %.2f %.2f", request.camera_pose.position.x, request.camera_pose.position.y,
+                 request.camera_pose.position.z);
         ROS_INFO("Point cloud size = %lu", request.cloud.data.size());
         ROS_INFO("Number of clusters = %lu", request.clusters_indices.size());
         ROS_INFO("Number of classification results = %lu", request.class_results.size());
@@ -93,6 +96,12 @@ private:
             ROS_INFO("Number of candidate locations = %lu", request.locations.size());
         else
             ROS_WARN("Number of candidate locations = %lu", request.locations.size());
+
+        // Set the camera pose
+        _camera_pose[0] = request.camera_pose.position.x;
+        _camera_pose[1] = request.camera_pose.position.y;
+        _camera_pose[2] = request.camera_pose.position.z;
+        _camera_pose[3] = 0;
 
         // Read the variance
         if (request.variance > 0)
@@ -107,32 +116,11 @@ private:
         PointCloud<PointT> cloud;
         fromPCLPointCloud2(pcl_pc2, cloud);
 
-        // Convert the input map ros topic to an octomap
-        // Get the octree
-        OcTree *tree_ptr;
-        // If the header specifies it is binary
-        if (request.map.binary)
-        {
-            // Convert the message to a map
-            tree_ptr = octomap_msgs::binaryMsgToMap(request.map);
-        }
-        else
-        {
-             // Convert the message to a map
-             AbstractOcTree *abstract_tree_ptr = octomap_msgs::fullMsgToMap(request.map);
-             // Cast to regular octree
-             tree_ptr = dynamic_cast<OcTree*>(abstract_tree_ptr);
-        }
-        OcTree tree = *tree_ptr;
-
-        // Plan type is MIN_CLASS_ENTROPY_UNOCCLUDED to begin with
+        // Plan type is MIN_CLASS_ENTROPY_UNOCCLUDED or MIN_CLASS_ENTROPY
         _plan_type = MIN_CLASS_ENTROPY_UNOCCLUDED;
-
-        // Check that the map has data
-        if (request.map.data.size() == 0 || tree.size() == 0)
+        if (!request.occlusions)
         {
-            ROS_WARN("squirrel_active_exploration_server : input map is empty, ignoring occlusions in the map");
-            // Ignore occlusions because there is no map information
+            ROS_WARN("squirrel_active_exploration_server : occlusions set to FALSE");
             _plan_type = MIN_CLASS_ENTROPY;
         }
 
@@ -166,6 +154,37 @@ private:
             return false;
         }
 
+        // Convert the input map ros topic to an octomap
+        // Get the octree
+        OcTree *tree_ptr;
+        // If the header specifies it is binary
+        if (request.map.binary)
+        {
+            // Convert the message to a map
+            tree_ptr = octomap_msgs::binaryMsgToMap(request.map);
+        }
+        else
+        {
+            ROS_ERROR("squirrel_active_exploration_server : map must be in binary format");
+            response.nbv_ix = -1;
+            free(tree_ptr);
+            return false;
+//             cout << "full conversion" << endl;
+//             // Convert the message to a map
+//             AbstractOcTree *abstract_tree_ptr = octomap_msgs::fullMsgToMap(request.map);
+//             // Cast to regular octree
+//             tree_ptr = dynamic_cast<OcTree*>(abstract_tree_ptr);
+        }
+        OcTree tree = *tree_ptr;
+
+        // Check that the map has data
+        if (_plan_type == MIN_CLASS_ENTROPY_UNOCCLUDED && (request.map.data.size() == 0 || tree.size() == 0))
+        {
+            ROS_WARN("squirrel_active_exploration_server : input map is empty, ignoring occlusions in the map");
+            // Ignore occlusions because there is no map information
+            _plan_type = MIN_CLASS_ENTROPY;
+        }
+
         // Extract the octree keys
         _segment_octree_keys.clear();
         if (_plan_type == MIN_CLASS_ENTROPY_UNOCCLUDED)
@@ -174,6 +193,7 @@ private:
             {
                 ROS_ERROR("squirrel_active_exploration_server : coud not extract segment octree keys");
                 response.nbv_ix = -1;
+                free(tree_ptr);
                 return false;
             }
         }
@@ -186,6 +206,7 @@ private:
         {
             ROS_ERROR("squirrel_active_exploration_server : error trying to estimate the poses of the segments");
             response.nbv_ix = -1;
+            free(tree_ptr);
             return false;
         }
 
@@ -195,6 +216,7 @@ private:
         {
             ROS_ERROR("squirrel_active_exploration_server : could not extract the instance directories");
             response.nbv_ix = -1;
+            free(tree_ptr);
             return false;
         }
 
@@ -204,6 +226,7 @@ private:
         {
             ROS_ERROR("squirrel_active_exploration_server : could not compute the transforms to the map");
             response.nbv_ix = -1;
+            free(tree_ptr);
             return false;
         }
 
@@ -212,6 +235,7 @@ private:
         {
             ROS_ERROR("squirrel_active_exploration_server : could not retrive entropy maps");
             response.nbv_ix = -1;
+            free(tree_ptr);
             return false;
         }
 
@@ -220,6 +244,7 @@ private:
         {
             ROS_ERROR("squirrel_active_exploration_server : could not compute the entropies");
             response.nbv_ix = -1;
+            free(tree_ptr);
             return false;
         }
 
@@ -228,6 +253,7 @@ private:
         {
             ROS_ERROR("squirrel_active_exploration_server : could not rank the entropies");
             response.nbv_ix = -1;
+            free(tree_ptr);
             return false;
         }
 
@@ -293,12 +319,14 @@ private:
                 ROS_WARN("squirrel_active_exploration_server : number of locations %i is invalid, using default value %i",
                          request.num_locations, static_cast<int>(_DEFAULT_NUM_LOCATIONS));
 
-            if (!generate_map_locations(tree, _poses, _map_locations))
+            if (!generate_map_locations(tree, _poses))
             {
                 ROS_ERROR("squirrel_active_exploration_server : could not generate locations in the map");
                 response.nbv_ix = -1;
+                free(tree_ptr);
                 return false;
             }
+            ROS_INFO("squirrel_active_exploration_server : generated %lu locations", _map_locations.size());
             // Set the locations in the response
             response.generated_locations.clear();
             for (size_t i = 0; i < _map_locations.size(); ++i)
@@ -311,8 +339,6 @@ private:
             }
         }
 
-        // next_best_view(int &next_best_index, const OcTree &tree, const Hypothesis &hypothesis, const SIM_TYPE &sim,
-        //                const vector<Eigen::Vector4f> &map_locations, const double &variance, const bool &do_visualize)
         int nbv;
         vector<double> utilities;
         if (!active_exploration_utils::next_best_view(nbv, utilities, tree, _hyp, _plan_type, _map_locations,
@@ -320,6 +346,7 @@ private:
         {
             ROS_ERROR("squirrel_active_exploration_server : could not find next best view");
             response.nbv_ix = -1;
+            free(tree_ptr);
             return false;
         }
 
@@ -330,9 +357,8 @@ private:
         for (size_t i = 0; i < utilities.size(); ++i)
             response.utilities.push_back(utilities[i]);
 
-        // Delete the pointer
-        if (tree_ptr)
-            delete tree_ptr;
+        // Free the memory
+        free(tree_ptr);
 
         return true;
     }
@@ -347,19 +373,38 @@ private:
      *
      * Return true on success or false on failure.
      */
-    bool generate_map_locations(const OcTree &tree, const vector<Pose> &poses, vector<Eigen::Vector4f> &map_locations)
+    bool generate_map_locations(const OcTree &tree, const vector<Pose> &poses)
     {
         // Generate locations around each segment centre at _distance_from_center from the centre
         vector<vector<Eigen::Vector4f> > circle_poses;
         for (size_t i = 0; i < poses.size(); ++i)
         {
-            // Get the surrounding locations
+            // Get the surrounding locations (they will have the same z value as the original pose)
             vector<Eigen::Vector4f> p = poses[i].get_surrounding_locations(_distance_from_center,
                                                                            _num_locations,
-                                                                           _robot_height);
+                                                                           _camera_pose[2]);
             // Add to the set of locations
             circle_poses.push_back(p);
         }
+
+//        // Write locations to a file
+//        string fname = "/home/tpat8946/locations.txt";
+//        ofstream myfile (fname.c_str());
+//        if (myfile.is_open())
+//        {
+//            // Write segment centroids
+//            for (size_t i = 0; i < poses.size(); ++i)
+//                myfile << poses[i].get_centroid()[0] << " " << poses[i].get_centroid()[1] << " " << poses[i].get_centroid()[2] << " ";
+//            myfile << "\n";
+//            // Write original locations
+//            for (size_t i = 0; i < circle_poses.size(); ++i)
+//            {
+//                for (size_t j = 0; j < circle_poses[i].size(); ++j)
+//                    myfile << circle_poses[i][j][0] << " " << circle_poses[i][j][1] << " " << circle_poses[i][j][2] << " ";
+//            }
+//            myfile << "\n";
+//            myfile.close();
+//        }
 
         // Remove locations that are too near object centers
         if (tree.size() > 0)
@@ -371,15 +416,29 @@ private:
             }
         }
 
+//        myfile.open(fname.c_str(), ios::app);
+//        if (myfile.is_open())
+//        {
+//            // Write ground removed locations
+//            for (size_t i = 0; i < circle_poses.size(); ++i)
+//            {
+//                for (size_t j = 0; j < circle_poses[i].size(); ++j)
+//                    myfile << circle_poses[i][j][0] << " " << circle_poses[i][j][1] << " " << circle_poses[i][j][2] << " ";
+//            }
+//            myfile << "\n";
+//            myfile.close();
+//        }
+
         // Merge locations near each other (greedily)
         double min_dist = 2.0 * M_PI * _distance_from_center / static_cast<double>(_num_locations);  // circumference divided by number of intervals
         // Loop through the sets of locations and merge locations that are less than the min dist
+        vector<Eigen::Vector4f> merged_locs;
         for (size_t i = 0; i < circle_poses.size(); ++i)
         {
             // If this is the first set, then always add
             if (i == 0)
             {
-                map_locations.insert(map_locations.end(), circle_poses[i].begin(), circle_poses[i].end());
+                merged_locs.insert(merged_locs.end(), circle_poses[i].begin(), circle_poses[i].end());
             }
             // Otherwise iterate through the already added poses and merrge if necessary
             else
@@ -389,33 +448,80 @@ private:
                 {
                     int merge_ix = -1;
                     // For each location already added to the list
-                    for (size_t k = 0; k < map_locations.size(); ++k)
+                    for (size_t k = 0; k < merged_locs.size(); ++k)
                     {
                         // If the distance is less than min_dist
-                        if (eigdistance3D(circle_poses[i][j], map_locations[k]) < min_dist)
+                        if (eigdistance3D(circle_poses[i][j], merged_locs[k]) < min_dist)
                         {
                             merge_ix = k;
                             break;
                         }
                     }
                     // If the location needs to be merged
-                    if (merge_ix >= 0 && merge_ix < map_locations.size())
+                    if (merge_ix >= 0 && merge_ix < merged_locs.size())
                     {
                         Eigen::Vector4f p;
-                        p[0] = (circle_poses[i][j][0] + map_locations[merge_ix][0]) / 2;
-                        p[1] = (circle_poses[i][j][1] + map_locations[merge_ix][1]) / 2;
+                        p[0] = (circle_poses[i][j][0] + merged_locs[merge_ix][0]) / 2;
+                        p[1] = (circle_poses[i][j][1] + merged_locs[merge_ix][1]) / 2;
                         p[2] = circle_poses[i][j][2];
                         p[3] = 0;
-                        map_locations.push_back(p);
+                        merged_locs[merge_ix] = p;
                     }
                     // Otherwise add to the list
                     else
                     {
-                        map_locations.push_back(circle_poses[i][j]);
+                        merged_locs.push_back(circle_poses[i][j]);
                     }
                 }
             }
         }
+
+//        myfile.open(fname.c_str(), ios::app);
+//        if (myfile.is_open())
+//        {
+//            // Write merged locations
+//            for (size_t i = 0; i < merged_locs.size(); ++i)
+//                myfile << merged_locs[i][0] << " " << merged_locs[i][1] << " " << merged_locs[i][2] << " ";
+//            myfile << "\n";
+//            myfile.close();
+//        }
+
+        // Now pass through all the locations and remove any locations that are too near to each other
+        _map_locations.clear();
+        for (size_t i = 0; i < merged_locs.size(); ++i)
+        {
+            // If have not added to the list yet
+            if (_map_locations.size() == 0)
+            {
+                _map_locations.push_back(merged_locs[i]);
+            }
+            // Otherwise, check this new location should be added or not
+            else
+            {
+                bool add_to_list = true;
+                for (size_t j = 0; j < _map_locations.size(); ++j)
+                {
+                    if (eigdistance3D(merged_locs[i], _map_locations[j]) < min_dist)
+                    {
+                        add_to_list = false;
+                        break;
+                    }
+                }
+                // If passed all checks
+                if (add_to_list)
+                    _map_locations.push_back(merged_locs[i]);
+            }
+        }
+
+//        myfile.open(fname.c_str(), ios::app);
+//        if (myfile.is_open())
+//        {
+//            // Write merged locations
+//            for (size_t i = 0; i < _map_locations.size(); ++i)
+//                myfile << _map_locations[i][0] << " " << _map_locations[i][1] << " " << _map_locations[i][2] << " ";
+//            myfile << "\n";
+//            myfile.close();
+//        }
 
         return true;
     }
@@ -436,6 +542,7 @@ private:
         // Determine the height of the ground and the minimum z values from the tree
         double zground = octree_ground_height(tree, _TREE_SEARCH_DEPTH);
         double zmin = zground  + _GROUND_THRESH;
+        //double zmin = zground + _robot_height/2;
         double zmax = zground + robot_height;
         double zheight = zmin + tree.getResolution();
 
@@ -461,6 +568,7 @@ private:
         // Iterate through the locations and only retain the locations that are not occupied
         vector<vector<Eigen::Vector4f> > keep_locations;
         double z = zmax;
+        bool check_floor = false;  // don't check the floor, just remove locations too near the robot
         for (size_t i = 0; i < locations.size(); ++i)
         {
             vector<Eigen::Vector4f> kp;
@@ -469,7 +577,7 @@ private:
                 point3d p (locations[i][j][0], locations[i][j][1], z);  // z or locations[i][2] ??
                 // Check if valid on ground
                 bool valid;
-                valid_on_ground(tree, robot_radius, zmin, zmax, zheight, p, valid);
+                valid_on_ground(tree, robot_radius, zmin, zmax, zheight, p, valid, check_floor);
                 if (valid)
                 {
                     kp.push_back(locations[i][j]);

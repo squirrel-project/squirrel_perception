@@ -13,7 +13,7 @@
         type="squirrel_entropy_map"
         output="screen">
         <param name="training_directory" type="string" value="$(arg training_directory)"/>
-	<param name="descriptor" type="string" value="$(arg descriptor)"/>
+		<param name="descriptor" type="string" value="$(arg descriptor)"/>
         <param name="classification" type="bool" value="$(arg classification)"/> 
         <param name="inspect" type="bool" value="$(arg inspect)"/> 
   </node>

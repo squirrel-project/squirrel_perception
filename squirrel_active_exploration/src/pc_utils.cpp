@@ -108,6 +108,7 @@ Eigen::Vector4f extract_camera_position(const PointCloud<PointT> &cloud, const d
 
 bool icp(const PointCloud<PointT>::Ptr source, const PointCloud<PointT>::Ptr target, Eigen::Matrix4f &transform, double &score, const bool &downsample)
 {
+    //cout << "utils::icp : starting icp" << endl;
     // Set the transform to the identity matrix
     transform = Eigen::Matrix4f::Identity();
     // Set the score to infinity
