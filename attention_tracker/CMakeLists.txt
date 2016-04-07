@@ -1,18 +1,19 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(attention_tracker)
+include(ExternalProject) 
 
 add_definitions(-std=c++11)
-
-set(DLIB_PATH "" CACHE PATH "Path to DLIB")
-include(${DLIB_PATH}/dlib/cmake)
+add_definitions(-fPIC)
 
 option(DEBUG "Enable debug visualizations" ON)
 option(WITH_TESTS "Compile sample test application" ON)
 option(WITH_ROS "Build ROS nodes -- Requires OpenCV2!" OFF)
 
+set(WITH_ROS TRUE)
 if(WITH_ROS)
 
     find_package(catkin REQUIRED COMPONENTS 
+        dlib
         roscpp 
         tf
         std_msgs
@@ -27,10 +28,13 @@ if(WITH_ROS)
 
     catkin_package(
     CATKIN_DEPENDS 
-        tf
+    tf
     DEPENDS OpenCV
     LIBRARIES 
     )
+
+    include(${CATKIN_DEVEL_PREFIX}/include/dlib/cmake)
+
 endif()
 
 if(DEBUG)
