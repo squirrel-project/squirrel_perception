@@ -65,6 +65,8 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
         response.dynamic_objects_removed.push_back(*sceneObjects_results[i]);
     }
 
+    ROS_INFO("Number of objects already in DB: %zu", sceneObjects_results.size());
+
     ROS_INFO("TUW: Number of lumps identified: %zu", clusters.size());
     for (std::vector<pcl::PointCloud<PointT>::Ptr>::iterator it = clusters.begin (); it != clusters.end (); ++it)
     {
@@ -103,7 +105,7 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
                 //check if the size differs and update it if necessary
                 else {
                     squirrel_object_perception_msgs::BCylinder bCylinder = (*sceneObject_db).bounding_cylinder;
-                    if (bCylinder.diameter == diam && bCylinder.height == z_diam) {
+                    if ((std::abs(bCylinder.diameter - diam) < 0.0001) && (std::abs(bCylinder.height == z_diam) < 0.0001)) {
                         lump=(*sceneObject_db);
                         is_lump_in_db = true;
                         response.dynamic_objects_removed.erase(response.dynamic_objects_removed.begin() + cnt);
