@@ -149,7 +149,7 @@ OcTree OctomapLib::subtractOctomap(const OcTree *minuendMap, OcTree subtrahendMa
                 }
             } else { //static map node is unknown
                 //std::cout << "Node outside of minuen map" << std::endl;
-                //it->setLogOdds(logodds(subtrahendMap.getClampingThresMin()));
+                it->setLogOdds(logodds(subtrahendMap.getClampingThresMin()));
             }
         }
     }

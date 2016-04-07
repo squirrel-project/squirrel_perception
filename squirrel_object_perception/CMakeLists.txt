@@ -69,10 +69,12 @@ include_directories(${catkin_INCLUDE_DIRS} ${PCL_INCLUDE_DIRS} ${OCTOMAP_INCLUDE
 add_executable(squirrel_look_for_objects src/squirrel_look_for_objects_server.cpp)
 add_executable(squirrel_call_haf_grasping src/call_haf_grasping.cpp)
 add_executable(squirrel_find_dynamic_objects src/squirrel_find_dynamic_objects_server.cpp src/OctomapLib.cpp)
+add_executable(squirrel_dilate_octomap src/octomap_test.cpp src/OctomapLib.cpp)
 
 #add_dependencies(squirrel_look_for_objects squirrel_look_for_objects_gencfg)
 add_dependencies(squirrel_look_for_objects ${squirrel_object_perception_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(squirrel_find_dynamic_objects ${squirrel_object_perception_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(squirrel_dilate_octomap ${squirrel_object_perception_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 target_link_libraries(squirrel_call_haf_grasping
   ${catkin_LIBRARIES}
@@ -83,6 +85,7 @@ target_link_libraries(squirrel_look_for_objects
 )
 
 target_link_libraries(squirrel_find_dynamic_objects ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${OCTOMAP_LIBRARIES})
+target_link_libraries(squirrel_dilate_octomap ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${OCTOMAP_LIBRARIES})
 
 install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
 install(TARGETS squirrel_look_for_objects squirrel_find_dynamic_objects RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
