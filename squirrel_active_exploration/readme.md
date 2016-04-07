@@ -3,7 +3,7 @@ squirrel_active_exploration
 
 
 Maintanier: <br />
-[Tim Patten] (https://github.com/tpatten) <br />
+[Tim Patten](https://github.com/tpatten) <br />
 t.patten@acfr.usyd.edu.au <br />
 Australian Centre for Field Robotics, The University of Sydney
 
@@ -28,9 +28,9 @@ Bibtex <br />
 
 ## Requirements
 *squirrel_active_exploration* requires additional nodes to run. <br />
-Classification from [squirrel_classification] (https://github.com/squirrel-project/squirrel_perception/blob/indigo_dev/squirrel_classification/launch/startup.launch). <br />
+Classification from [squirrel_classification](https://github.com/squirrel-project/squirrel_perception/blob/indigo_dev/squirrel_classification/launch/startup.launch). <br />
 Segmentation from [squirrel_segmentation](https://github.com/squirrel-project/squirrel_perception/tree/indigo_dev/squirrel_segmentation/launch) (use the incremental version). <br />
-Entropy map from [entropy_map.launch] (https://github.com/squirrel-project/squirrel_perception/blob/indigo_dev/squirrel_active_exploration/launch/entropy_map.launch). <br />
+Entropy map from [entropy_map.launch](https://github.com/squirrel-project/squirrel_perception/blob/indigo_dev/squirrel_active_exploration/launch/entropy_map.launch). <br />
 Robot controller (only for real experiments with a robot) from [robot_controller.launch](https://github.com/squirrel-project/squirrel_perception/blob/indigo_dev/squirrel_active_exploration/launch/robot_controller.launch). <br />
 These components communicate with the squirrel_active_exploration module through [ros services](http://wiki.ros.org/Services). <br />
 Before running active_exploration, these other ros nodes must be running.
@@ -38,7 +38,7 @@ Before running active_exploration, these other ros nodes must be running.
 ## Entropy maps
 This is precomputed training data. It stores an entropy values for each viewpoint of a training model. These entropy values are looked up, during the viewpoint evaluation process, to determine the utility of candidate viewpoints. <br />
 How to train:
-  * Perform training as per [squirrel_classification] (https://github.com/squirrel-project/squirrel_perception/tree/indigo_dev/squirrel_classification) by creating a directory containing all model files.
+  * Perform training as per [squirrel_classification](https://github.com/squirrel-project/squirrel_perception/tree/indigo_dev/squirrel_classification) by creating a directory containing all model files.
   * Run `entropy_map.launch` with the same directory and descriptor parameters as used for training the classifier. Set *classification* parameter to TRUE and *inspect* parameter to FALSE (this prints out the data for each model).
   * `entropy_map.launch` will generate files with in the training directory that contain the entropy information as well information
 about pose, point clouds, point cloud centroids, classification probablities and an occupancy tree file.
@@ -51,7 +51,7 @@ is saved that stores information summarising each viewpoint. The format for each
 x_pos	y_pos	z_pos	num_observed_objects	total_entropy	total_entropy+entropy_unseen_objects
 ```
 
-[Click here] (https://github.com/tpatten/squirrel_perception/blob/indigo_dev/squirrel_active_exploration/parameters_run_with_dataset.txt) file for an explanation about the parameters.
+[Click here](https://github.com/squirrel-project/squirrel_perception/blob/indigo_dev/squirrel_active_exploration/parameters_run_with_dataset.txt) file for an explanation about the parameters.
 
 ## Running with robot
 Run the launch file `run_robot_experiment.launch`, remembering that `robot_controller.launch` is also running first. <br />
@@ -60,10 +60,11 @@ This will load a file that contains the viewpoints in the environment to treat a
 x_pos	y_pos	z_pos	num_observed_objects	total_entropy	total_entropy+entropy_unseen_objects
 ```
 
-[Click here] (https://github.com/tpatten/squirrel_perception/blob/indigo_dev/squirrel_active_exploration/parameters_run_with_robot.txt) file for an explanation about the parameters.
+[Click here](https://github.com/squirrel-project/squirrel_perception/blob/indigo_dev/squirrel_active_exploration/parameters_run_with_robot.txt) file for an explanation about the parameters.
 
 ## Running as a ros service
-TODO
+Run the launch file `squirrel_active_exploration_server.launch`. This starts up the ros service that is used to evaluate future viewpoint locations. <br />
+Calling the service requires a given point cloud, camera pose, segmentation [cluster indices](https://github.com/squirrel-project/squirrel_common/blob/indigo_dev/squirrel_object_perception_msgs/srv/Segment.srv) , classification [class results](https://github.com/squirrel-project/squirrel_common/blob/indigo_dev/squirrel_object_perception_msgs/srv/Classify.srv) and an octomap. Additionally, a list of viewpoints in the map can be included and these will be evaluated for their utility scores. If this is not given, then locations will be generated in the map and returned from the service. If this is the case, then specific parameters describing the geometry of the robot and the placement of the candidate viewpoints must be provided. Finally, full occlusion reasoning may be selected if desired. However, this method is slower and not always necessary. For more details, the definition is found in [ActiveExplorationNBV.srv](https://github.com/tpatten/squirrel_common/blob/indigo_dev/squirrel_object_perception_msgs/srv/ActiveExplorationNBV.srv).
 
 ## Map coverage
 The map coverage component generates a list of waypoints that, when combined, view all parts of a map. The algorithm assumes a sensor with a 360 degree field of view, so it is expected that the robot performs a 360 degree turn at each waypoint. <br />
