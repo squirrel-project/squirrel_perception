@@ -4,6 +4,7 @@
 .project
 *.pyc
 */bin/
-.kdev4
-*.swp
-squirrel_object_perception/data/models
+*~
+data
+*.bt
+*.ot
