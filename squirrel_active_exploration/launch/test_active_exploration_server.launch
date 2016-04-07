@@ -3,6 +3,8 @@
 
   <arg name="hostname" default="localhost" />
 
+  <!-- the data input can be an entire directory of point clouds, one of which will be selected at random, or a single point cloud file
+       must have saved segmentation files for this to work because the segmentation service appears not to work anymore -->
   <arg name="data_name" default="/home/tpat8946/Data/TUW/Datasets/willow_dataset_training_models_gt/test_set/T_01_willow_dataset/" />
   <!--arg name="data_name" default="/home/tpat8946/Data/TUW/Datasets/willow_dataset_training_models_gt/test_set/T_01_willow_dataset/cloud_0000000000.pcd" /-->
   <arg name="variance" default="0.5" />
