@@ -11,10 +11,17 @@
         <param name="camera_name" type="string" value="$(arg camera_name)"/>
   </node>
 
-  <!-- <node name="lump_tracker"
+  <node name="lump_tracker"
         pkg="squirrel_tracking"
         type="lump_tracker"
         required="true" output="screen">
-  </node> -->
+        <param name="camera_name" type="string" value="$(arg camera_name)"/>
+  </node>
+
+  <node name="meta_tracker"
+        pkg="squirrel_tracking"
+        type="meta_tracker"
+        required="true" output="screen">
+  </node>
 
 </launch>
