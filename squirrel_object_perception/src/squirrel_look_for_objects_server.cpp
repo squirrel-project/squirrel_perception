@@ -14,6 +14,8 @@
 #include <squirrel_object_perception_msgs/Recognize.h>
 #include <squirrel_planning_knowledge_msgs/UpdateObjectService.h>
 #include <squirrel_planning_knowledge_msgs/AddObjectService.h>
+#include <squirrel_object_perception_msgs/SceneObject.h>
+#include <visualization_msgs/MarkerArray.h>
 #include <std_msgs/Int32MultiArray.h>
 #include <sstream>
 #include <algorithm>
@@ -24,20 +26,16 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <vector>
 #include <pcl/filters/passthrough.h>
-
+#include <pcl_ros/transforms.h>
+#include "mongodb_store/message_store.h"
 
 
 class Object
 {
 
 public:
-    std::string id;
-    std::string category;
-    std_msgs::Header header;
-    geometry_msgs::Pose pose;
-    sensor_msgs::PointCloud2 points;
+    squirrel_object_perception_msgs::SceneObject sceneObject;
     std_msgs::Int32MultiArray point_indices;
-    squirrel_object_perception_msgs::BCylinder bounding_cylinder;
 };
 
 class LookForObjectsAction
@@ -55,7 +53,8 @@ protected:
     squirrel_object_perception_msgs::LookForObjectsFeedback feedback_;
     squirrel_object_perception_msgs::LookForObjectsResult result_;
     // create needed variables
-    sensor_msgs::PointCloud2ConstPtr scene;
+    sensor_msgs::PointCloud2ConstPtr sceneConst;
+    sensor_msgs::PointCloud2 scene;
     bool success;
     sensor_msgs::Image saliency_map;
     std::vector<Object> objects;
@@ -64,6 +63,11 @@ protected:
     std::vector<squirrel_object_perception_msgs::RecognizeResponse> recognized_object;
     std::vector<std_msgs::Int32MultiArray> cluster_indices;
     int id_cnt_;
+
+    mongodb_store::MessageStoreProxy message_store;
+    ros::Publisher markerPublisher;
+    visualization_msgs::Marker zyl_marker;
+    std::vector<int32_t> vis_marker_ids;
 
     void set_publish_feedback(std::string phase, std::string status, int percent)
     {
@@ -83,17 +87,20 @@ protected:
         return (std::string("object") + str);
     }
 
-    bool do_recognition(Object &object)
+    bool do_recognition(squirrel_object_perception_msgs::SceneObject &object)
     {
         if (!ros::service::waitForService("/squirrel_recognizer/squirrel_recognize_objects", ros::Duration(5.0)))
             return false;
         ros::ServiceClient client = nh_.serviceClient<squirrel_object_perception_msgs::Recognize>("/squirrel_recognizer/squirrel_recognize_objects");
 
         pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
-        pcl::fromROSMsg(*scene, *cloud);
+        pcl::fromROSMsg(scene, *cloud);
+
+        pcl::PointCloud<PointT>::Ptr segmented_object(new pcl::PointCloud<PointT>);
+        pcl::fromROSMsg(object.cloud, *segmented_object);
 
         PointT min_p, max_p;
-        pcl::getMinMax3D(*cloud, min_p, max_p);
+        pcl::getMinMax3D(*segmented_object, min_p, max_p);
 
         //TODO maybe add some buffer to the min/max points if segmentation method was not accurate
         pcl::PassThrough<PointT> pass;
@@ -119,7 +126,12 @@ protected:
             ROS_INFO("Called service %s: ", "/squirrel_recognizer/squirrel_recognize_objects");
             this->recognized_object.push_back(srv.response);
             object.category = srv.response.ids.at(0).data; //this is only ok, when just one object gets recognized
+            object.cloud = srv.response.model_clouds.at(0);
+            transformPointCloud(object.cloud, object.cloud.header.frame_id, "/map");
             std::cout << "Category: " << object.category << std::endl;
+            object.pose = transform(srv.response.centroids.at(0).x, srv.response.centroids.at(0).y, srv.response.centroids.at(0).z,
+                                    "/kinect_depth_optical_frame", "/map").pose;
+            //TODO: transform BBox from Recognizer to BCylinder for SceneObject
             return true;
         }
         else
@@ -134,7 +146,7 @@ protected:
             return false;
         ros::ServiceClient client = nh_.serviceClient<squirrel_object_perception_msgs::SegmentVisualizationInit>("/squirrel_segmentation_visualization_init");
         squirrel_object_perception_msgs::SegmentVisualizationInit srv;
-        srv.request.cloud = *(this->scene);
+        srv.request.cloud = (this->scene);
         srv.request.saliency_map = this->saliency_map;
         if (client.call(srv))
         {
@@ -171,7 +183,7 @@ protected:
             return false;
         ros::ServiceClient client = nh_.serviceClient<squirrel_object_perception_msgs::GetSaliency3DSymmetry>("/squirrel_attention_itti");
         squirrel_object_perception_msgs::GetSaliency3DSymmetry srv;
-        srv.request.cloud = *(this->scene);
+        srv.request.cloud = (this->scene);
         if (client.call(srv))
         {
             ROS_INFO("Called service %s: ", "/squirrel_attention_itti");
@@ -209,19 +221,93 @@ protected:
         return after;
     }
 
+    //transforms a whole point cloud and saves the result in the same object
+    void transformPointCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_cluster, const std::string &from, const std::string &to) {
+        try
+        {
+            tf_listener.waitForTransform(from, to, ros::Time::now(), ros::Duration(1.0));
+            pcl_ros::transformPointCloud(to, *cloud_cluster, *cloud_cluster, tf_listener);
+        }
+        catch (tf::TransformException& ex)
+        {
+            ROS_ERROR("%s: %s", ros::this_node::getName().c_str(), ex.what());
+        }
+    }
 
-    bool add_object_to_db(Object object)
+    //transforms a whole point cloud and saves the result in the same object
+    void transformPointCloud(sensor_msgs::PointCloud2 &cloud_cluster, const std::string &from, const std::string &to) {
+        try
+        {
+            tf_listener.waitForTransform(from, to, ros::Time::now(), ros::Duration(1.0));
+            pcl_ros::transformPointCloud(to, cloud_cluster, cloud_cluster, tf_listener);
+        }
+        catch (tf::TransformException& ex)
+        {
+            ROS_ERROR("%s: %s", ros::this_node::getName().c_str(), ex.what());
+        }
+    }
+
+
+    bool compareToDB(squirrel_object_perception_msgs::SceneObject sceneObject) {
+        std::vector< boost::shared_ptr<squirrel_object_perception_msgs::SceneObject> > sceneObjects_results;
+        message_store.query<squirrel_object_perception_msgs::SceneObject>(sceneObjects_results);
+
+        //TODO think about a good way when to update objects.
+        BOOST_FOREACH(boost::shared_ptr<squirrel_object_perception_msgs::SceneObject> sceneObject_db, sceneObjects_results) {
+            if (isSame(sceneObject, *sceneObject_db)) { //update
+                if (sceneObject.category == "unknown" && sceneObject_db->category != "unknown") {
+                    //do nothing, the object in the DB was already categorized
+                } else {
+                    sceneObject_db->pose = sceneObject.pose;
+                    sceneObject_db->category = sceneObject.category;
+                    sceneObject_db->cloud = sceneObject.cloud;
+                    sceneObject_db->bounding_cylinder = sceneObject.bounding_cylinder;
+                    result_.objects_updated.push_back(*sceneObject_db);
+                }
+                return true;
+            }
+        }
+        //new object - add it to DB
+        result_.objects_added.push_back(sceneObject);
+        return true;
+    }
+
+    //check for overlapping bounding cylinders
+    bool isSame(const squirrel_object_perception_msgs::SceneObject& sceneObject, const squirrel_object_perception_msgs::SceneObject& sceneObject_db)
+    {
+        double size1 = std::sqrt(std::pow(sceneObject.bounding_cylinder.diameter/2,2) +
+                                 std::pow(sceneObject.bounding_cylinder.diameter/2,2) +
+                                 std::pow(sceneObject.bounding_cylinder.height/2,2));
+        double size2 = std::sqrt(std::pow(sceneObject_db.bounding_cylinder.diameter/2,2) +
+                                 std::pow(sceneObject_db.bounding_cylinder.diameter/2,2) +
+                                 std::pow(sceneObject_db.bounding_cylinder.height/2,2));;
+
+        geometry_msgs::Point p1 = sceneObject.pose.position;
+        geometry_msgs::Point p2 = sceneObject_db.pose.position;
+        geometry_msgs::Point d;
+        d.x = p1.x - p2.x;
+        d.y = p1.y - p2.y;
+        d.z = p1.z - p2.z;
+        if(sqrt(d.x*d.x + d.y*d.y + d.z*d.z) < std::min(size1/2., size2/2.))
+            return true;
+        else
+            return false;
+    }
+
+    bool add_object_to_db(squirrel_object_perception_msgs::SceneObject sceneObject)
     {
         if (!ros::service::waitForService("/kcl_rosplan/add_object", ros::Duration(5.0)))
             return false;
         ros::ServiceClient client = nh_.serviceClient<squirrel_planning_knowledge_msgs::AddObjectService>("/kcl_rosplan/add_object");
         squirrel_planning_knowledge_msgs::AddObjectService srv;
-        srv.request.object.header = object.header;
-        srv.request.object.id = object.id;
-        srv.request.object.category = object.category;
-        srv.request.object.pose = object.pose;
-        srv.request.object.cloud = object.points;
-        srv.request.object.bounding_cylinder = object.bounding_cylinder;
+        srv.request.object.header = sceneObject.header;
+        srv.request.object.header.frame_id = "/map";
+        srv.request.object.id = sceneObject.id;
+        srv.request.object.category = sceneObject.category;
+        srv.request.object.pose = transform(sceneObject.pose.position.x, sceneObject.pose.position.y, sceneObject.pose.position.z, sceneObject.header.frame_id, "/map").pose;
+        transformPointCloud(sceneObject.cloud, sceneObject.cloud.header.frame_id, "/map");
+        srv.request.object.cloud = sceneObject.cloud;
+        srv.request.object.bounding_cylinder = sceneObject.bounding_cylinder;
         if (client.call(srv))
         {
             ROS_INFO("Called service %s: ", "/kcl_rosplan/add_object");
@@ -234,13 +320,40 @@ protected:
         }
     }
 
+    void visualizeObject(squirrel_object_perception_msgs::SceneObject sceneObject) {
+        zyl_marker.header.frame_id = "map";
+        zyl_marker.header.stamp = ros::Time();
+        zyl_marker.ns = "object_marker";
+        zyl_marker.id = std::atoi(sceneObject.id.substr(6, std::string::npos).c_str());
+        zyl_marker.lifetime = ros::Duration();
+        zyl_marker.type = visualization_msgs::Marker::CYLINDER;
+        zyl_marker.action = visualization_msgs::Marker::ADD;
+        zyl_marker.pose.position.x = sceneObject.pose.position.x;
+        zyl_marker.pose.position.y = sceneObject.pose.position.y;
+        zyl_marker.pose.position.z = sceneObject.pose.position.z;
+        zyl_marker.pose.orientation.x = 0.0;
+        zyl_marker.pose.orientation.y = 0.0;
+        zyl_marker.pose.orientation.z = 0.0;
+        zyl_marker.pose.orientation.w = 1.0;
+        zyl_marker.scale.x = sceneObject.bounding_cylinder.diameter;
+        zyl_marker.scale.y = sceneObject.bounding_cylinder.diameter;
+        zyl_marker.scale.z = sceneObject.bounding_cylinder.height;
+        zyl_marker.color.r = 0.1;
+        zyl_marker.color.g = 0.1;
+        zyl_marker.color.b = 0.9;
+        zyl_marker.color.a = 0.4;
+
+        markerPublisher.publish(zyl_marker);
+        vis_marker_ids.push_back(zyl_marker.id);
+    }
+
     bool setup_segmentation()
     {
         if (!ros::service::waitForService("/squirrel_segmentation_incremental_init", ros::Duration(5.0)))
             return false;
         ros::ServiceClient client = nh_.serviceClient<squirrel_object_perception_msgs::SegmentInit>("/squirrel_segmentation_incremental_init");
         squirrel_object_perception_msgs::SegmentInit srv;
-        srv.request.cloud = *(this->scene);
+        srv.request.cloud = (this->scene);
         srv.request.saliency_map = this->saliency_map;
         if (client.call(srv))
         {
@@ -276,42 +389,47 @@ protected:
         for(int i=0; srv.response.poses.size(); i++) {
             ROS_INFO("appending object");
             Object obj;
-            obj.category = "unknown";
-            obj.id = get_unique_object_id();
-            obj.header = srv.response.poses[i].header;
+            obj.sceneObject.category = "unknown";
+            obj.sceneObject.id = get_unique_object_id();
+            obj.sceneObject.header = srv.response.poses[i].header;
             obj.point_indices = srv.response.clusters_indices[i];
-            obj.points = srv.response.points[i];
-            obj.pose = srv.response.poses[i].pose;
+            obj.sceneObject.cloud = srv.response.points[i];
+            obj.sceneObject.pose = srv.response.poses[i].pose;
 
             pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
-            pcl::fromROSMsg(obj.points, *cloud);
+            pcl::fromROSMsg(obj.sceneObject.cloud, *cloud);
 
             PointT min_p, max_p;
             pcl::getMinMax3D(*cloud, min_p, max_p);
 
+            //it is in kinect-optical-frame! (x=z, y=x, z=y)
             double x_diam = double(max_p.x - min_p.x + 1);
             double y_diam = double(max_p.y - min_p.y + 1);
-            double diam = std::sqrt(std::pow(x_diam,2) + std::pow(y_diam,2));
             double z_diam = double(max_p.z - min_p.z + 1);
 
-            obj.bounding_cylinder.diameter = diam;
-            obj.bounding_cylinder.height = z_diam;
+            double diam = std::sqrt(std::pow(x_diam,2) + std::pow(z_diam,2));
+
+            obj.sceneObject.bounding_cylinder.diameter = diam;
+            obj.sceneObject.bounding_cylinder.height = y_diam;
             this->objects.push_back(obj);
             return true;
         }
     }
 
-    bool update_object_in_db(Object object)
+    bool update_object_in_db(squirrel_object_perception_msgs::SceneObject sceneObject)
     {
         if (!ros::service::waitForService("/kcl_rosplan/update_object", ros::Duration(5.0)))
             return false;
         ros::ServiceClient client = nh_.serviceClient<squirrel_planning_knowledge_msgs::UpdateObjectService>("/kcl_rosplan/update_object");
         squirrel_planning_knowledge_msgs::UpdateObjectService srv;
-        srv.request.object.id = object.id;
-        srv.request.object.category = object.category;
-        srv.request.object.header = object.header;
-        srv.request.object.pose = object.pose;
-        srv.request.object.cloud = object.points;
+        srv.request.object.header = sceneObject.header;
+        srv.request.object.header.frame_id = "/map";
+        srv.request.object.id = sceneObject.id;
+        srv.request.object.category = sceneObject.category;
+        srv.request.object.pose = transform(sceneObject.pose.position.x, sceneObject.pose.position.y, sceneObject.pose.position.z, sceneObject.header.frame_id, "/map").pose;
+        transformPointCloud(sceneObject.cloud, sceneObject.cloud.header.frame_id, "/map");
+        srv.request.object.cloud = sceneObject.cloud;
+
         if (client.call(srv))
         {
             return true;
@@ -339,13 +457,13 @@ protected:
         // TODO: check data
         std::vector<std_msgs::Int32MultiArray> point_indices;
         point_indices.push_back(this->objects.back().point_indices);
-        srv.request.cloud = *(this->scene);
+        srv.request.cloud = (this->scene);
         srv.request.clusters_indices = point_indices;
         if (client.call(srv))
         {
             if (srv.response.class_results.size() == 1)
             {
-                this->objects.back().category = this->most_confident_class(srv.response.class_results[0]);
+                this->objects.back().sceneObject.category = this->most_confident_class(srv.response.class_results[0]);
                 return true;
             }
             else
@@ -363,11 +481,14 @@ public:
 
     LookForObjectsAction(std::string name) :
         as_(nh_, name, boost::bind(&LookForObjectsAction::executeCB, this, _1), false),
-        action_name_(name)
+        action_name_(name),
+        message_store(nh_)
     {
         id_cnt_ = 1;
         as_.start();
         success = false;
+
+        markerPublisher = nh_.advertise<visualization_msgs::Marker>("visualization_segm_objects", 0);
     }
 
     ~LookForObjectsAction(void)
@@ -381,6 +502,14 @@ public:
 
         sleep(2); // HACK: Michael Zillich
 
+        for (std::vector<int>::iterator it = vis_marker_ids.begin() ; it != vis_marker_ids.end(); ++it) {
+            zyl_marker.id = *it;
+            zyl_marker.ns = "object_marker";
+            zyl_marker.action = visualization_msgs::Marker::DELETE;
+            markerPublisher.publish(zyl_marker);
+        }
+
+
         if (as_.isPreemptRequested())
         {
             ROS_INFO("%s: Preempted", action_name_.c_str());
@@ -388,10 +517,52 @@ public:
         }
 
         // get data from depth camera
-        scene = ros::topic::waitForMessage<sensor_msgs::PointCloud2>("/kinect/depth_registered/points", nh_, ros::Duration(5));
-        if (scene)
+        sceneConst = ros::topic::waitForMessage<sensor_msgs::PointCloud2>("/kinect/depth_registered/points", nh_, ros::Duration(5));
+        if (sceneConst)
         {
+            scene = *sceneConst;
             ROS_DEBUG("%s: Received data", action_name_.c_str());
+            if (as_.acceptNewGoal()->look_for_object == squirrel_object_perception_msgs::LookForObjectsGoal::CHECK) {
+                //get lump size from DB and filter cloud for segmentation to cut off unnecessary parts
+                ROS_INFO("Checking out a lump");
+
+                squirrel_object_perception_msgs::SceneObject sceneObject;
+
+                std::vector< boost::shared_ptr<squirrel_object_perception_msgs::SceneObject> > results;
+                if(message_store.queryNamed<squirrel_object_perception_msgs::SceneObject>(as_.acceptNewGoal()->id, results)) {
+                    if(results.size()<1) { // no results
+                        ROS_INFO("There is nothing in the Database with ID %s. Use the whole scene for segmentation", (as_.acceptNewGoal()->id).c_str());
+                    } else {
+                        sceneObject = *results.at(0);
+                        pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
+                        pcl::fromROSMsg(scene, *cloud);
+
+                        pcl::PointCloud<PointT>::Ptr lump(new pcl::PointCloud<PointT>);
+                        pcl::fromROSMsg(sceneObject.cloud, *lump);
+
+                        PointT min_p, max_p;
+                        pcl::getMinMax3D(*lump, min_p, max_p);
+
+                        //TODO maybe add some buffer to the min/max points if segmentation method was not accurate
+                        pcl::PassThrough<PointT> pass;
+                        pass.setKeepOrganized(true);
+                        pass.setFilterFieldName("x");
+                        pass.setFilterLimits(min_p.x, max_p.x);
+                        pass.setInputCloud(cloud);
+                        pass.filter(*cloud);
+                        pass.setFilterFieldName("y");
+                        pass.setFilterLimits(min_p.y, max_p.y);
+                        pass.setInputCloud(cloud);
+                        pass.filter(*cloud);
+                        pass.setFilterFieldName("z");
+                        pass.setFilterLimits(min_p.z, max_p.z);
+                        pass.setInputCloud(cloud);
+                        pass.filter(*cloud);
+
+                        pcl::toROSMsg(*cloud, scene);
+                    }
+                }
+            }
         }
         else
         {
@@ -440,8 +611,10 @@ public:
         }
         for(objectIterator = objects.begin(); objectIterator != objects.end(); objectIterator++)
         {
-            do_recognition(*objectIterator);
-            success = add_object_to_db(*objectIterator);
+            do_recognition((*objectIterator).sceneObject);
+            success = compareToDB((*objectIterator).sceneObject);
+            visualizeObject((*objectIterator).sceneObject);
+            //success = add_object_to_db((*objectIterator).sceneObject);
             if (!success)
                 break;
         }
