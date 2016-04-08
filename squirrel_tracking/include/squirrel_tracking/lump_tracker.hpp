@@ -33,6 +33,7 @@ private:
   pcl::PointCloud<PointT>::Ptr cloud_;
   tf::TransformListener tf_listener;
   std::string cameraName;
+  std::string trackedObjectId;
 
   geometry_msgs::PoseStamped kinect2base_link(double x, double y, double z);
   geometry_msgs::PoseStamped base_link2kinect(double x, double y, double z);
