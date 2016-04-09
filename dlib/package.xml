@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>dlib</name>
-  <version>18.18</version>
+  <version>0.18.18</version>
   <description>DLIB C++ library as catkin package</description>
 
   <maintainer email="markus.bajones@gmail.com">Markus "Bajo" Bajones</maintainer>
