@@ -127,6 +127,7 @@ protected:
             this->recognized_object.push_back(srv.response);
             object.category = srv.response.ids.at(0).data; //this is only ok, when just one object gets recognized
             object.cloud = srv.response.model_clouds.at(0);
+	    object.cloud.header.frame_id = srv.request.cloud.header.frame_id;
             transformPointCloud(object.cloud, object.cloud.header.frame_id, "/map");
             std::cout << "Category: " << object.category << std::endl;
             object.pose = transform(srv.response.centroids.at(0).x, srv.response.centroids.at(0).y, srv.response.centroids.at(0).z,
@@ -521,17 +522,17 @@ public:
         if (sceneConst)
         {
             scene = *sceneConst;
-            ROS_DEBUG("%s: Received data", action_name_.c_str());
-            if (as_.acceptNewGoal()->look_for_object == squirrel_object_perception_msgs::LookForObjectsGoal::CHECK) {
+            ROS_INFO("%s: Received data", action_name_.c_str());
+            if (goal->look_for_object == squirrel_object_perception_msgs::LookForObjectsGoal::CHECK) {
                 //get lump size from DB and filter cloud for segmentation to cut off unnecessary parts
                 ROS_INFO("Checking out a lump");
 
                 squirrel_object_perception_msgs::SceneObject sceneObject;
 
                 std::vector< boost::shared_ptr<squirrel_object_perception_msgs::SceneObject> > results;
-                if(message_store.queryNamed<squirrel_object_perception_msgs::SceneObject>(as_.acceptNewGoal()->id, results)) {
+                if(message_store.queryNamed<squirrel_object_perception_msgs::SceneObject>(goal->id, results)) {
                     if(results.size()<1) { // no results
-                        ROS_INFO("There is nothing in the Database with ID %s. Use the whole scene for segmentation", (as_.acceptNewGoal()->id).c_str());
+                        ROS_INFO("There is nothing in the Database with ID %s. Use the whole scene for segmentation", (goal->id).c_str());
                     } else {
                         sceneObject = *results.at(0);
                         pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
@@ -562,6 +563,9 @@ public:
                         pcl::toROSMsg(*cloud, scene);
                     }
                 }
+		else {
+			ROS_INFO("There is nothing in the Database with ID %s. Use the whole scene for segmentation", (goal->id).c_str()); 
+		}
             }
         }
         else

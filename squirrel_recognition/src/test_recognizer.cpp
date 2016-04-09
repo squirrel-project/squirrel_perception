@@ -89,7 +89,7 @@ public:
         std::cout <<  "You can either select a topic param 'topic' or "
           " test pcd files from a directory by specifying param 'directory'." << std::endl;
 
-        std::string service_name_sv_rec = "/squirrel_recognize_objects";
+        std::string service_name_sv_rec = "/squirrel_recognizer/squirrel_recognize_objects";
         sv_rec_client_ = n_->serviceClient<squirrel_object_perception_msgs::Recognize>(service_name_sv_rec);
 
         if(n_->getParam ( "directory", directory_ ) && !directory_.empty())

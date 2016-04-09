@@ -445,7 +445,7 @@ std::vector<pcl::PointCloud<PointT>::Ptr> RemoveBackground::removeClusters(pcl::
             //cout << "Max point: " << max_p.z << endl;
 
             //check if bounding box is above floor or is too tall
-            if (min_p.z > octomap_lib.leaf_size + octomap_lib.leaf_size/2 + 0.0001|| max_p.z >= 0.5 || max_p.z <= octomap_lib.leaf_size) { //max_p.z <= 0.05 should not be needed when camera is calibrated well
+            if (min_p.z > octomap_lib.leaf_size + octomap_lib.leaf_size/2 + 0.0001|| max_p.z >= 0.5 || max_p.z <= 2* octomap_lib.leaf_size) { //max_p.z <= 0.05 should not be needed when camera is calibrated well
                 //cout << "bad cluster" << endl;
             } else {
                 *cloud_filtered += *cloud_cluster;
