@@ -17,11 +17,16 @@
 #include <iostream>
 #include <tf/transform_listener.h>
 #include <sensor_msgs/PointCloud2.h>
+#include <fstream>
 
 class OctomapLib {
 public:
     typedef pcl::PointXYZRGB PointT;
     static const int tree_depth = 16;
+
+    double leaf_size;
+
+    tf::TransformListener tf_listener;
 
     bool readOctoMapFromFile(std::string, octomap::OcTree *&ocTree, bool binary);
     void tranformCloud2Map(pcl::PointCloud<PointT>::Ptr &cloud);
@@ -32,6 +37,8 @@ public:
     void getOctomapDimension(octomap::OcTree *octomap, unsigned int &width, unsigned int &height, unsigned int &depth);
     void octomapToMat(octomap::OcTree *octomap, cv::Mat &mat);
     void octomapExpandOccupiedNodes(octomap::OcTree *octomap);
+    int getNumberOccupiedLeafNodes(const octomap::OcTree *octomap);
+    octomap::OcTree dilateOctomap(octomap::OcTree *octomap);
 
     void addNodes(octomap::OcTree *ocTree);
 

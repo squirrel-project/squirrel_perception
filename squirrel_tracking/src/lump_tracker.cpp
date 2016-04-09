@@ -21,64 +21,77 @@
 
 using namespace std;
 
-SquirrelTrackingNode::SquirrelTrackingNode()
+LumpTracker::LumpTracker()
 {
   n_ = 0;
   startedTracking = false;
+  cameraName = "kinect";
   cloud_.reset(new pcl::PointCloud<PointT>());
 }
 
-SquirrelTrackingNode::~SquirrelTrackingNode()
+LumpTracker::~LumpTracker()
 {
   delete n_;
 }
 
-void SquirrelTrackingNode::initialize(int argc, char ** argv)
+void LumpTracker::initialize(int argc, char ** argv)
 {
-  ROS_INFO("initialize");
-  ROS_INFO("ros::init called");
+  ROS_INFO("LumpTracker::initialize");
   n_ = new ros::NodeHandle("~");
-  ROS_INFO("node handle created");
-  startTrackingService_ = n_->advertiseService("/squirrel_start_object_tracking", &SquirrelTrackingNode::startTracking, this);
-  stopTrackingService_ = n_->advertiseService("/squirrel_stop_object_tracking", &SquirrelTrackingNode::stopTracking, this);
-  ROS_INFO("Ready to get service calls...");
+  n_->getParam("camera_name", cameraName);
+  startTrackingService_ = n_->advertiseService("/squirrel_start_lump_tracking", &LumpTracker::startTracking, this);
+  stopTrackingService_ = n_->advertiseService("/squirrel_stop_lump_tracking", &LumpTracker::stopTracking, this);
+  ROS_INFO("LumpTracker: Ready to receive service calls.");
 
   ros::spin();
 }
 
-bool SquirrelTrackingNode::startTracking(squirrel_object_perception_msgs::StartObjectTracking::Request &req, squirrel_object_perception_msgs::StartObjectTracking::Response &response)
+bool LumpTracker::startTracking(squirrel_object_perception_msgs::StartLumpTracking::Request &req, squirrel_object_perception_msgs::StartLumpTracking::Response &response)
 {
   bool ret = false;
   if(!startedTracking)
   {
-    pointcloudSubscriber = n_->subscribe("/kinect/depth_registered/points", 1, &SquirrelTrackingNode::receivePointcloud, this);
-    startedTracking = true;
-    ret = true;
-    ROS_INFO("SquirrelTrackingNode::startTracking: started");
+    // Note that the object_id is just a unique identifier. What the tracker needs is essentially
+    // the file name of the model to be loaded. This is the object class.
+    trackedObjectId = req.object_id.data;
+    if(!trackedObjectId.empty())
+    {
+      stringstream topic;
+      topic << "/" << cameraName << "/depth/points";
+      pointcloudSubscriber = n_->subscribe(topic.str(), 1, &LumpTracker::receivePointcloud, this);
+      startedTracking = true;
+      ret = true;
+      ROS_INFO("LumpTracker::startTracking: started");
+    }
+    else
+    {
+      ROS_ERROR("SquirrelTrackingNode::startTracking: missing object ID");
+    }
   }
   else
   {
-    ROS_ERROR("SquirrelTrackingNode::startTracking: I am already tracking an object, can only do one at a time.");
+    ROS_ERROR("LumpTracker::startTracking: I am already tracking an object, can only do one at a time.");
   }
   return ret;
 }
 
-bool SquirrelTrackingNode::stopTracking(squirrel_object_perception_msgs::StopObjectTracking::Request &req, squirrel_object_perception_msgs::StopObjectTracking::Response &response)
+bool LumpTracker::stopTracking(squirrel_object_perception_msgs::StopLumpTracking::Request &req, squirrel_object_perception_msgs::StopLumpTracking::Response &response)
 {
   if(startedTracking)
   {
+    trackedObjectId = "";
     startedTracking = false;
     pointcloudSubscriber.shutdown();
-    ROS_INFO("SquirrelTrackingNode::stopTracking: stopped");
+    ROS_INFO("LumpTracker::stopTracking: stopped");
   }
   else
   {
-    ROS_ERROR("SquirrelTrackingNode::stopTracking: currently not tracking an object");
+    ROS_ERROR("LumpTracker::stopTracking: currently not tracking an object");
   }
   return true;
 }
 
-void SquirrelTrackingNode::receivePointcloud(const sensor_msgs::PointCloud2::ConstPtr &msg)
+void LumpTracker::receivePointcloud(const sensor_msgs::PointCloud2::ConstPtr &msg)
 {
   //ROS_INFO("%s: new point cloud", ros::this_node::getName().c_str());
 
@@ -198,31 +211,33 @@ void SquirrelTrackingNode::receivePointcloud(const sensor_msgs::PointCloud2::Con
     tf::Quaternion q(0., 0., 0., 1.);
     transform.setOrigin(p);
     transform.setRotation(q);
-    tfBroadcast.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "kinect_depth_optical_frame", "lump"));
+
+    stringstream frame;
+    frame << cameraName << "_depth_optical_frame";
+    tfBroadcast.sendTransform(tf::StampedTransform(transform, ros::Time::now(), frame.str(), trackedObjectId));
 
     ROS_INFO("%s: cluster %s with %d points at (in base_link): (%.3f %.3f %.3f)", ros::this_node::getName().c_str(), "lump",
       (int)selected->points.size(), centroid[0], centroid[1], centroid[2]);
-    /*geometry_msgs::PoseStamped pose_base = kinect2base_link(centroid[0], centroid[1], centroid[2]);
-    ROS_INFO("%s: cluster in base_link %s: (%.3f %.3f %.3f)", ros::this_node::getName().c_str(), "lump",
-      pose_base.pose.position.x, 
-      pose_base.pose.position.y, 
-      pose_base.pose.position.z);*/
   }
 
   //ROS_INFO("%s: done", ros::this_node::getName().c_str());
 }
 
-geometry_msgs::PoseStamped SquirrelTrackingNode::kinect2base_link(double x, double y, double z)
+geometry_msgs::PoseStamped LumpTracker::kinect2base_link(double x, double y, double z)
 {
-  return transform(x, y, z, "/kinect_depth_optical_frame", "/base_link");
+  stringstream frame;
+  frame << "/" << cameraName << "_depth_optical_frame";
+  return transform(x, y, z, frame.str(), "/base_link");
 }
 
-geometry_msgs::PoseStamped SquirrelTrackingNode::base_link2kinect(double x, double y, double z)
+geometry_msgs::PoseStamped LumpTracker::base_link2kinect(double x, double y, double z)
 {
-  return transform(x, y, z, "/base_link", "/kinect_depth_optical_frame");
+  stringstream frame;
+  frame << "/" << cameraName << "_depth_optical_frame";
+  return transform(x, y, z, "/base_link", frame.str());
 }
 
-geometry_msgs::PoseStamped SquirrelTrackingNode::transform(double x, double y, double z, const std::string &from, const std::string &to)
+geometry_msgs::PoseStamped LumpTracker::transform(double x, double y, double z, const std::string &from, const std::string &to)
 {
   geometry_msgs::PoseStamped before, after;
 
@@ -250,18 +265,20 @@ geometry_msgs::PoseStamped SquirrelTrackingNode::transform(double x, double y, d
  * Transform a cluster from kinect to base coordinates.
  * NOTE: I am not sure if this is really efficient.
  */
-void SquirrelTrackingNode::tranformCluster2base_link(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_cluster)
+void LumpTracker::tranformCluster2base_link(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_cluster)
 {
   try
   {
-    tf_listener.waitForTransform("/kinect_depth_optical_frame","/base_link", ros::Time::now(), ros::Duration(0.2));
+    stringstream frame;
+    frame << "/" << cameraName << "_depth_optical_frame";
+    tf_listener.waitForTransform(frame.str(), "/base_link", ros::Time::now(), ros::Duration(0.2));
     for(size_t i = 0; i < cloud_cluster->points.size(); i++)
     {
       geometry_msgs::PointStamped p, pb;
       p.point.x = cloud_cluster->points[i].x;
       p.point.y = cloud_cluster->points[i].y;
       p.point.z = cloud_cluster->points[i].z;
-      p.header.frame_id = "/kinect_depth_optical_frame";
+      p.header.frame_id = frame.str();
       tf_listener.transformPoint("/base_link", p, pb);
       cloud_cluster->points[i].x = pb.point.x;
       cloud_cluster->points[i].y = pb.point.y;
@@ -277,7 +294,7 @@ void SquirrelTrackingNode::tranformCluster2base_link(pcl::PointCloud<pcl::PointX
 /**
  * Perform sanity checks to rule out stupid clusters like walls, people ..
  */
-bool SquirrelTrackingNode::isValidCluster(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_cluster)
+bool LumpTracker::isValidCluster(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_cluster)
 {
   double z_max = 0.;
   for(size_t i = 0; i < cloud_cluster->points.size(); i++)
@@ -292,7 +309,7 @@ bool SquirrelTrackingNode::isValidCluster(pcl::PointCloud<pcl::PointXYZ>::Ptr &c
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "lump_tracker");
-  SquirrelTrackingNode tracker;
+  LumpTracker tracker;
   tracker.initialize(argc, argv);
 
   return 0;

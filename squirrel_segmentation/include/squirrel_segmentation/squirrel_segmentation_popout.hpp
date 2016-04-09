@@ -11,6 +11,7 @@
 #include <strstream>
 #include <pcl/common/common.h>
 #include <ros/ros.h>
+#include <pcl_ros/transforms.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <tf/transform_listener.h>
 #include <tf/transform_broadcaster.h>
@@ -96,7 +97,8 @@ private:
   geometry_msgs::PoseStamped base_link2kinect(double x, double y, double z);
   geometry_msgs::PoseStamped base_link2map(double x, double y, double z);
   geometry_msgs::PoseStamped transform(double x, double y, double z, const std::string &from, const std::string &to);
-  void tranformCluster2base_link(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_cluster);
+  void transformCluster2base_link(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_cluster);
+  void transformBase2Kinect(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_cluster);
   bool isValidCluster(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_cluster, Eigen::Vector4f &centroid);
   void visualizePersistentObject(PersistentObject &obj);
 
