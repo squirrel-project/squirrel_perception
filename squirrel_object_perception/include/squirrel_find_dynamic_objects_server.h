@@ -36,7 +36,7 @@
 #include "mongodb_store/message_store.h"
 
 typedef pcl::PointXYZRGB PointT;
-const double POSE_THRESH = 0.05; //5 cm
+const double POSE_THRESH = 0.10; //5 cm
 
 class RemoveBackground {
 private:
@@ -56,7 +56,11 @@ private:
 
     mongodb_store::MessageStoreProxy message_store;
 
+    visualization_msgs::Marker zyl_marker;
+
     int id_cnt_;
+
+    std::vector<int32_t> vis_marker_ids;
 
     inline bool ends_with(std::string const & value, std::string const & ending)
     {
