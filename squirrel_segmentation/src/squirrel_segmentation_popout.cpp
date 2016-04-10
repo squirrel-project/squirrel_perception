@@ -128,6 +128,7 @@ bool SegmentationPopoutNode::segment(squirrel_object_perception_msgs::SegmentIni
         pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZ>);
         for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); ++pit)
             cloud_cluster->points.push_back (cloud_filtered->points[*pit]);
+        cloud_cluster->header.frame_id="/kinect_depth_optical_frame";
         cloud_cluster->width = cloud_cluster->points.size ();
         cloud_cluster->height = 1;
         cloud_cluster->is_dense = true;
@@ -332,6 +333,7 @@ geometry_msgs::PoseStamped SegmentationPopoutNode::transform(double x, double y,
  */
 void SegmentationPopoutNode::transformCluster2base_link(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_cluster)
 {
+
     try
     {
         tf_listener.waitForTransform("/kinect_depth_optical_frame","/base_link", ros::Time::now(), ros::Duration(0.2));
