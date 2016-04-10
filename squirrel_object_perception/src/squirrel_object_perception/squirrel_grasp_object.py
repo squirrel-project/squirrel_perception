@@ -59,7 +59,7 @@ class SquirrelGraspObjectImpl:
     def look_down(self):
         look_down = rospy.ServiceProxy('/tilt_controller/resetPosition', Empty)
         try:
-            rospy.wait_for_service('/tilt_controller/resetPosition', timeout=5)
+            rospy.wait_for_service('/tilt_controller/resetPosition', timeout=10)
             look_down()
         except (rospy.ROSException, rospy.ServiceException):
             rospy.logdebug('looking down failed')
@@ -74,7 +74,7 @@ class SquirrelGraspObjectImpl:
         print(tmp)
         listener = tf.TransformListener()
         try:
-            listener.waitForTransform('odom', 'base_link', rospy.Time(), rospy.Duration.from_sec(5))
+            listener.waitForTransform('odom', 'base_link', rospy.Time(), rospy.Duration.from_sec(60))
             self._grasp_pose = listener.transformPose("odom", tmp)
             print(self._grasp_pose)
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
@@ -169,7 +169,7 @@ class SquirrelGraspObjectImpl:
             rospy.loginfo('Got point cloud')
             self.get_grasp_points()
             self.transform_pose()
-            self.send_pose_to_motion_planner()
+            #self.send_pose_to_motion_planner()
             #self.open_close_gripper(open=True)
             #self.move_arm_straight(direction='down')
             #self.open_close_gripper(open=False)
