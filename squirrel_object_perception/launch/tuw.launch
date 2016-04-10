@@ -17,7 +17,7 @@
         type="squirrel_grasp_object.py"
         required="true" output="screen">
 	<param name="pan" type="double" value="0.0" />
-	<param name="tilt" type="double" value="0.0" />
+	<param name="tilt" type="double" value="1.25" />
   </node>
 
 </launch>
