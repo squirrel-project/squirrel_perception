@@ -48,6 +48,8 @@ class SquirrelGraspObjectImpl:
         self._closeFinger = rospy.ServiceProxy('hand_controller/closeFinger', graspCurrent)
         self._openFinger = rospy.ServiceProxy('hand_controller/openFinger', graspPreparation)
         self._group = moveit_commander.MoveGroupCommander("arm")
+        self._tilt_pub = rospy.Publisher('/tilt_controller/command' Float64, 10)
+        self._pan_pub = rospy.Publisher('/pan_controller/command' Float64, 10)
         pass
 
     def configure(self):
@@ -57,12 +59,10 @@ class SquirrelGraspObjectImpl:
         pass
 
     def look_down(self):
-        look_down = rospy.ServiceProxy('/tilt_controller/resetPosition', Empty)
-        try:
-            rospy.wait_for_service('/tilt_controller/resetPosition', timeout=10)
-            look_down()
-        except (rospy.ROSException, rospy.ServiceException):
-            rospy.logdebug('looking down failed')
+        tilt = rospy.get_param('tilt', '0.0')
+        pan = rospy.get_param('pan', '0.0')
+        self._tilt_pub.publish(tilt)
+        self._pan_pub.publish(pan)
         rospy.sleep(1.0)
 
     def transform_pose(self):
@@ -71,6 +71,7 @@ class SquirrelGraspObjectImpl:
         tmp.pose.position = self._grasp_points.graspOutput.graspPoint1
         print(tmp)
         tmp.pose.position.z = tmp.pose.position.z + 0.2
+        tmp.pose.position.z = 0.4
         print(tmp)
         listener = tf.TransformListener()
         try:
@@ -80,7 +81,6 @@ class SquirrelGraspObjectImpl:
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
             print(e)
             pass
-        #return
  
         self._grasp_pose.pose.orientation.x = 0.0
         self._grasp_pose.pose.orientation.y = 1.0
@@ -99,9 +99,9 @@ class SquirrelGraspObjectImpl:
     def move_arm_straight(self, direction='up'):
         # move up or down by 0.1 meter
         if direction == 'up':
-            diff = 0.1
+            diff = 0.15
         elif direction == 'down':
-            diff = -0.1
+            diff = -0.15
         else:
             return
     

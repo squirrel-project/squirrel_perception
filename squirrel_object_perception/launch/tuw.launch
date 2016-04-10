@@ -1,0 +1,23 @@
+<launch> 
+  <node name="squirrel_look_for_objects"
+        pkg="squirrel_object_perception"
+        type="squirrel_look_for_objects"
+        required="true" output="screen">
+  </node>
+
+  <node name="squirrel_find_dynamic_objects"
+        pkg="squirrel_object_perception"
+        type="squirrel_find_dynamic_objects"
+        required="true" output="screen">
+	<param name="static_octomap_path" value="$(find squirrel_object_perception)/data/octomaps/default_octomap.bt" />
+  </node>
+
+  <node name="squirrel_haf_grasping"
+        pkg="squirrel_object_perception"
+        type="squirrel_grasp_object.py"
+        required="true" output="screen">
+	<param name="pan" type="double" value="0.0" />
+	<param name="tilt" type="double" value="0.0" />
+  </node>
+
+</launch>
