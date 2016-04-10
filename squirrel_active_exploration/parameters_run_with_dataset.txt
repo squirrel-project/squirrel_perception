@@ -1,0 +1,38 @@
+run_dataset.launch parameters
+
+  * save_directory: the directory to save all data (point clouds, probabilities and results)
+  * data_directory: the directory to load all data from (point clouds and transformations)
+  * image_file: a necassary file for calling the segmentation algorithm
+  * entropy_order_file: a precomputed file that specifies the individual entropy of each view (only necessary for best_to_worst and
+worst_to_best methods)
+  * views_limit_file: a file specifying the number of views within each dataset, the dataset used will automatically be found in this file
+  * single_class_test: boolean to specify if the dataset is only one object (changes behaviour of algorithm)
+  * reverse_transforms: boolean to specify if the transformation files are in fact inverse transforms (this is the case for the 
+Willow Garage dataset, not the case for the TUW dataset)
+  * load_segmentation: boolean to specify if precomputed segmentation files can be used (it is helpful when generating results to
+precompute the segmentation so that it does not have to happen everytime)
+  * variance: the sigma value for exponential factor in the utility function (see Patten et al.)
+  * plan_type: sets the planning mode (the options are worst_to_best_entropy, best_to_worst_entropy, worst_to_best_probability,
+best_to_worst_probability, nearest_location_area, nearest_location_min_entropy, nearest_location_max_probability, random, max_area,
+max_area_unoccluded, min_class_entropy, min_class_entropy_unoccluded, max_class_probability, max_class_probability_unoccluded,
+min_view_classification_entropy, max_view_classification_probability, clockwise, anticlockwise)
+  * start_index: the index of the dataset point clouds to begin with
+  * maximum_iterations: the maximum number of iterations (if specified very large this will stop once all views have been analysed)
+  * loaded_views_limit: the maximum number of views in the dataset to use (some datasets are broken and contain strange files that need
+to be ignored, however in general just set this to the number of files in the dataset)
+  * expected_number_objects: the number of objects in the scene (Willow Garage dataset all have 6 objects)
+  * expected_number_classes: the number of classes that were used for training (this and the previous parameter are only important when
+computing the entropy of unseen objects, these can be ignored of that is not important)
+  * visualize: boolean flag to view the intermediate steps of the algorithm (the user must then interact in order to move onto next stages)
+  * save: boolean flag to save results data
+  * generate_order: boolean flag to generate the entropy_order file (parameter 4), if set this will ignore the planning and exit once all
+views are analysed
+  * visualize_views_and_exit: boolean flag to command the program to load the dataset and visualize the viewpoint locations, use this to
+verify that the dataset is in working order
+  * max_object_distance: after segmentation, remove objects further away than this distance (helpful to ignore walls, etc)
+  * min_object_height: after segmentation, remove objects that have a height less than this value
+  * max_object_height: after segmentation, remove objects that have a height greater than this value
+  * min_object_length: after segmentation, remove objects that have a length less than this value
+  * max_object_lenght: after segmentation, remove objects that have a length greater than this value
+  * table_height_threshold: after segmentation, remove objects that have a centroid below the table height
+  * voxel_overlap: the amount of overlap between segments in different frames to be considered the same object (see Patten et al.)
