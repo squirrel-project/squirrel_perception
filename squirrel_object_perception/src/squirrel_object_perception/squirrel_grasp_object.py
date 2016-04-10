@@ -21,6 +21,7 @@ from sensor_msgs.msg import PointCloud2
 from squirrel_object_perception_msgs.msg import \
     GraspObjectAction, GraspObjectFeedback, GraspObjectResult
 from haf_grasping.msg import CalcGraspPointsServerAction, CalcGraspPointsServerGoal
+from kclhand_control.srv import graspCurrent, graspPreparation
 import moveit_commander 
 
 
@@ -44,6 +45,9 @@ class SquirrelGraspObjectImpl:
         self._grasp_calculation_time_max = rospy.Duration.from_sec(40)
         self._show_only_best_grasp = False
         self._gripper_opening_width = 1
+        self._closeFinger = rospy.ServiceProxy('hand_controller/closeFinger', graspCurrent)
+        self._openFinger = rospy.ServiceProxy('hand_controller/openFinger', graspPreparation)
+        self._group = moveit_commander.MoveGroupCommander("arm")
         pass
 
     def configure(self):
@@ -66,6 +70,8 @@ class SquirrelGraspObjectImpl:
         tmp.header.frame_id = "base_link"
         tmp.pose.position = self._grasp_points.graspOutput.graspPoint1
         print(tmp)
+        tmp.pose.position.z = tmp.pose.position.z + 0.2
+        print(tmp)
         listener = tf.TransformListener()
         try:
             listener.waitForTransform('odom', 'base_link', rospy.Time(), rospy.Duration.from_sec(5))
@@ -82,13 +88,45 @@ class SquirrelGraspObjectImpl:
         self._grasp_pose.pose.orientation.w = 1.0
 
     def send_pose_to_motion_planner(self):
-        group = moveit_commander.MoveGroupCommander("arm")
-        group.clear_pose_targets()
-        group.set_start_state_to_current_state()
-        group.set_pose_reference_frame("/odom")
-        group.set_pose_target(self._grasp_pose)
-        plan = group.plan()
-        group.go(wait=True)
+        self._group.clear_pose_targets()
+        self._group.set_start_state_to_current_state()
+        self._group.set_pose_reference_frame("/odom")
+        self._group.set_pose_target(self._grasp_pose)
+        plan = self._group.plan()
+        #group.go(wait=True)
+        rospy.sleep(5.0)
+
+    def move_arm_straight(self, direction='up'):
+        # move up or down by 0.1 meter
+        if direction == 'up':
+            diff = 0.1
+        elif direction == 'down':
+            diff = -0.1
+        else:
+            return
+    
+        waypoints = []
+        # start with the current pose
+        waypoints.append(group.get_current_pose().pose)
+        wpose = geometry_msgs.msg.Pose()
+        wpose.orientation.x = waypoints[0].orientation.x
+        wpose.orientation.y = waypoints[0].orientation.y
+        wpose.orientation.z = waypoints[0].orientation.z
+        wpose.orientation.w = waypoints[0].orientation.w
+        wpose.position.x = waypoints[0].position.x + diff
+        wpose.position.y = waypoints[0].position.y
+        wpose.position.z = waypoints[0].position.z
+        waypoints.append(copy.deepcopy(wpose))
+        (plan1, fraction) = self._group.compute_cartesian_path(waypoints, 0.01, 0.0)
+        rospy.sleep(5.0)
+
+    def open_close_gripper(self, open=True):
+        if open:
+            print("open fingers")
+            self._openFinger()
+        else:
+            print("close fingers")
+            self._closeFinger(1.0)
 
     def get_grasp_points(self):
         client = actionlib.SimpleActionClient('calc_grasppoints_svm_action_server', \
@@ -121,15 +159,21 @@ class SquirrelGraspObjectImpl:
 
         # Start getting data from /kinect/depth_registered/points
         # Set feedback to data acquisition succeeded and set percentage
+        rospy.loginfo('started')
         try:
             self._point_cloud = rospy.wait_for_message(
                 '/kinect/depth_registered/points',
                 PointCloud2,
                 timeout=5
             )
+            rospy.loginfo('Got point cloud')
             self.get_grasp_points()
             self.transform_pose()
             self.send_pose_to_motion_planner()
+            #self.open_close_gripper(open=True)
+            #self.move_arm_straight(direction='down')
+            #self.open_close_gripper(open=False)
+            #self.move_arm_straight(direction='up')
         except rospy.ROSException:
             self.as_squirrel_object_perception.set_aborted(self._result)
             rospy.logdebug('receive_data failed')
