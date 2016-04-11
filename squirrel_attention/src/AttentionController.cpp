@@ -11,6 +11,9 @@
 #include <cmath>
 #include <std_msgs/Float64.h>
 #include <squirrel_attention/AttentionController.h>
+#include <geometry_msgs/PointStamped.h>
+#include <tf/LinearMath/Vector3.h>
+#include <tf/LinearMath/Scalar.h>
 
 AttentionController::AttentionController()
 {
@@ -71,7 +74,17 @@ bool AttentionController::lookAtImagePosition(squirrel_object_perception_msgs::L
 bool AttentionController::lookAtPosition(squirrel_object_perception_msgs::LookAtPosition::Request &req,
                                         squirrel_object_perception_msgs::LookAtPosition::Response &res)
 {
-  
+  jointMutex_.lock();
+  std_msgs::Float64 panMsg, tiltMsg;
+  panMsg.data = atan2(req.target.y, req.target.x);
+  tiltMsg.data = -atan2(0.4, req.target.x); 
+  ROS_INFO("pan/tilt relative move move (deg): %.f %.f / (rad): %.3f %.3f ", panMsg.data*180./M_PI, tiltMsg.data*180./M_PI, panMsg.data, tiltMsg.data);
+  if(std::isfinite(panMsg.data) && std::isfinite(tiltMsg.data))
+  {
+    panPub_.publish(panMsg);
+    tiltPub_.publish(tiltMsg);
+  }
+  jointMutex_.unlock();
   return true;
 }
 
