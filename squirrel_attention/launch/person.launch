@@ -1,0 +1,14 @@
+<launch> 
+  <node name="squirrel_attention_controller"
+        pkg="squirrel_attention"
+        type="attention_controller" 
+        required="true" output="screen">
+  </node>
+
+  <node name="squirrel_attention_fusion"
+        pkg="squirrel_attention"
+        type="attention_fusion" 
+        required="true" output="screen">
+  </node>
+
+</launch>
