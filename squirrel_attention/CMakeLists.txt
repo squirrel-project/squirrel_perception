@@ -4,7 +4,7 @@ project(squirrel_attention)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp rospy sensor_msgs geometry_msgs cv_bridge image_transport squirrel_object_perception_msgs tf) #pcl_conversions
+find_package(catkin REQUIRED COMPONENTS roscpp rospy sensor_msgs geometry_msgs cv_bridge image_transport squirrel_speech_msgs squirrel_object_perception_msgs tf) #pcl_conversions
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
