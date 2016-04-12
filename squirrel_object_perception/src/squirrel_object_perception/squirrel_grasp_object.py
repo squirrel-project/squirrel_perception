@@ -48,9 +48,14 @@ class SquirrelGraspObjectImpl:
         self._gripper_opening_width = 1
         self._closeFinger = rospy.ServiceProxy('hand_controller/closeFinger', graspCurrent)
         self._openFinger = rospy.ServiceProxy('hand_controller/openFinger', graspPreparation)
-        self._group = moveit_commander.MoveGroupCommander("arm")
-        self._tilt_pub = rospy.Publisher('/tilt_controller/command', Float64, 10)
-        self._pan_pub = rospy.Publisher('/pan_controller/command', Float64, 10)
+        try:
+            self._group = moveit_commander.MoveGroupCommander("arm")
+        except RuntimeError as e:
+            rospy.loginfo("No moveit group available")
+            self._group = None
+
+        self._tilt_pub = rospy.Publisher('/tilt_controller/command', Float64, queue_size=10)
+        self._pan_pub = rospy.Publisher('/pan_controller/command', Float64, queue_size=10)
         pass
 
     def configure(self):
