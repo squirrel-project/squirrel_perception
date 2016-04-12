@@ -22,6 +22,16 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
 
     ROS_INFO("TUW: Current octomap read");
 
+    //delete all visualization markers from previous calls
+    for (std::vector<int>::iterator it = vis_marker_ids.begin() ; it != vis_marker_ids.end(); ++it) {
+        zyl_marker.id = *it;
+        zyl_marker.ns = "cluster_marker";
+        zyl_marker.action = visualization_msgs::Marker::DELETE;
+        markerPublisher.publish(zyl_marker);
+    }
+//    zyl_marker.action = 3; //DELETEALL
+//    markerPublisher.publish(zyl_marker);
+
     octomap::OcTree subtractedMapVar = subtractOctomaps();
     if (octomap_lib.getNumberOccupiedLeafNodes(&subtractedMapVar) == 0) {
         ROS_INFO("TUW: Static and current octomap are the same");
@@ -126,7 +136,6 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
                         lump.bounding_cylinder.height = z_diam;
                         lump.category="unknown";
                         lump.id= (*sceneObject_db).id;
-                        //TODO: update the old object or delete the old and add the new object
 
                         is_lump_in_db = true;
                         response.dynamic_objects_updated.push_back(lump);
@@ -163,11 +172,8 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
         }
 
 
-        //TODO the objects that are still in the vector should be removed from the database
-
         //creates a marker that can be visualized in rviz
         if (!is_classified) {
-            visualization_msgs::Marker zyl_marker;
             zyl_marker.header.frame_id = "map";
             zyl_marker.header.stamp = ros::Time();
             zyl_marker.ns = "cluster_marker";
@@ -185,15 +191,14 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
             zyl_marker.scale.x = diam;
             zyl_marker.scale.y = diam;
             zyl_marker.scale.z = z_diam;
-//            zyl_marker.scale.x = std::max((float) (diam + octomap_lib.leaf_size), (float) octomap_lib.leaf_size);
-//            zyl_marker.scale.y = std::max((float) (diam + octomap_lib.leaf_size), (float) octomap_lib.leaf_size);
-//            zyl_marker.scale.z = std::max((float) (max_p.z - min_p.z + octomap_lib.leaf_size), (float) octomap_lib.leaf_size);
             zyl_marker.color.r = 1.0;
             zyl_marker.color.g = 0.9;
             zyl_marker.color.b = 0.1;
             zyl_marker.color.a = 0.4;
 
             markerPublisher.publish(zyl_marker);
+
+            vis_marker_ids.push_back(zyl_marker.id);
 
         }
 
@@ -412,12 +417,12 @@ std::vector<pcl::PointCloud<PointT>::Ptr> RemoveBackground::removeClusters(pcl::
 
         pcl::PointCloud<PointT>::Ptr cloud_filtered(new pcl::PointCloud<PointT>);
         std::vector<pcl::PointCloud<PointT>::Ptr> clusters;
-        std::cout << "Cluster indices size: " << cluster_indices.size() << std::endl;
+        //std::cout << "Cluster indices size: " << cluster_indices.size() << std::endl;
         int j = 0;
         pcl::PCDWriter writer;
         for (std::vector<pcl::PointIndices>::iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
         {
-            cout << "CLUSTER " << j << endl;
+            //cout << "CLUSTER " << j << endl;
             pcl::PointCloud<PointT>::Ptr cloud_cluster (new pcl::PointCloud<PointT>);
             for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); ++pit) {
                 cloud_cluster->points.push_back (cloud->points[*pit]);
@@ -427,21 +432,21 @@ std::vector<pcl::PointCloud<PointT>::Ptr> RemoveBackground::removeClusters(pcl::
             cloud_cluster->height = 1;
             cloud_cluster->is_dense = true;
 
-            std::cout << "PointCloud representing the Cluster: " << cloud_cluster->points.size () << " data points." << std::endl;
-            std::stringstream ss;
-            ss << "cloud_cluster_" << j << ".pcd";
-            writer.write<PointT> (ss.str (), *cloud_cluster, false);
+            //std::cout << "PointCloud representing the Cluster: " << cloud_cluster->points.size () << " data points." << std::endl;
+            //std::stringstream ss;
+            //ss << "cloud_cluster_" << j << ".pcd";
+            //writer.write<PointT> (ss.str (), *cloud_cluster, false);
             j++;
 
             PointT min_p, max_p;
 
             pcl::getMinMax3D(*cloud_cluster, min_p, max_p);
-            cout << "Min point: " << min_p.z << endl;
-            cout << "Max point: " << max_p.z << endl;
+            //cout << "Min point: " << min_p.z << endl;
+            //cout << "Max point: " << max_p.z << endl;
 
             //check if bounding box is above floor or is too tall
-            if (min_p.z > octomap_lib.leaf_size + octomap_lib.leaf_size/2 + 0.0001|| max_p.z >= 0.5 || max_p.z <= octomap_lib.leaf_size) { //max_p.z <= 0.05 should not be needed when camera is calibrated well
-                cout << "bad cluster" << endl;
+            if (min_p.z > octomap_lib.leaf_size + octomap_lib.leaf_size/2 + 0.0001|| max_p.z >= 0.5 || max_p.z <= 2* octomap_lib.leaf_size) { //max_p.z <= 0.05 should not be needed when camera is calibrated well
+                //cout << "bad cluster" << endl;
             } else {
                 *cloud_filtered += *cloud_cluster;
                 clusters.push_back(cloud_cluster);
