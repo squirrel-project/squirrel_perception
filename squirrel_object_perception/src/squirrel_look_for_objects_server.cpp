@@ -99,7 +99,7 @@ protected:
         pcl::fromROSMsg(object.cloud, *segmented_object);
 	
 	pcl::PCDWriter writer;
-        writer.write<PointT>("/home/edith/edith_rec_test/before_recognize.pcd", *segmented_object, false);
+        //writer.write<PointT>("/home/edith/edith_rec_test/before_recognize.pcd", *segmented_object, false);
 
 	transformPointCloud(segmented_object, segmented_object->header.frame_id, "/kinect_depth_optical_frame");
 
