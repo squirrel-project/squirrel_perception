@@ -99,7 +99,7 @@ protected:
         pcl::fromROSMsg(object.cloud, *segmented_object);
 	
 	pcl::PCDWriter writer;
-        //writer.write<PointT>("/home/edith/edith_rec_test/before_recognize.pcd", *segmented_object, false);
+        writer.write<PointT>("before_recognize.pcd", *segmented_object, false);
 
 	transformPointCloud(segmented_object, segmented_object->header.frame_id, "/kinect_depth_optical_frame");
 
@@ -126,7 +126,7 @@ protected:
         pass.setInputCloud(cloud);
         pass.filter(*cloud);
 	
-        //writer.write<PointT>("/home/edith/edith_rec_test/cutted.pcd", *cloud, false);
+        writer.write<PointT>("cutted.pcd", *cloud, false);
         
 	squirrel_object_perception_msgs::Recognize srv;
         pcl::toROSMsg(*cloud, srv.request.cloud);
@@ -141,10 +141,11 @@ protected:
             	transformPointCloud(object.cloud, object.cloud.header.frame_id, "/map");
             	std::cout << "Category: " << object.category << std::endl;
             	object.pose = transform(srv.response.centroids.at(0).x, srv.response.centroids.at(0).y, srv.response.centroids.at(0).z,
-            	                        "/kinect_depth_optical_frame", "/map").pose;
+            	                        srv.response.model_clouds.at(0).header.frame_id, "/map").pose;
             	//TODO: transform BBox from Recognizer to BCylinder for SceneObject
             	return true;
 	    } else {
+		std::cout << "could not recognize an object!" << std::endl;
 		return false;
 	    }
         }
@@ -359,6 +360,7 @@ protected:
 
         markerPublisher.publish(zyl_marker);
         vis_marker_ids.push_back(zyl_marker.id);
+	std::cout << "Diam for visualization: " << sceneObject.bounding_cylinder.diameter<< "; Height: " << sceneObject.bounding_cylinder.height << std::endl;
     }
 
     bool setup_segmentation()
@@ -410,26 +412,33 @@ protected:
             Object obj;
             obj.sceneObject.category = "unknown";
             obj.sceneObject.id = get_unique_object_id();
-            obj.sceneObject.header = srv.response.poses[i].header;
+            obj.sceneObject.header.frame_id = "/map";
             obj.point_indices = srv.response.clusters_indices[i];
             obj.sceneObject.cloud = srv.response.points[i];
-            obj.sceneObject.pose = srv.response.poses[i].pose;
-
-            pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
+	    transformPointCloud(obj.sceneObject.cloud, obj.sceneObject.cloud.header.frame_id, "/map");
+            obj.sceneObject.pose = transform(srv.response.poses[i].pose.position.x, srv.response.poses[i].pose.position.y, 
+				   srv.response.poses[i].pose.position.z, srv.response.poses[i].header.frame_id, "/map").pose;
+            
+	    pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
             pcl::fromROSMsg(obj.sceneObject.cloud, *cloud);
 
             PointT min_p, max_p;
             pcl::getMinMax3D(*cloud, min_p, max_p);
 
             //it is in kinect-optical-frame! (x=z, y=x, z=y)
+            //double x_diam = double(max_p.x - min_p.x + 1);
+            //double y_diam = double(max_p.y - min_p.y + 1);
+            //double z_diam = double(max_p.z - min_p.z + 1);
+
             double x_diam = double(max_p.x - min_p.x + 1);
             double y_diam = double(max_p.y - min_p.y + 1);
             double z_diam = double(max_p.z - min_p.z + 1);
+            
+	    double diam = std::sqrt(std::pow(x_diam,2) + std::pow(y_diam,2));
 
-            double diam = std::sqrt(std::pow(x_diam,2) + std::pow(z_diam,2));
-
+	    std::cout << "Diam from Segmenter: " << diam << "; Height: " << z_diam << std::endl;
             obj.sceneObject.bounding_cylinder.diameter = diam;
-            obj.sceneObject.bounding_cylinder.height = y_diam;
+            obj.sceneObject.bounding_cylinder.height = z_diam;
             this->objects.push_back(obj);
             return true;
         }
@@ -516,6 +525,8 @@ public:
 
     void executeCB(const squirrel_object_perception_msgs::LookForObjectsGoalConstPtr &goal)
     {
+
+	objects.clear();
 	
     	sensor_msgs::PointCloud2ConstPtr sceneConst;
         ROS_INFO("%s: executeCB started", action_name_.c_str());
@@ -640,6 +651,8 @@ public:
             as_.setAborted(result_);
             return;
         }
+
+	std::cout << "Number of segmented objects: " << objects.size() << std::endl;
         for(objectIterator = objects.begin(); objectIterator != objects.end(); objectIterator++)
         {
             do_recognition((*objectIterator).sceneObject);
