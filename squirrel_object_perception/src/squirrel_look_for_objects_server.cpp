@@ -99,30 +99,34 @@ protected:
         pcl::fromROSMsg(object.cloud, *segmented_object);
 	
 	pcl::PCDWriter writer;
-        writer.write<PointT>("/home/squirrel/edith_rec_test/before_recognize.pcd", *segmented_object, false);
+        //writer.write<PointT>("/home/edith/edith_rec_test/before_recognize.pcd", *segmented_object, false);
 
 	transformPointCloud(segmented_object, segmented_object->header.frame_id, "/kinect_depth_optical_frame");
 
         PointT min_p, max_p;
         pcl::getMinMax3D(*segmented_object, min_p, max_p);
 
+        std::cout << "Size from Segmenter: " << "X(" << min_p.x << ";" << max_p.x << ")" <<
+                     " Y(" << min_p.y << ";" << max_p.y << ")" <<
+                     " Z(" << min_p.z << ";" << max_p.z << ")";
+
         //TODO maybe add some buffer to the min/max points if segmentation method was not accurate
-        /*pcl::PassThrough<PointT> pass;
+        pcl::PassThrough<PointT> pass;
         pass.setKeepOrganized(true);
         pass.setFilterFieldName("x");
-        pass.setFilterLimits(min_p.x, max_p.x);
+        pass.setFilterLimits(min_p.x-0.05, max_p.x+0.05);
         pass.setInputCloud(cloud);
         pass.filter(*cloud);
         pass.setFilterFieldName("y");
-        pass.setFilterLimits(min_p.y, max_p.y);
+        pass.setFilterLimits(min_p.y-0.05, max_p.y+0.05);
         pass.setInputCloud(cloud);
         pass.filter(*cloud);
         pass.setFilterFieldName("z");
-        pass.setFilterLimits(min_p.z, max_p.z);
+        pass.setFilterLimits(min_p.z-0.05, max_p.z+0.05);
         pass.setInputCloud(cloud);
-        pass.filter(*cloud);*/
+        pass.filter(*cloud);
 	
-        writer.write<PointT>("/home/squirrel/edith_rec_test/cutted.pcd", *cloud, false);
+        //writer.write<PointT>("/home/edith/edith_rec_test/cutted.pcd", *cloud, false);
         
 	squirrel_object_perception_msgs::Recognize srv;
         pcl::toROSMsg(*cloud, srv.request.cloud);
@@ -130,10 +134,10 @@ protected:
         {
             ROS_INFO("Called service %s: ", "/squirrel_recognizer/squirrel_recognize_objects");
             if (srv.response.ids.size() > 0) { 
-	    	this->recognized_object.push_back(srv.response);
+                this->recognized_object.push_back(srv.response);
             	object.category = srv.response.ids.at(0).data; //this is only ok, when just one object gets recognized
             	object.cloud = srv.response.model_clouds.at(0);
-	    	object.cloud.header.frame_id = srv.request.cloud.header.frame_id;
+                object.cloud.header.frame_id = srv.request.cloud.header.frame_id;
             	transformPointCloud(object.cloud, object.cloud.header.frame_id, "/map");
             	std::cout << "Category: " << object.category << std::endl;
             	object.pose = transform(srv.response.centroids.at(0).x, srv.response.centroids.at(0).y, srv.response.centroids.at(0).z,
@@ -364,7 +368,7 @@ protected:
 
 	pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
         pcl::fromROSMsg(this->scene, *cloud);
-	pcl::io::savePCDFileBinary("/home/squirrel/edith_rec_test/before_segmentation.pcd", *cloud);
+    //pcl::io::savePCDFileBinary("/home/edith/edith_rec_test/before_segmentation.pcd", *cloud);
 
         ros::ServiceClient client = nh_.serviceClient<squirrel_object_perception_msgs::SegmentInit>("/squirrel_segmentation_incremental_init");
         squirrel_object_perception_msgs::SegmentInit srv;
@@ -558,10 +562,14 @@ public:
                         pcl::PointCloud<PointT>::Ptr lump(new pcl::PointCloud<PointT>);
                         pcl::fromROSMsg(sceneObject.cloud, *lump);
 
-			transformPointCloud(lump, lump->header.frame_id, "/kinect_depth_optical_frame");
+                        transformPointCloud(lump, lump->header.frame_id, "/kinect_depth_optical_frame");
 			
                         PointT min_p, max_p;
                         pcl::getMinMax3D(*lump, min_p, max_p);
+
+                        std::cout << "Size from DB: " << "X(" << min_p.x << ";" << max_p.x << ")" <<
+                                     " Y(" << min_p.y << ";" << max_p.y << ")" <<
+                                     " Z(" << min_p.z << ";" << max_p.z << ")";
 
                         //TODO maybe add some buffer to the min/max points if segmentation method was not accurate
                         /*pcl::PassThrough<PointT> pass;
