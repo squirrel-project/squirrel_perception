@@ -99,7 +99,7 @@ protected:
         pcl::fromROSMsg(object.cloud, *segmented_object);
 	
 	pcl::PCDWriter writer;
-        //writer.write<PointT>("/home/edith/edith_rec_test/before_recognize.pcd", *segmented_object, false);
+        writer.write<PointT>("/home/squirrel/edith_rec_test/before_recognize.pcd", *segmented_object, false);
 
 	transformPointCloud(segmented_object, segmented_object->header.frame_id, "/kinect_depth_optical_frame");
 
@@ -368,7 +368,7 @@ protected:
 
 	pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
         pcl::fromROSMsg(this->scene, *cloud);
-    //pcl::io::savePCDFileBinary("/home/edith/edith_rec_test/before_segmentation.pcd", *cloud);
+	pcl::io::savePCDFileBinary("/home/squirrel/edith_rec_test/before_segmentation.pcd", *cloud);
 
         ros::ServiceClient client = nh_.serviceClient<squirrel_object_perception_msgs::SegmentInit>("/squirrel_segmentation_incremental_init");
         squirrel_object_perception_msgs::SegmentInit srv;
