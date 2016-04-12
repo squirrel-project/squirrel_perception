@@ -11,6 +11,7 @@
   <run_depend>squirrel_attention</run_depend>
   -->
   <run_depend>attention_tracker</run_depend>
+  <run_depend>dlib_lib</run_depend>
   <run_depend>squirrel_active_exploration</run_depend>
   <run_depend>squirrel_attention</run_depend>
   <run_depend>squirrel_classification</run_depend>

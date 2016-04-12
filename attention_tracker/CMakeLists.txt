@@ -13,7 +13,7 @@ set(WITH_ROS TRUE)
 if(WITH_ROS)
 
     find_package(catkin REQUIRED COMPONENTS 
-        dlib
+        dlib_lib
         roscpp 
         tf
         std_msgs
@@ -33,7 +33,7 @@ if(WITH_ROS)
     LIBRARIES 
     )
 
-    include(${CATKIN_DEVEL_PREFIX}/include/dlib/cmake)
+ #   include(${CATKIN_DEVEL_PREFIX}/include/dlib/cmake)
 
 endif()
 
@@ -58,7 +58,7 @@ endif()
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 add_library(head_pose_estimation SHARED src/head_pose_estimation.cpp)
-target_link_libraries(head_pose_estimation dlib ${OpenCV_LIBRARIES})
+#target_link_libraries(head_pose_estimation dlib ${OpenCV_LIBRARIES})
 
 if(WITH_ROS)
 
