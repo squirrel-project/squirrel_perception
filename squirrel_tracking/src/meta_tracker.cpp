@@ -75,6 +75,7 @@ bool MetaTracker::startTracking(squirrel_object_perception_msgs::StartObjectTrac
       {
         ROS_INFO("MetaTracker: starting lump tracker for object '%s'", trackedObjectId.c_str());
         squirrel_object_perception_msgs::StartLumpTracking srv;
+        srv.request.object_id.data = trackedObjectId;
         if(startLumpClient.call(srv))
           startedTracking = true;
         else
@@ -84,6 +85,8 @@ bool MetaTracker::startTracking(squirrel_object_perception_msgs::StartObjectTrac
       {
         ROS_INFO("MetaTracker: starting instance tracker '%s' for object '%s'", trackedObjectClass.c_str(), trackedObjectId.c_str());
         squirrel_object_perception_msgs::StartInstanceTracking srv;
+        srv.request.object_id.data = trackedObjectId;
+        srv.request.object_class.data = trackedObjectClass;
         if(startInstanceClient.call(srv))
           startedTracking = true;
         else

@@ -1,0 +1,38 @@
+<launch>
+
+  <arg name="head_tracking_frame" default="head_tracking_camera"/>
+
+  <arg name="device" default="/dev/video0"/>
+  <arg name="calibration" default="package://attention_tracker/logitech-c920_640x360.ini"/>
+
+  <node name="webcam_source" pkg="gscam" type="gscam" output="screen">
+    <param name="camera_name" value="default"/>
+    <param name="camera_info_url" value="$(arg calibration)"/>
+    <param name="gscam_config" value="v4l2src device=$(arg device) ! video/x-raw-yuv,width=640,height=360 ! ffmpegcolorspace"/>
+    <param name="frame_id" value="$(arg head_tracking_frame)"/>
+    <param name="sync_sink" value="true"/>
+  </node>
+
+
+
+  <node name="tablet_transform" pkg="tf" type="static_transform_publisher" args="0.3 0 0 0 0 0 /base_footprint /tablet 100"/>
+  <node name="selection_tablet_transform" pkg="tf" type="static_transform_publisher" args="0.3 -0.3 0 0 0 0 /base_footprint /selection_tablet 100"/>
+  <node name="experimenter_transform" pkg="tf" type="static_transform_publisher" args="0.2 -0.6 0.6 0 0 0 /base_footprint /experimenter 100"/>
+  <node name="observers_transform" pkg="tf" type="static_transform_publisher" args="-2.7 1 0.7 0 0 0 /base_footprint /observer 100"/>
+  <node name="camera_transform" pkg="tf" type="static_transform_publisher" args="0.1 0 0 1.57 0 1. /base_footprint $(arg head_tracking_frame) 100"/>
+
+  <node name="base_footprint_transform" pkg="tf" type="static_transform_publisher" args="0 0 0 0 0 0 /map /base_footprint 100"/>
+  <node name="robot_transform" pkg="tf" type="static_transform_publisher" args="0 0 0.5 0 0 0 /base_footprint /robot_head 100"/>
+
+  <node pkg="attention_tracker" type="estimate_focus" name="estimate_focus" />
+
+  <node pkg="attention_tracker" type="estimate" name="head_pose_estimation">
+    <param name="face_model" value="$(find attention_tracker)/shape_predictor_68_face_landmarks.dat" />
+    <remap from="/image" to="/camera/image_raw"/>
+  </node>
+
+  <node pkg="attention_tracker" type="withmeness.py" name="withmeness">
+      <param name="targets" value="$(find attention_tracker)/targets.json"/>
+  </node>
+
+</launch>

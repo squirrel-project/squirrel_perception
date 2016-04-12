@@ -51,12 +51,22 @@ bool LumpTracker::startTracking(squirrel_object_perception_msgs::StartLumpTracki
   bool ret = false;
   if(!startedTracking)
   {
-    stringstream topic;
-    topic << "/" << cameraName << "/depth/points";
-    pointcloudSubscriber = n_->subscribe(topic.str(), 1, &LumpTracker::receivePointcloud, this);
-    startedTracking = true;
-    ret = true;
-    ROS_INFO("LumpTracker::startTracking: started");
+    // Note that the object_id is just a unique identifier. What the tracker needs is essentially
+    // the file name of the model to be loaded. This is the object class.
+    trackedObjectId = req.object_id.data;
+    if(!trackedObjectId.empty())
+    {
+      stringstream topic;
+      topic << "/" << cameraName << "/depth/points";
+      pointcloudSubscriber = n_->subscribe(topic.str(), 1, &LumpTracker::receivePointcloud, this);
+      startedTracking = true;
+      ret = true;
+      ROS_INFO("LumpTracker::startTracking: started");
+    }
+    else
+    {
+      ROS_ERROR("SquirrelTrackingNode::startTracking: missing object ID");
+    }
   }
   else
   {
@@ -69,6 +79,7 @@ bool LumpTracker::stopTracking(squirrel_object_perception_msgs::StopLumpTracking
 {
   if(startedTracking)
   {
+    trackedObjectId = "";
     startedTracking = false;
     pointcloudSubscriber.shutdown();
     ROS_INFO("LumpTracker::stopTracking: stopped");
@@ -203,7 +214,7 @@ void LumpTracker::receivePointcloud(const sensor_msgs::PointCloud2::ConstPtr &ms
 
     stringstream frame;
     frame << cameraName << "_depth_optical_frame";
-    tfBroadcast.sendTransform(tf::StampedTransform(transform, ros::Time::now(), frame.str(), "lump"));
+    tfBroadcast.sendTransform(tf::StampedTransform(transform, ros::Time::now(), frame.str(), trackedObjectId));
 
     ROS_INFO("%s: cluster %s with %d points at (in base_link): (%.3f %.3f %.3f)", ros::this_node::getName().c_str(), "lump",
       (int)selected->points.size(), centroid[0], centroid[1], centroid[2]);
