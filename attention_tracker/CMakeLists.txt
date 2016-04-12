@@ -58,7 +58,7 @@ endif()
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 add_library(head_pose_estimation SHARED src/head_pose_estimation.cpp)
-#target_link_libraries(head_pose_estimation dlib ${OpenCV_LIBRARIES})
+target_link_libraries(head_pose_estimation ${OpenCV_LIBRARIES})
 
 if(WITH_ROS)
 
