@@ -118,7 +118,7 @@ bool SegmentationPopoutNode::segment(squirrel_object_perception_msgs::SegmentIni
 
     std::vector<pcl::PointIndices> cluster_indices;
     pcl::EuclideanClusterExtraction<PointT> ec;
-    ec.setClusterTolerance (0.02); // 2cm
+    ec.setClusterTolerance (0.06); // 2cm
     ec.setMinClusterSize (100);
     ec.setMaxClusterSize (25000);
     ec.setSearchMethod (tree);
