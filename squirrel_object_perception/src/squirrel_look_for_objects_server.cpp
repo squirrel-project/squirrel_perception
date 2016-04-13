@@ -99,7 +99,7 @@ protected:
         pcl::fromROSMsg(object.cloud, *segmented_object);
 	
 	pcl::PCDWriter writer;
-        writer.write<PointT>("before_recognize.pcd", *segmented_object, false);
+        //writer.write<PointT>("before_recognize.pcd", *segmented_object, false);
 
 	transformPointCloud(segmented_object, segmented_object->header.frame_id, "/kinect_depth_optical_frame");
 
@@ -114,19 +114,19 @@ protected:
         pcl::PassThrough<PointT> pass;
         pass.setKeepOrganized(true);
         pass.setFilterFieldName("x");
-        pass.setFilterLimits(min_p.x-0.03, max_p.x+0.03);
+        pass.setFilterLimits(min_p.x, max_p.x);
         pass.setInputCloud(cloud);
         pass.filter(*cloud);
         pass.setFilterFieldName("y");
-        pass.setFilterLimits(min_p.y-0.03, max_p.y+0.03);
+        pass.setFilterLimits(min_p.y, max_p.y);
         pass.setInputCloud(cloud);
         pass.filter(*cloud);
         pass.setFilterFieldName("z");
-        pass.setFilterLimits(min_p.z-0.03, max_p.z+0.03);
+        pass.setFilterLimits(min_p.z, max_p.z);
         pass.setInputCloud(cloud);
         pass.filter(*cloud);
 	
-        writer.write<PointT>("cutted.pcd", *cloud, false);
+        //writer.write<PointT>("cutted.pcd", *cloud, false);
         
 	squirrel_object_perception_msgs::Recognize srv;
         pcl::toROSMsg(*cloud, srv.request.cloud);
@@ -566,7 +566,7 @@ public:
 	    
 	    pcl::PointCloud<PointT>::Ptr test(new pcl::PointCloud<PointT>);
         pcl::fromROSMsg(*sceneConst, *test);
-	pcl::io::savePCDFileBinary("scene.pcd", *test);
+	//pcl::io::savePCDFileBinary("scene.pcd", *test);
             scene = *sceneConst;
 	    sceneConst.reset();
             ROS_INFO("%s: Received data", action_name_.c_str());
