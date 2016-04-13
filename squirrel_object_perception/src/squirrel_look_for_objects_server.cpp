@@ -114,6 +114,7 @@ protected:
         pcl::PassThrough<PointT> pass;
         pass.setKeepOrganized(true);
         pass.setFilterFieldName("x");
+<<<<<<< Updated upstream
         pass.setFilterLimits(min_p.x-0.05, max_p.x+0.05);
         pass.setInputCloud(cloud);
         pass.filter(*cloud);
@@ -123,6 +124,17 @@ protected:
         pass.filter(*cloud);
         pass.setFilterFieldName("z");
         pass.setFilterLimits(min_p.z-0.05, max_p.z+0.05);
+=======
+        pass.setFilterLimits(min_p.x, max_p.x);
+        pass.setInputCloud(cloud);
+        pass.filter(*cloud);
+        pass.setFilterFieldName("y");
+        pass.setFilterLimits(min_p.y, max_p.y);
+        pass.setInputCloud(cloud);
+        pass.filter(*cloud);
+        pass.setFilterFieldName("z");
+        pass.setFilterLimits(min_p.z, max_p.z);
+>>>>>>> Stashed changes
         pass.setInputCloud(cloud);
         pass.filter(*cloud);
 	
