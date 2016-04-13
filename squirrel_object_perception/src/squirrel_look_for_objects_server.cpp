@@ -187,7 +187,7 @@ protected:
             return false;
         ros::ServiceClient client = nh_.serviceClient<squirrel_object_perception_msgs::LookAtPanTilt>("/attention/look_at_pan_tilt");
         squirrel_object_perception_msgs::LookAtPanTilt srv;
-        srv.request.pan = 0.0;
+        srv.request.pan = -1.1;
         srv.request.tilt = 0.7;
         if (client.call(srv))
         {
