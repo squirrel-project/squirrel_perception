@@ -6,6 +6,7 @@
 #include <squirrel_object_perception_msgs/Classification.h>
 #include <squirrel_object_perception_msgs/Classify.h>
 #include <squirrel_object_perception_msgs/GetSaliency3DSymmetry.h>
+#include <squirrel_object_perception_msgs/LookAtPanTilt.h>
 #include <squirrel_object_perception_msgs/SegmentInit.h>
 #include <squirrel_object_perception_msgs/SegmentOnce.h>
 #include <squirrel_object_perception_msgs/SegmentsToObjects.h>
@@ -172,6 +173,25 @@ protected:
         if (client.call(srv))
         {
             ROS_INFO("Called service %s: ", "/squirrel_segmentation_visualization_init");
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    bool setup_camera_position()
+    {
+        if (!ros::service::waitForService("/attention/look_at_pan_tilt", ros::Duration(5.0)))
+            return false;
+        ros::ServiceClient client = nh_.serviceClient<squirrel_object_perception_msgs::LookAtPanTilt>("/attention/look_at_pan_tilt");
+        squirrel_object_perception_msgs::LookAtPanTilt srv;
+        srv.request.pan = 0.0;
+        srv.request.tilt = 0.7;
+        if (client.call(srv))
+        {
+            ROS_INFO("Called service %s: ", "/attention/look_at_pan_tilt");
             return true;
         }
         else
@@ -542,6 +562,7 @@ public:
     	sensor_msgs::PointCloud2ConstPtr sceneConst;
         ROS_INFO("%s: executeCB started", action_name_.c_str());
 
+        setup_camera_position();
         sleep(2); // HACK: Michael Zillich
 
         for (std::vector<int>::iterator it = vis_marker_ids.begin() ; it != vis_marker_ids.end(); ++it) {
