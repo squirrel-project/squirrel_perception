@@ -14,6 +14,7 @@ import actionlib
 import tf
 import dynamic_reconfigure.server
 from std_srvs.srv import Empty
+from std_msgs.msg import Float64
 from geometry_msgs.msg import Pose, Point, Vector3, PoseStamped
 from sensor_msgs.msg import PointCloud2
 #from squirrel_object_perception.cfg import \
@@ -32,24 +33,29 @@ class SquirrelGraspObjectImpl:
     _graspsearchcenter = Point()
     _approach_vector = Vector3()
     def __init__(self):
-        tmp_graspsearchcenter = rospy.get_param('grasp_search_center')
+        tmp_graspsearchcenter = rospy.get_param('grasp_search_center', [0.5,-0.25,0.25])
         self._graspsearchcenter.x = tmp_graspsearchcenter[0]
         self._graspsearchcenter.y = tmp_graspsearchcenter[1]
         self._graspsearchcenter.z = tmp_graspsearchcenter[2]
-        tmp_approach_vector = rospy.get_param('gripper_approach_vector')
+        tmp_approach_vector = rospy.get_param('gripper_approach_vector', [0, 0, 1])
         self._approach_vector.x = tmp_approach_vector[0]
         self._approach_vector.y = tmp_approach_vector[1]
         self._approach_vector.z = tmp_approach_vector[2]
-        self._grasp_search_size_x = rospy.get_param('grasp_search_size_x')
-        self._grasp_search_size_y = rospy.get_param('grasp_search_size_y')
+        self._grasp_search_size_x = rospy.get_param('grasp_search_size_x', 18)
+        self._grasp_search_size_y = rospy.get_param('grasp_search_size_y', 30)
         self._grasp_calculation_time_max = rospy.Duration.from_sec(40)
         self._show_only_best_grasp = False
         self._gripper_opening_width = 1
         self._closeFinger = rospy.ServiceProxy('hand_controller/closeFinger', graspCurrent)
         self._openFinger = rospy.ServiceProxy('hand_controller/openFinger', graspPreparation)
-        self._group = moveit_commander.MoveGroupCommander("arm")
-        self._tilt_pub = rospy.Publisher('/tilt_controller/command' Float64, 10)
-        self._pan_pub = rospy.Publisher('/pan_controller/command' Float64, 10)
+        try:
+            self._group = moveit_commander.MoveGroupCommander("arm")
+        except RuntimeError as e:
+            rospy.loginfo("No moveit group available")
+            self._group = None
+
+        self._tilt_pub = rospy.Publisher('/tilt_controller/command', Float64, queue_size=10)
+        self._pan_pub = rospy.Publisher('/pan_controller/command', Float64, queue_size=10)
         pass
 
     def configure(self):
