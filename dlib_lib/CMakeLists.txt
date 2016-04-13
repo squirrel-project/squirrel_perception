@@ -4,7 +4,7 @@ project(dlib_lib)
 ## Find catkin macros and libraries 
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED)
+find_package(catkin REQUIRED COMPONENTS mk roslib rospack)
 
 #test -e ${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_SHARE_DESTINATION}/${PROJECT_NAME}/INSTALLED ||
 message(STATUS "Project source dir: ${PROJECT_SOURCE_DIR}")
@@ -57,4 +57,9 @@ install(TARGETS dlib
 
 install(DIRECTORY common/include
 	DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION}
+)
+
+install(DIRECTORY common/lib
+DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+PATTERN ".svn|.so" EXCLUDE
 )

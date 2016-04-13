@@ -12,9 +12,9 @@ add_definitions(-DEIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET)
 #find_package(Boost 1.54.0 EXACT REQUIRED COMPONENTS thread program_options serialization regex filesystem system)
 
 catkin_package(
- INCLUDE_DIRS include #  LIBRARIES squirrel_tracking
- CATKIN_DEPENDS #  DEPENDS system_lib
- cv_bridge gazebo_msgs image_transport pcl_conversions rospy sensor_msgs squirrel_object_perception_msgs tf tf2 mongodb_store
+  INCLUDE_DIRS include #  LIBRARIES squirrel_tracking
+  CATKIN_DEPENDS #  DEPENDS system_lib
+  cv_bridge gazebo_msgs image_transport pcl_conversions rospy sensor_msgs squirrel_object_perception_msgs tf tf2 mongodb_store
 )
 
 include_directories(include ${catkin_INCLUDE_DIRS} ${V4R_INCLUDE_DIRS} ${PCL_INCLUDE_DIRS})
