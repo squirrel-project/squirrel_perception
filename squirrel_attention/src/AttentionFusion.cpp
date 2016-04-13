@@ -86,8 +86,8 @@ void AttentionFusion::observeTimerCallback(const ros::TimerEvent&)
     fakespeechPub.publish(message);
 
     // FIXME: For now do not try to move the camera towards a user
-    // observeMutex_.unlock();
-    // return;
+     observeMutex_.unlock();
+     return;
     
     squirrel_object_perception_msgs::LookAtPosition srv;
     srv.request.target = next_.point;
