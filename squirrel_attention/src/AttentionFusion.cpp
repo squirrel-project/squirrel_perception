@@ -21,15 +21,13 @@ using namespace std;
 
 AttentionFusion::AttentionFusion()
 {
-  legsSub_ = nh_.subscribe("/laser_person", 2, &AttentionFusion::legsCallback, this);
-  legsSub2_ = nh_.subscribe("/leg_persons", 2, &AttentionFusion::legsCallback2, this);
+  legsSub_ = nh_.subscribe("/leg_persons", 2, &AttentionFusion::legsCallback, this);
   controllerSrv_ = nh_.serviceClient<squirrel_object_perception_msgs::LookAtPosition>("/attention/look_at_position");
   timer = nh_.createTimer(ros::Duration(2.5), &AttentionFusion::observeTimerCallback, this);
   facetimer = nh_.createTimer(ros::Duration(2.5), &AttentionFusion::faceTimerCallback, this);
   last_observation_ = ros::Time::now();
   attentionSub = nh_.subscribe("actual_focus_of_attention", 2, &AttentionFusion::robotInFovCallback, this);
   fakespeechPub = nh_.advertise<squirrel_speech_msgs::RecognizedCommand>("/squirrel_speech_rec/squirrel_speech_recognized_commands", 1);
-
 }
 
 AttentionFusion::~AttentionFusion()
@@ -53,6 +51,7 @@ void AttentionFusion::faceTimerCallback(const ros::TimerEvent&)
   tmp_point.point.x = 0.0;
   tmp_point.point.y = 0.0;
   tmp_point.point.z = 0.0;
+  observeMutex_.lock();
   try{
     // service expects a geometry_msgs::Point in base_link instead of kinect_rgb_optical_frame
     listener_.waitForTransform("base_link", "face_0", ros::Time::now(), ros::Duration(1.0));
@@ -66,10 +65,8 @@ void AttentionFusion::faceTimerCallback(const ros::TimerEvent&)
   }
   
   ROS_INFO("look at person at %.3f %.3f", next_.point.x, next_.point.y);
-  observeMutex_.lock();
   reason_ = "face";
   observeMutex_.unlock();
-  
 }
 
 void AttentionFusion::observeTimerCallback(const ros::TimerEvent&)
@@ -80,7 +77,7 @@ void AttentionFusion::observeTimerCallback(const ros::TimerEvent&)
   if (diff > ros::Duration(20.0))
   {
     // rotate robot
-    //ROS_INFO("Turn camera towards the other person");
+    ROS_INFO("Turn camera towards the other person");
     ROS_INFO("For 20 seconds nobody paid attention to the robot. Make some noice.");
     squirrel_speech_msgs::RecognizedCommand message;
     message.header.stamp = ros::Time::now();
@@ -88,9 +85,9 @@ void AttentionFusion::observeTimerCallback(const ros::TimerEvent&)
     message.is_command = true;
     fakespeechPub.publish(message);
 
-    //FIXME: For now do not try to move the camera towards a user
-    observeMutex_.unlock();
-    return;
+    // FIXME: For now do not try to move the camera towards a user
+     observeMutex_.unlock();
+     return;
     
     squirrel_object_perception_msgs::LookAtPosition srv;
     srv.request.target = next_.point;
@@ -108,24 +105,14 @@ void AttentionFusion::observeTimerCallback(const ros::TimerEvent&)
   else
   {
     // wait a little longer
-    ROS_INFO("Do not move the camera just yet.");
+    // ROS_INFO("Do not move the camera just yet.");
   }
   observeMutex_.unlock();
 }
 
-void AttentionFusion::legsCallback(const std_msgs::String& msg)
+void AttentionFusion::legsCallback(const people_msgs::People& msg)
 {
-  stringstream poss(msg.data);
-  float x, y;
-  poss >> x >> y;
-  ROS_INFO("look at person at %.3f %.3f", x, y);
-  observeMutex_.lock();
-  observeMutex_.unlock();
-}
-
-void AttentionFusion::legsCallback2(const people_msgs::People& msg)
-{
-  ROS_INFO("legsCallback2");
+  ROS_INFO("legsCallback");
   for (size_t i = 0; i < msg.people.size(); i++)
   {
     ROS_INFO("possible person at %.3f %.3f", msg.people[i].position.x, msg.people[i].position.y);

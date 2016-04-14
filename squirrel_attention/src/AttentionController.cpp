@@ -23,6 +23,7 @@ AttentionController::AttentionController()
 
   lookImageSrv_ = nh_.advertiseService("/attention/look_at_image_position", &AttentionController::lookAtImagePosition, this);
   lookSrv_ = nh_.advertiseService("/attention/look_at_position", &AttentionController::lookAtPosition, this);
+  lookPanTiltSrv_ = nh_.advertiseService("/attention/look_at_pan_tilt", &AttentionController::lookAtPanTilt, this);
   fixateSrv_ =  nh_.advertiseService("/attention/fixate_position", &AttentionController::fixatePosition, this);
   clearSrv_ = nh_.advertiseService("/attention/clear_fixation", &AttentionController::clearFixation, this);
   panStateSub_ = nh_.subscribe("/pan_controller/state", 2, &AttentionController::panStateCallback, this);
@@ -88,6 +89,22 @@ bool AttentionController::lookAtPosition(squirrel_object_perception_msgs::LookAt
   return true;
 }
 
+bool AttentionController::lookAtPanTilt(squirrel_object_perception_msgs::LookAtPanTilt::Request &req,
+                                        squirrel_object_perception_msgs::LookAtPanTilt::Response &res)
+{
+  jointMutex_.lock();
+  std_msgs::Float64 panMsg, tiltMsg;
+  panMsg.data = req.pan;
+  tiltMsg.data = req.tilt; 
+  ROS_INFO("pan/tilt relative move move (deg): %.f %.f / (rad): %.3f %.3f ", panMsg.data*180./M_PI, tiltMsg.data*180./M_PI, panMsg.data, tiltMsg.data);
+  if(std::isfinite(panMsg.data) && std::isfinite(tiltMsg.data))
+  {
+    panPub_.publish(panMsg);
+    tiltPub_.publish(tiltMsg);
+  }
+  jointMutex_.unlock();
+  return true;
+}
 bool AttentionController::fixatePosition(squirrel_object_perception_msgs::FixatePosition::Request &req,
                                         squirrel_object_perception_msgs::FixatePosition::Response &res)
 {
