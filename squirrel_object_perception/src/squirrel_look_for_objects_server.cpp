@@ -6,6 +6,7 @@
 #include <squirrel_object_perception_msgs/Classification.h>
 #include <squirrel_object_perception_msgs/Classify.h>
 #include <squirrel_object_perception_msgs/GetSaliency3DSymmetry.h>
+#include <squirrel_object_perception_msgs/LookAtPanTilt.h>
 #include <squirrel_object_perception_msgs/SegmentInit.h>
 #include <squirrel_object_perception_msgs/SegmentOnce.h>
 #include <squirrel_object_perception_msgs/SegmentsToObjects.h>
@@ -99,7 +100,7 @@ protected:
         pcl::fromROSMsg(object.cloud, *segmented_object);
 	
 	pcl::PCDWriter writer;
-        writer.write<PointT>("before_recognize.pcd", *segmented_object, false);
+    //writer.write<PointT>("before_recognize.pcd", *segmented_object, false);
 
 	transformPointCloud(segmented_object, segmented_object->header.frame_id, "/kinect_depth_optical_frame");
 
@@ -114,19 +115,19 @@ protected:
         pcl::PassThrough<PointT> pass;
         pass.setKeepOrganized(true);
         pass.setFilterFieldName("x");
-        pass.setFilterLimits(min_p.x-0.03, max_p.x+0.03);
+        pass.setFilterLimits(min_p.x, max_p.x);
         pass.setInputCloud(cloud);
         pass.filter(*cloud);
         pass.setFilterFieldName("y");
-        pass.setFilterLimits(min_p.y-0.03, max_p.y+0.03);
+        pass.setFilterLimits(min_p.y, max_p.y);
         pass.setInputCloud(cloud);
         pass.filter(*cloud);
         pass.setFilterFieldName("z");
-        pass.setFilterLimits(min_p.z-0.03, max_p.z+0.03);
+        pass.setFilterLimits(min_p.z, max_p.z);
         pass.setInputCloud(cloud);
         pass.filter(*cloud);
 	
-        writer.write<PointT>("cutted.pcd", *cloud, false);
+        //writer.write<PointT>("cutted.pcd", *cloud, false);
         
 	squirrel_object_perception_msgs::Recognize srv;
         pcl::toROSMsg(*cloud, srv.request.cloud);
@@ -172,6 +173,25 @@ protected:
         if (client.call(srv))
         {
             ROS_INFO("Called service %s: ", "/squirrel_segmentation_visualization_init");
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    bool setup_camera_position()
+    {
+        if (!ros::service::waitForService("/attention/look_at_pan_tilt", ros::Duration(5.0)))
+            return false;
+        ros::ServiceClient client = nh_.serviceClient<squirrel_object_perception_msgs::LookAtPanTilt>("/attention/look_at_pan_tilt");
+        squirrel_object_perception_msgs::LookAtPanTilt srv;
+        srv.request.pan = -1.1;
+        srv.request.tilt = 0.7;
+        if (client.call(srv))
+        {
+            ROS_INFO("Called service %s: ", "/attention/look_at_pan_tilt");
             return true;
         }
         else
@@ -376,7 +396,7 @@ protected:
 
 	pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
         pcl::fromROSMsg(this->scene, *cloud);
-    //pcl::io::savePCDFileBinary("/home/edith/edith_rec_test/before_segmentation.pcd", *cloud);
+    //pcl::io::savePCDFileBinary("before_segmentation.pcd", *cloud);
 
         ros::ServiceClient client = nh_.serviceClient<squirrel_object_perception_msgs::SegmentInit>("/squirrel_segmentation_incremental_init");
         squirrel_object_perception_msgs::SegmentInit srv;
@@ -442,13 +462,8 @@ protected:
             
 	    double diam = std::sqrt(std::pow(x_diam,2) + std::pow(y_diam,2));
 
-            //std::cout << "Size from Segmenter: " << "X(" << min_p.x << ";" << max_p.x << ")" <<
-            //                         " Y(" << min_p.y << ";" << max_p.y << ")" <<
-            //                         " Z(" << min_p.z << ";" << max_p.z << ")";
 	    //std::cout << "Diam from Segmenter: " << diam << "; Height: " << z_diam << std::endl;
-            //std::cout << "Position from Segmenter in map-frame (" << obj.sceneObject.pose.position.x << "; "
-            //             << obj.sceneObject.pose.position.y << "; " << obj.sceneObject.pose.position.z << "; " << std::endl;
-	    obj.sceneObject.bounding_cylinder.diameter = diam;
+            obj.sceneObject.bounding_cylinder.diameter = diam;
             obj.sceneObject.bounding_cylinder.height = z_diam;
             this->objects.push_back(obj);
             return true;
@@ -542,6 +557,7 @@ public:
     	sensor_msgs::PointCloud2ConstPtr sceneConst;
         ROS_INFO("%s: executeCB started", action_name_.c_str());
 
+        setup_camera_position();
         sleep(2); // HACK: Michael Zillich
 
         for (std::vector<int>::iterator it = vis_marker_ids.begin() ; it != vis_marker_ids.end(); ++it) {
@@ -563,10 +579,6 @@ public:
 
 	if (sceneConst != NULL)
         {
-	    
-	    pcl::PointCloud<PointT>::Ptr test(new pcl::PointCloud<PointT>);
-        pcl::fromROSMsg(*sceneConst, *test);
-	pcl::io::savePCDFileBinary("scene.pcd", *test);
             scene = *sceneConst;
 	    sceneConst.reset();
             ROS_INFO("%s: Received data", action_name_.c_str());
@@ -611,9 +623,7 @@ public:
                         pass.setFilterFieldName("z");
                         pass.setFilterLimits(min_p.z, max_p.z);
                         pass.setInputCloud(cloud);
-                        pass.filter(*cloud); 
-
-			pcl::io::savePCDFileBinary("before_segmentation.pcd", *cloud);*/
+                        pass.filter(*cloud); */
 
                         pcl::toROSMsg(*cloud, scene);
                     }
@@ -672,16 +682,14 @@ public:
 	std::cout << "Number of segmented objects: " << objects.size() << std::endl;
         for(objectIterator = objects.begin(); objectIterator != objects.end(); objectIterator++)
         {
-            success = do_recognition((*objectIterator).sceneObject);
+            do_recognition((*objectIterator).sceneObject);
+            success = compareToDB((*objectIterator).sceneObject);
+            visualizeObject((*objectIterator).sceneObject);
             //success = add_object_to_db((*objectIterator).sceneObject);
             if (!success)
                 break;
         }
-	/*squirrel_object_perception_msgs::SceneObject sceneObjectTemp;
-	sceneObjectTemp.cloud = scene;
-	sceneObjectTemp.category = "unknown";
-	sceneObjectTemp.id = "object1";
-	do_recognition(sceneObjectTemp);*/
+	
         if(success)
         {
             //result_.sequence = feedback_.sequence;
