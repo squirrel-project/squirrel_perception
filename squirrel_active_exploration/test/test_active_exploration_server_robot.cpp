@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <octomap_ros/conversions.h>
-#include <squirrel_object_perception_msgs/Segment.h>
+#include <squirrel_object_perception_msgs/SegmentInit.h>
+#include <squirrel_object_perception_msgs/SegmentOnce.h>
 #include <squirrel_object_perception_msgs/Classify.h>
 #include <squirrel_object_perception_msgs/ActiveExplorationNBV.h>
 #include "squirrel_active_exploration/io_utils.h"
@@ -17,10 +18,8 @@ using namespace octomap;
 #define _DISTANCE_FROM_CENTER 2
 #define _NUM_LOCATIONS 10
 #define _TREE_RESOLUTION 0.1
-
-// Function declarations
-bool load_data(const string &data_name, const bool &reverse_transforms, vector<Eigen::Vector4f> &poses,
-               vector<PointCloud<PointT> > &clouds, vector<Eigen::Matrix4f> &transforms, vector<vector<vector<int> > > &indices);
+#define _BASE "/base_link"
+#define _MAP "/map"
 
 // Run Main
 int main(int argc, char **argv)
@@ -40,11 +39,6 @@ int main(int argc, char **argv)
     bool occlusions = true;
     bool multiple_locations = false;
     // Read the input if it exists
-    if (!n.getParam ("data_name", data_name))
-    {
-        ROS_ERROR("test_active_exploration_server::main : you must enter a filename!");
-        return EXIT_FAILURE;
-    }
     n.getParam ("variance", variance);
     n.getParam ("robot_height", robot_height);
     n.getParam ("robot_radius", robot_radius);
@@ -55,7 +49,6 @@ int main(int argc, char **argv)
     n.getParam ("occlusions", occlusions);
     // Print out the input
     ROS_INFO("test_active_exploration_server : input parameters");
-    cout << "Data name = " << data_name << endl;
     cout << "Variance = " << variance << endl;
     cout << "Robot height = " << robot_height << endl;
     cout << "Robot radius = " << robot_radius << endl;
@@ -71,66 +64,73 @@ int main(int argc, char **argv)
     else
         cout << "Occlusions = FALSE" << endl;
 
-    // Load the clouds from the file
-    vector<Eigen::Vector4f> poses;
-    vector<PointCloud<PointT> > clouds;
-    vector<Eigen::Matrix4f> transforms;
-    vector<vector<vector<int> > > indices;
-    if (!load_data(data_name, reverse_transforms, poses, clouds, transforms, indices))
-    {
-        ROS_ERROR("test_active_exploration_server::main : could not load the data");
-        return EXIT_FAILURE;
-    }
-    // Get a single pose, cloud and transform
     Eigen::Vector4f pose;
-    PointCloud<PointT> cloud;
     Eigen::Matrix4f transform;
     vector<vector<int> > segs;
-    if (poses.size() == 0)
+
+    // Get the point cloud
+    sensor_msgs::PointCloud2ConstPtr cloud_msg = ros::topic::waitForMessage<sensor_msgs::PointCloud2>("/kinect/depth_registered/points",
+                                                                                                      n, ros::Duration(50));
+    // Transform
+    tf::StampedTransform transform;
+    tf::TransformListener tf_listener;
+    tf_listener.waitForTransform("/kinect_depth_optical_frame", "/map", ros::Time(0), ros::Duration(5.0));
+    tf_listener.lookupTransform ("/kinect_depth_optical_frame", "/map", ros::Time(0), transform);
+    tf::Vector3 t = transform.getOrigin();
+    tf::Matrix3x3 r = transform.getBasis();
+    Eigen::Matrix4f tf = Eigen::Matrix4f::Identity();
+    tf(0,0) = r[0][0];
+    tf(0,1) = r[0][1];
+    tf(0,2) = r[0][2];
+    tf(0,3) = t[0];
+    tf(1,0) = r[1][0];
+    tf(1,1) = r[1][1];
+    tf(1,2) = r[1][2];
+    tf(1,3) = t[1];
+    tf(2,0) = r[2][0];
+    tf(2,1) = r[2][1];
+    tf(2,2) = r[2][2];
+    tf(2,3) = t[2];
+    tf = tf.inverse();  // inverse the transform
+    transform = tf;
+    // Transform the point cloud
+    transformPointCloud(cloud, cloud, transform);
+
+    // Get the pose
+    PointCloud<PointT> robot_pos;
+    robot_pos.resize(1);
+    robot_pos.points[0].x = 0.0;
+    robot_pos.points[0].y = 0.0;
+    robot_pos.points[0].z = 0.0;
+    PointCloud<PointT> robot_map_pos;
+    if (!frame_to_frame(_BASE, _MAP, robot_pos, robot_map_pos))
     {
-        ROS_ERROR("test_active_exploration_server::main : iposes is empty");
+        ROS_ERROR("test_active_exploration_server : could not transform robot location to map frame");
         return EXIT_FAILURE;
-    }
-    else if (poses.size() == 1)
-    {
-        pose = poses[0];
-        cloud = clouds[0];
-        transform = transforms[0];
-        segs = indices[0];
     }
     else
     {
-        multiple_locations = true;
-        int r = int_rand(0, poses.size()-1);
-        if (r < 0 || r >= poses.size())
-        {
-            ROS_ERROR("test_active_exploration_server::main : invalid random number %i for poses of size %lu", r, poses.size());
-            return EXIT_FAILURE;
-        }
-        // Otherwise get the elements
-        pose = poses[r];
-        cloud = clouds[r];
-        transform = transforms[r];
-        segs = indices[r];
+        ROS_INFO("test_active_exploration_server : robot location is [%.2f, %.2f]", robot_map_pos.points[0].x, robot_map_pos.points[0].y);
+        pose[0] = robot_map_pos.points[0].x;
+        pose[1] = robot_map_pos.points[0].y;
+        pose[2] = robot_map_pos.points[0].z;
+        pose[3] = 0.0;
     }
 
-    // Transform the point cloud
-    transformPointCloud(cloud, cloud, transform);
-    // Get the pose from the transformed point cloud
-    pose = extract_camera_position (cloud);
-    pose = transform_eigvec(pose, transform);
+
+
+
 
     // Create the service clients
     ros::ServiceClient nbv_client = n.serviceClient<squirrel_object_perception_msgs::ActiveExplorationNBV>("/squirrel_active_exploration");
     squirrel_object_perception_msgs::ActiveExplorationNBV nbv_srv;
-    ros::ServiceClient seg_client = n.serviceClient<squirrel_object_perception_msgs::Segment>("/squirrel_segmentation");;
-    squirrel_object_perception_msgs::Segment seg_srv;
+    ros::ServiceClient seg_init_client = n.serviceClient<squirrel_object_perception_msgs::SegmentInit>("/squirrel_segmentation_incremental_init");;
+    squirrel_object_perception_msgs::SegmentInit seg_init_srv;
+    ros::ServiceClient seg_client = n.serviceClient<squirrel_object_perception_msgs::SegmentOnce>("/squirrel_segmentation_incremental_once");;
+    squirrel_object_perception_msgs::SegmentOnce seg_srv;
     ros::ServiceClient classify_client = n.serviceClient<squirrel_object_perception_msgs::Classify>("/squirrel_classify");
     squirrel_object_perception_msgs::Classify classify_srv;
 
-    // Convert the point cloud to a ros message type
-    sensor_msgs::PointCloud2 cloud_msg;
-    pcl::toROSMsg(cloud, cloud_msg);
 
     // Create an octree with the point cloud input
     OcTree tree (tree_resolution);
@@ -149,16 +149,6 @@ int main(int argc, char **argv)
     nbv_srv.request.cloud = cloud_msg;
     nbv_srv.request.occlusions = occlusions;
     // Octomap - Only works with binary conversion!
-//    vector<int8_t> map_data;
-//    if (!octomap_msgs::fullMapToMsgData(tree, map_data))
-//    {
-//        ROS_ERROR("test_active_exploration_server::main : could not convert the octomap");
-//        return EXIT_FAILURE;
-//    }
-//    nbv_srv.request.map.id = "OcTree";  // always!
-//    nbv_srv.request.map.binary = false; // used full map conversion
-//    nbv_srv.request.map.resolution = tree_resolution;
-//    nbv_srv.request.map.data = map_data;
     octomap_msgs::Octomap oc_msg;
     if (!octomap_msgs::binaryMapToMsg(tree, oc_msg))
     {
@@ -168,23 +158,46 @@ int main(int argc, char **argv)
     nbv_srv.request.map = oc_msg;
 
     // This is how the segmentation and classification SHOULD work
-    // Segment
-    seg_srv.request.cloud = cloud_msg;
+    sensor_msgs::Image in_image;
+    // Load the image
+    string image_file = "/home/squirrel/catkin_ws/src/squirrel_perception/squirrel_active_exploration/data/test45.png";
+    cv::Mat image = cv::imread(image_file,-1);
+    cv_bridge::CvImagePtr cv_ptr (new cv_bridge::CvImage);
+    ros::Time time = ros::Time::now();
+    // Convert OpenCV image to ROS message
+    cv_ptr->header.stamp = time;
+    cv_ptr->header.frame_id = "saliency_map";
+    cv_ptr->encoding = "mono8";
+    cv_ptr->image = image;
+    cv_ptr->toImageMsg(in_image);
+    // Segment initialisation
+    seg_init_srv.request.saliency_map = in_image;
+    seg_init_srv.request.cloud = cloud_msg;
+    if (!seg_init_client.call(seg_init_srv))
+    {
+        ROS_ERROR("test_active_exploration_server::main : could not call the segmentation initialisation service");
+        return EXIT_FAILURE;
+    }
+    // Segment once
     if (!seg_client.call(seg_srv))
     {
         ROS_ERROR("test_active_exploration_server::main : could not call the segmentation service");
         return EXIT_FAILURE;
     }
     nbv_srv.request.clusters_indices = seg_srv.response.clusters_indices;
-    // Classify
-    classify_srv.request.cloud = cloud_msg;
-    classify_srv.request.clusters_indices = seg_srv.response.clusters_indices;
-    if (!classify_client.call(classify_srv))
-    {
-        ROS_ERROR("test_active_exploration_server::main : could not call the classification service");
-        return EXIT_FAILURE;
-    }
-    nbv_srv.request.class_results = classify_srv.response.class_results;
+
+    ROS_INFO("Successfully segmented the scene");
+
+
+//    // Classify
+//    classify_srv.request.cloud = cloud_msg;
+//    classify_srv.request.clusters_indices = seg_srv.response.clusters_indices;
+//    if (!classify_client.call(classify_srv))
+//    {
+//        ROS_ERROR("test_active_exploration_server::main : could not call the classification service");
+//        return EXIT_FAILURE;
+//    }
+//    nbv_srv.request.class_results = classify_srv.response.class_results;
 
 //    // Fake segmentation and classification because they do not seem to work
 //    vector<std_msgs::Int32MultiArray> clusters_indices;
@@ -218,65 +231,65 @@ int main(int argc, char **argv)
 //    nbv_srv.request.class_results = class_results;
 
 
-    // --- Test 1: given locations
-    if (multiple_locations)
-    {
-        vector<geometry_msgs::Point> locations;
-        //for (size_t i = 0; i < poses.size(); ++i)
-        for (size_t i = 0; i < 4; ++i)
-        {
-            geometry_msgs::Point p;
-            p.x = poses[i][0];
-            p.y = poses[i][1];
-            p.z = poses[i][2];
-            locations.push_back(p);
-        }
-        nbv_srv.request.locations = locations;
-        // Call the service
-        ROS_INFO("test_active_exploration_server::main : calling next best view service with given locations");
-        if (!nbv_client.call(nbv_srv))
-        {
-            ROS_ERROR("test_active_exploration_server::main : could not call the next best view service");
-            return EXIT_FAILURE;
-        }
-        // Print out the best index
-        cout << endl;
-        ROS_INFO("Next best view index is %i", nbv_srv.response.nbv_ix);
-        // Print out the locations and their utilities
-        cout << "locations and utilities:" << endl;
-        for (size_t i = 0; i < nbv_srv.response.generated_locations.size(); ++i)
-        {
-            cout << "[" << nbv_srv.response.generated_locations[i].x << " "
-                 << nbv_srv.response.generated_locations[i].y << " "
-                 << nbv_srv.response.generated_locations[i].z << "] -> "
-                 << nbv_srv.response.utilities[i] << endl;
-        }
-    }
+//    // --- Test 1: given locations
+//    if (multiple_locations)
+//    {
+//        vector<geometry_msgs::Point> locations;
+//        //for (size_t i = 0; i < poses.size(); ++i)
+//        for (size_t i = 0; i < 4; ++i)
+//        {
+//            geometry_msgs::Point p;
+//            p.x = poses[i][0];
+//            p.y = poses[i][1];
+//            p.z = poses[i][2];
+//            locations.push_back(p);
+//        }
+//        nbv_srv.request.locations = locations;
+//        // Call the service
+//        ROS_INFO("test_active_exploration_server::main : calling next best view service with given locations");
+//        if (!nbv_client.call(nbv_srv))
+//        {
+//            ROS_ERROR("test_active_exploration_server::main : could not call the next best view service");
+//            return EXIT_FAILURE;
+//        }
+//        // Print out the best index
+//        cout << endl;
+//        ROS_INFO("Next best view index is %i", nbv_srv.response.nbv_ix);
+//        // Print out the locations and their utilities
+//        cout << "locations and utilities:" << endl;
+//        for (size_t i = 0; i < nbv_srv.response.generated_locations.size(); ++i)
+//        {
+//            cout << "[" << nbv_srv.response.generated_locations[i].x << " "
+//                 << nbv_srv.response.generated_locations[i].y << " "
+//                 << nbv_srv.response.generated_locations[i].z << "] -> "
+//                 << nbv_srv.response.utilities[i] << endl;
+//        }
+//    }
 
-    // --- Test 2: without locations (they must be generated)
-    nbv_srv.request.locations.clear();
-    nbv_srv.request.robot_height = robot_height;
-    nbv_srv.request.robot_radius = robot_radius;
-    nbv_srv.request.distance_from_center = distance_from_center;
-    nbv_srv.request.num_locations = num_locations;
-    ROS_INFO("test_active_exploration_server::main : calling next best view service without given locations");
-    if (!nbv_client.call(nbv_srv))
-    {
-        ROS_ERROR("test_active_exploration_server::main : could not call the next best view service");
-        return EXIT_FAILURE;
-    }
-    // Print out the best index
-    cout << endl;
-    ROS_INFO("Next best view index is %i", nbv_srv.response.nbv_ix);
-    // Print out the locations and their utilities
-    cout << "locations and utilities:" << endl;
-    for (size_t i = 0; i < nbv_srv.response.generated_locations.size(); ++i)
-    {
-        cout << "[" << nbv_srv.response.generated_locations[i].x << " "
-             << nbv_srv.response.generated_locations[i].y << " "
-             << nbv_srv.response.generated_locations[i].z << "] -> "
-             << nbv_srv.response.utilities[i] << endl;
-    }
+//    // --- Test 2: without locations (they must be generated)
+//    nbv_srv.request.locations.clear();
+//    nbv_srv.request.robot_height = robot_height;
+//    nbv_srv.request.robot_radius = robot_radius;
+//    nbv_srv.request.distance_from_center = distance_from_center;
+//    nbv_srv.request.num_locations = num_locations;
+//    ROS_INFO("test_active_exploration_server::main : calling next best view service without given locations");
+//    if (!nbv_client.call(nbv_srv))
+//    {
+//        ROS_ERROR("test_active_exploration_server::main : could not call the next best view service");
+//        return EXIT_FAILURE;
+//    }
+//    // Print out the best index
+//    cout << endl;
+//    ROS_INFO("Next best view index is %i", nbv_srv.response.nbv_ix);
+//    // Print out the locations and their utilities
+//    cout << "locations and utilities:" << endl;
+//    for (size_t i = 0; i < nbv_srv.response.generated_locations.size(); ++i)
+//    {
+//        cout << "[" << nbv_srv.response.generated_locations[i].x << " "
+//             << nbv_srv.response.generated_locations[i].y << " "
+//             << nbv_srv.response.generated_locations[i].z << "] -> "
+//             << nbv_srv.response.utilities[i] << endl;
+//    }
 
     // End
     ros::shutdown();
