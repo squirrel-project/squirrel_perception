@@ -171,8 +171,8 @@ bool icp(const PointCloud<PointT>::Ptr source, const PointCloud<PointT>::Ptr tar
     {
         tgt = target;
     }
-    //cout << "source " << src->size() << " (" << source->size() << ")" << endl;
-    //cout << "target " << tgt->size() << " (" << target->size() << ")" << endl;
+    cout << "source " << src->size() << " (" << source->size() << ")" << endl;
+    cout << "target " << tgt->size() << " (" << target->size() << ")" << endl;
 
     // Compute surface normals and curvature
     PointCloud<PointNormal>::Ptr points_with_normals_src (new PointCloud<PointNormal>);
