@@ -52,3 +52,17 @@ string rem_backslash(const string &str)
         res = str.substr(0,str.length()-1);
     return res;
 }
+
+bool split_filename(const string& str, string &path, string &file)
+{
+    // Find the last directory delimiter
+    size_t found = str.find_last_of("/\\");
+    // If did not find the directory delimiter
+    if (found == string::npos)
+        return false;
+    // Split to path and filename
+    path = str.substr(0,found);
+    file = str.substr(found+1);
+    // Return success
+    return true;
+}

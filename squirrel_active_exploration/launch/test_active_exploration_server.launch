@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="hostname" default="localhost" />
+
+  <!-- the data input can be an entire directory of point clouds, one of which will be selected at random, or a single point cloud file
+       must have saved segmentation files for this to work because the segmentation service appears not to work anymore -->
+  <arg name="data_name" default="/home/tpat8946/Data/TUW/Datasets/willow_dataset_training_models_gt/test_set/T_01_willow_dataset/" />
+  <!--arg name="data_name" default="/home/tpat8946/Data/TUW/Datasets/willow_dataset_training_models_gt/test_set/T_01_willow_dataset/cloud_0000000000.pcd" /-->
+  <arg name="variance" default="0.5" />
+  <arg name="robot_height" default="0.7" />
+  <arg name="robot_radius" default="0.22" />
+  <arg name="distance_from_center" default="2.0" />
+  <arg name="num_locations" default="8" />
+  <arg name="tree_resolution" default="0.1" />
+  <arg name="reverse_transforms" default="true" />  <!-- reverse is "true" for WILLOW GARAGE dataset -->
+  <arg name="occlusions" default="true" />
+
+  <node name="test_active_exploration_server"
+        pkg="squirrel_active_exploration"
+        type="test_active_exploration_server"
+        output="screen">
+       	<param name="data_name" type="string" value="$(arg data_name)" />
+    	<param name="variance" type="double" value="$(arg variance)" />
+		<param name="robot_height" type="double" value="$(arg robot_height)" />
+		<param name="robot_radius" type="double" value="$(arg robot_radius)" />
+		<param name="distance_from_center" type="double" value="$(arg distance_from_center)" />
+		<param name="num_locations" type="double" value="$(arg num_locations)" />
+		<param name="tree_resolution" type="double" value="$(arg tree_resolution)" />
+		<param name="reverse_transforms" type="bool" value="$(arg reverse_transforms)" />
+		<param name="occlusions" type="bool" value="$(arg occlusions)" />
+  </node>
+
+</launch>

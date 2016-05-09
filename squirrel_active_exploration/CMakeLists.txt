@@ -98,6 +98,12 @@ target_link_libraries(refine_transformations ${catkin_LIBRARIES} ${PCL_LIBRARIES
 add_executable(manual_adjust_point_cloud src/manual_adjust_point_cloud.cpp $<TARGET_OBJECTS:squirrel_active_exploration_common>)
 target_link_libraries(manual_adjust_point_cloud ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${OCTOMAP_LIBRARIES})
 
+add_executable(squirrel_active_exploration_server src/squirrel_active_exploration_server.cpp $<TARGET_OBJECTS:squirrel_active_exploration_common>)
+target_link_libraries(squirrel_active_exploration_server ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${OCTOMAP_LIBRARIES})
+
+add_executable(test_active_exploration_server test/test_active_exploration_server.cpp $<TARGET_OBJECTS:squirrel_active_exploration_common>)
+target_link_libraries(test_active_exploration_server ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${OCTOMAP_LIBRARIES})
+
 add_dependencies(squirrel_map_coverage ${catkin_EXPORTED_TARGETS} ${squirrel_active_exploration_EXPORTED_TARGETS})
 add_dependencies(squirrel_map_coverage_server ${catkin_EXPORTED_TARGETS} ${squirrel_active_exploration_EXPORTED_TARGETS})
 add_dependencies(test_map_coverage_server ${catkin_EXPORTED_TARGETS} ${squirrel_active_exploration_EXPORTED_TARGETS})

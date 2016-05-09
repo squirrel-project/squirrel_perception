@@ -1611,8 +1611,9 @@ namespace active_exploration_utils
 
     /* === PLANNING === */
 
-    bool next_best_view(int &next_best_index, const OcTree &tree, const Hypothesis &hypothesis, const SIM_TYPE &sim,
-                        const vector<Eigen::Vector4f> &map_locations, const double &variance, const bool &do_visualize)
+    bool next_best_view(int &next_best_index, vector<double> &utilities, const OcTree &tree, const Hypothesis &hypothesis,
+                        const SIM_TYPE &sim, const vector<Eigen::Vector4f> &map_locations, const double &variance,
+                        const bool &do_visualize)
     {
         ROS_INFO("active_exploration_utils::next_best_view : starting");
         next_best_index = -1;
@@ -1671,7 +1672,7 @@ namespace active_exploration_utils
                     segs_max_ent = entropies[i];
             }
         }
-        // If segs for planning is empty then just plan for the objct with the  highest entropy
+        // If segs for planning is empty then just plan for the objct with the highest entropy
         if (segs_for_planning.size() == 0)
         {
             // If there are no rankings available
@@ -1815,10 +1816,11 @@ namespace active_exploration_utils
 
             // Compute the utility for each location
             if (all_model_views)
-                next_best_index = gaussian_weighted_next_best_view(tree, hypothesis, map_locations, segs_for_planning, model_views,
-                                                                   scaled_model_utilities, uncertainty_weight, variance, unoccluded, do_visualize);
+                next_best_index = gaussian_weighted_next_best_view(utilities, tree, hypothesis, map_locations, segs_for_planning,
+                                                                   model_views, scaled_model_utilities, uncertainty_weight, variance,
+                                                                   unoccluded, do_visualize);
             else
-                next_best_index = nearest_next_best_view(class_estimates, map_locations, segs_for_planning, model_views,
+                next_best_index = nearest_next_best_view(utilities, class_estimates, map_locations, segs_for_planning, model_views,
                                                          scaled_model_utilities, uncertainty_weight);
         }
         // Check that the index is valid
@@ -1833,11 +1835,21 @@ namespace active_exploration_utils
         return true;
     }
 
-    int nearest_next_best_view(const vector<Classification> &class_estimates, const vector<Eigen::Vector4f> &map_locations,
-                               const vector<int> &seg_indices,
+    bool next_best_view(int &next_best_index, const OcTree &tree, const Hypothesis &hypothesis, const SIM_TYPE &sim,
+                        const vector<Eigen::Vector4f> &map_locations, const double &variance, const bool &do_visualize)
+    {
+        vector<double> utilities;
+        return next_best_view(next_best_index, utilities, tree, hypothesis, sim, map_locations, variance, do_visualize);
+    }
+
+    int nearest_next_best_view(vector<double> &utilities, const vector<Classification> &class_estimates,
+                               const vector<Eigen::Vector4f> &map_locations, const vector<int> &seg_indices,
                                const vector<vector<pair<vector<PointCloud<PointT> >,vector<Eigen::Vector4f> > > > &model_views,
                                const vector<vector<vector<double> > > &scaled_model_utilities, const vector<double> &uncertainty_weight)
     {
+        // This function does not compute utilities using the objective function, therefore keep it empty
+        utilities.clear();
+
         // For each segment find the closest location in the map
         vector<pair<int,double> > nearest_indices;
         for (vector<int>::size_type i = 0; i < seg_indices.size(); ++i)
@@ -1908,8 +1920,18 @@ namespace active_exploration_utils
         }
     }
 
-    int gaussian_weighted_next_best_view(const OcTree &tree, const Hypothesis &hypothesis, const vector<Eigen::Vector4f> &map_locations,
-                                         const vector<int> &seg_indices,
+    int nearest_next_best_view(const vector<Classification> &class_estimates,
+                               const vector<Eigen::Vector4f> &map_locations, const vector<int> &seg_indices,
+                               const vector<vector<pair<vector<PointCloud<PointT> >,vector<Eigen::Vector4f> > > > &model_views,
+                               const vector<vector<vector<double> > > &scaled_model_utilities, const vector<double> &uncertainty_weight)
+    {
+        vector<double> utilities;
+        return nearest_next_best_view(utilities, class_estimates, map_locations, seg_indices, model_views, scaled_model_utilities,
+                                      uncertainty_weight);
+    }
+
+    int gaussian_weighted_next_best_view(vector<double> &utilities, const OcTree &tree, const Hypothesis &hypothesis,
+                                         const vector<Eigen::Vector4f> &map_locations, const vector<int> &seg_indices,
                                          const vector<vector<pair<vector<PointCloud<PointT> >,vector<Eigen::Vector4f> > > > &model_views,
                                          const vector<vector<vector<double> > > &scaled_model_utilities,
                                          const vector<double> &uncertainty_weight, const double &variance, const bool &unoccluded,
@@ -1920,9 +1942,9 @@ namespace active_exploration_utils
         vector<vector<InstLookUp> > instance_directories = hypothesis._instance_directories;
         vector<vector<OcTreeKey> > octree_keys = hypothesis._octree_keys;
         vector<vector<InstToMapTF> > transforms = hypothesis._transforms;
-
-        vector<double> utilities;
+        utilities.clear();
         utilities.resize(map_locations.size());
+
         // Do one visualization if do_visualize is set to true
         bool single_vis = false;
         // WARN : no visualization ever when commented out
@@ -1930,7 +1952,7 @@ namespace active_exploration_utils
             single_vis = true;
         for (vector<Eigen::Vector4f>::size_type i = 0; i < map_locations.size(); ++i)
         {
-            //cout << " * * * LOCATION " << i << endl;
+            cout << " * * * LOCATION " << i << endl;
             utilities[i] = 0;
             // Consider the contribution from each segment that needs to be viewed
             vector<vector<PointCloud<PointT> > > expected_clouds;
@@ -2003,6 +2025,18 @@ namespace active_exploration_utils
         }
         // Determine the location with the maximum utility
         return distance(utilities.begin(), max_element(utilities.begin(), utilities.end()));
+    }
+
+    int gaussian_weighted_next_best_view(const OcTree &tree, const Hypothesis &hypothesis,
+                                         const vector<Eigen::Vector4f> &map_locations, const vector<int> &seg_indices,
+                                         const vector<vector<pair<vector<PointCloud<PointT> >,vector<Eigen::Vector4f> > > > &model_views,
+                                         const vector<vector<vector<double> > > &scaled_model_utilities,
+                                         const vector<double> &uncertainty_weight, const double &variance, const bool &unoccluded,
+                                         const bool &do_visualize)
+    {
+        vector<double> utilities;
+        return gaussian_weighted_next_best_view(utilities, tree, hypothesis, map_locations, seg_indices, model_views,
+                                                scaled_model_utilities, uncertainty_weight, variance, unoccluded, do_visualize);
     }
 
     int extracted_point_cloud_next_best_view(const vector<Eigen::Vector4f> &map_locations, const vector<int> &seg_indices,

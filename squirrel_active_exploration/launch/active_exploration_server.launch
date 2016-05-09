@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="hostname" default="localhost" />
+  <node name="squirrel_active_exploration_server" pkg="squirrel_active_exploration" type="squirrel_active_exploration_server" output="screen"> </node>
+
+</launch>
