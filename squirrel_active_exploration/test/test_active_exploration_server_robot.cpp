@@ -102,7 +102,7 @@ int main(int argc, char **argv)
     fromPCLPointCloud2(pcl_pc2, cloud);
     transformPointCloud(cloud, cloud, transform);
     // Save point cloud
-    string f = "tim_seg_cloud.pcd";
+    string f = "/home/squirrel/tim_seg_cloud.pcd";
     io::savePCDFileBinary (f, cloud);
     // Convert back to ros message
     sensor_msgs::PointCloud2 cloud_msg;
@@ -147,6 +147,8 @@ int main(int argc, char **argv)
     octomap::Pointcloud o_cloud;
     pointCloud2ToOctomap(cloud_msg, o_cloud);
     tree.insertPointCloud(o_cloud, pos);
+    // Save octomap
+    tree.writeBinary("/home/squirrel/tim_tree.bt");
 
     // Set the fields in the service
     nbv_srv.request.camera_pose.position.x = pose[0];
