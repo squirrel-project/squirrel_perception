@@ -4,6 +4,9 @@
 #include <squirrel_object_perception_msgs/SegmentOnce.h>
 #include <squirrel_object_perception_msgs/Classify.h>
 #include <squirrel_object_perception_msgs/ActiveExplorationNBV.h>
+#include <cv.h>
+#include <opencv2/highgui/highgui.hpp>
+#include <cv_bridge/cv_bridge.h>
 #include "squirrel_active_exploration/io_utils.h"
 
 using namespace std;
@@ -69,15 +72,15 @@ int main(int argc, char **argv)
     vector<vector<int> > segs;
 
     // Get the point cloud
-    sensor_msgs::PointCloud2ConstPtr cloud_msg = ros::topic::waitForMessage<sensor_msgs::PointCloud2>("/kinect/depth_registered/points",
-                                                                                                      n, ros::Duration(50));
+    sensor_msgs::PointCloud2ConstPtr scene = ros::topic::waitForMessage<sensor_msgs::PointCloud2>("/kinect/depth_registered/points",
+                                                                                                  n, ros::Duration(50));
     // Transform
-    tf::StampedTransform transform;
+    tf::StampedTransform stamped_transform;
     tf::TransformListener tf_listener;
     tf_listener.waitForTransform("/kinect_depth_optical_frame", "/map", ros::Time(0), ros::Duration(5.0));
-    tf_listener.lookupTransform ("/kinect_depth_optical_frame", "/map", ros::Time(0), transform);
-    tf::Vector3 t = transform.getOrigin();
-    tf::Matrix3x3 r = transform.getBasis();
+    tf_listener.lookupTransform ("/kinect_depth_optical_frame", "/map", ros::Time(0), stamped_transform);
+    tf::Vector3 t = stamped_transform.getOrigin();
+    tf::Matrix3x3 r = stamped_transform.getBasis();
     Eigen::Matrix4f tf = Eigen::Matrix4f::Identity();
     tf(0,0) = r[0][0];
     tf(0,1) = r[0][1];
@@ -94,7 +97,14 @@ int main(int argc, char **argv)
     tf = tf.inverse();  // inverse the transform
     transform = tf;
     // Transform the point cloud
+    PCLPointCloud2 pcl_pc2;
+    pcl_conversions::toPCL(*scene, pcl_pc2);
+    PointCloud<PointT> cloud;
+    fromPCLPointCloud2(pcl_pc2, cloud);
     transformPointCloud(cloud, cloud, transform);
+    // Convert back to ros message
+    sensor_msgs::PointCloud2 cloud_msg;
+    pcl::toROSMsg(cloud, cloud_msg);
 
     // Get the pose
     PointCloud<PointT> robot_pos;
