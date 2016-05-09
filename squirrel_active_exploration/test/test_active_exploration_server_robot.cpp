@@ -126,20 +126,15 @@ int main(int argc, char **argv)
         pose[3] = 0.0;
     }
 
-
-
-
-
     // Create the service clients
     ros::ServiceClient nbv_client = n.serviceClient<squirrel_object_perception_msgs::ActiveExplorationNBV>("/squirrel_active_exploration");
     squirrel_object_perception_msgs::ActiveExplorationNBV nbv_srv;
     ros::ServiceClient seg_init_client = n.serviceClient<squirrel_object_perception_msgs::SegmentInit>("/squirrel_segmentation_incremental_init");;
     squirrel_object_perception_msgs::SegmentInit seg_init_srv;
-    ros::ServiceClient seg_client = n.serviceClient<squirrel_object_perception_msgs::SegmentOnce>("/squirrel_segmentation_incremental_once");;
+    ros::ServiceClient seg_client = n.serviceClient<squirrel_object_perception_msgs::SegmentOnce>("/squirrel_segmentation_incremental_once");
     squirrel_object_perception_msgs::SegmentOnce seg_srv;
     ros::ServiceClient classify_client = n.serviceClient<squirrel_object_perception_msgs::Classify>("/squirrel_classify");
     squirrel_object_perception_msgs::Classify classify_srv;
-
 
     // Create an octree with the point cloud input
     OcTree tree (tree_resolution);
@@ -181,7 +176,7 @@ int main(int argc, char **argv)
     cv_ptr->toImageMsg(in_image);
     // Segment initialisation
     seg_init_srv.request.saliency_map = in_image;
-    seg_init_srv.request.cloud = cloud_msg;
+    seg_init_srv.request.cloud = scene;
     if (!seg_init_client.call(seg_init_srv))
     {
         ROS_ERROR("test_active_exploration_server::main : could not call the segmentation initialisation service");
