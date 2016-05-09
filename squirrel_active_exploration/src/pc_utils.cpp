@@ -185,11 +185,17 @@ bool icp(const PointCloud<PointT>::Ptr source, const PointCloud<PointT>::Ptr tar
 
     norm_est.setInputCloud (src);
     norm_est.compute (*points_with_normals_src);
+    cout << "source with normals " << points_with_normals_src->size() << endl;
     copyPointCloud (*src, *points_with_normals_src);
+    cout << "source with normals " << points_with_normals_src->size() << endl;
+    cout << "source " << src->size() << endl;
 
     norm_est.setInputCloud (tgt);
     norm_est.compute (*points_with_normals_tgt);
+    cout << "target with normals " << points_with_normals_tgt->size() << endl;
     copyPointCloud (*tgt, *points_with_normals_tgt);
+    cout << "target with normals " << points_with_normals_tgt->size() << endl;
+    cout << "target " << tgt->size() << endl;
 
     // Instantiate our custom point representation (defined above) ...
     MyPointRepresentation point_representation;

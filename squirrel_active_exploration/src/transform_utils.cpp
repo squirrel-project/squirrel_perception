@@ -410,7 +410,7 @@ bool transform_cloud_to_cloud(const PointCloud<PointT> &source, const PointCloud
         // Try the different rotations
         for (size_t j = 0; j < rotations.size(); ++j)
         {
-            cout << "1. ICP with source_ds = " << source_ptr->size() << endl;
+            cout << "1. ICP with source_ds = " << source_ds_ptr->size() << endl;
             Eigen::Matrix4f rtf = rotations[j];
             transformPointCloud(*source_ds_ptr, *source_ptr, rtf);
             cout << "2. ICP with source = " << source_ptr->size() << endl;
