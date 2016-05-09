@@ -94,8 +94,7 @@ int main(int argc, char **argv)
     tf(2,1) = r[2][1];
     tf(2,2) = r[2][2];
     tf(2,3) = t[2];
-    tf = tf.inverse();  // inverse the transform
-    transform = tf;
+    transform = tf.inverse();  // inverse the transform
     // Transform the point cloud
     PCLPointCloud2 pcl_pc2;
     pcl_conversions::toPCL(*scene, pcl_pc2);

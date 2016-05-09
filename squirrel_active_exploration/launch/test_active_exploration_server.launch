@@ -16,9 +16,9 @@
   <arg name="reverse_transforms" default="true" />  <!-- reverse is "true" for WILLOW GARAGE dataset -->
   <arg name="occlusions" default="true" />
 
-  <node name="test_active_exploration_server"
+  <node name="test_active_exploration_server_robot"
         pkg="squirrel_active_exploration"
-        type="test_active_exploration_server"
+        type="test_active_exploration_server_robot"
         output="screen">
        	<param name="data_name" type="string" value="$(arg data_name)" />
     	<param name="variance" type="double" value="$(arg variance)" />
