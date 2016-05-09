@@ -101,6 +101,9 @@ int main(int argc, char **argv)
     PointCloud<PointT> cloud;
     fromPCLPointCloud2(pcl_pc2, cloud);
     transformPointCloud(cloud, cloud, transform);
+    // Save point cloud
+    string f = "tim_seg_cloud.pcd";
+    io::savePCDFileBinary (f, cloud);
     // Convert back to ros message
     sensor_msgs::PointCloud2 cloud_msg;
     pcl::toROSMsg(cloud, cloud_msg);
