@@ -126,7 +126,7 @@ int main(int argc, char **argv)
                  robot_map_pos.points[0].x, robot_map_pos.points[0].y, robot_map_pos.points[0].z);
         pose[0] = robot_map_pos.points[0].x;
         pose[1] = robot_map_pos.points[0].y;
-        pose[2] = robot_map_pos.points[0].z;
+        pose[2] = robot_map_pos.points[0].z + robot_height;  // Adding height here?
         pose[3] = 0.0;
     }
 
