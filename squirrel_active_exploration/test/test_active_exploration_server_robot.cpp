@@ -159,7 +159,7 @@ int main(int argc, char **argv)
     octomap_msgs::Octomap oc_msg;
     if (!octomap_msgs::binaryMapToMsg(tree, oc_msg))
     {
-        ROS_ERROR("test_active_exploration_server::main : could not convert the octomap");
+        ROS_ERROR("test_active_exploration_server : could not convert the octomap");
         return EXIT_FAILURE;
     }
     nbv_srv.request.map = oc_msg;
@@ -179,21 +179,21 @@ int main(int argc, char **argv)
     cv_ptr->toImageMsg(in_image);
     // Segment initialisation
     seg_init_srv.request.saliency_map = in_image;
-    seg_init_srv.request.cloud = scene;
+    seg_init_srv.request.cloud = *scene;
     if (!seg_init_client.call(seg_init_srv))
     {
-        ROS_ERROR("test_active_exploration_server::main : could not call the segmentation initialisation service");
+        ROS_ERROR("test_active_exploration_server : could not call the segmentation initialisation service");
         return EXIT_FAILURE;
     }
     // Segment once
     if (!seg_client.call(seg_srv))
     {
-        ROS_ERROR("test_active_exploration_server::main : could not call the segmentation service");
+        ROS_ERROR("test_active_exploration_server : could not call the segmentation service");
         return EXIT_FAILURE;
     }
     nbv_srv.request.clusters_indices = seg_srv.response.clusters_indices;
 
-    ROS_INFO("Successfully segmented the scene");
+    ROS_INFO("test_active_exploration_server : successfully segmented the scene");
 
 
 //    // Classify
@@ -206,36 +206,32 @@ int main(int argc, char **argv)
 //    }
 //    nbv_srv.request.class_results = classify_srv.response.class_results;
 
-//    // Fake segmentation and classification because they do not seem to work
-//    vector<std_msgs::Int32MultiArray> clusters_indices;
-//    vector<squirrel_object_perception_msgs::Classification> class_results;
-//    string squirrel_dir = "/home/tpat8946/ros_ws/squirrel/src/squirrel_perception/squirrel_active_exploration/data/training_set_3/training/";
-//    for (size_t i = 0; i < segs.size(); ++i)
-//    {
-//        std_msgs::Int32MultiArray s;
-//        s.data = segs[i];
-//        clusters_indices.push_back(s);
-//        squirrel_object_perception_msgs::Classification c;
-//        std_msgs::String str;
-//        str.data = "apple/";
-//        c.class_type.push_back(str);
-//        str.data = "bottle/";
-//        c.class_type.push_back(str);
-//        str.data = "spray_bottle/";
-//        c.class_type.push_back(str);
-//        c.confidence.push_back(0.2);
-//        c.confidence.push_back(0.3);
-//        c.confidence.push_back(0.5);
-//        str.data = squirrel_dir + "apple//3a92a256ad1e060ec048697b91f69d2/esf/pose_0.txt";
-//        c.pose.push_back(str);
-//        str.data = squirrel_dir + "bottle//1cf98e5b6fff5471c8724d5673a063a6/esf/pose_0.txt";
-//        c.pose.push_back(str);
-//        str.data = squirrel_dir + "spray_bottle//9b9a4bb5550f00ea586350d6e78ecc7/esf/pose_0.txt";
-//        c.pose.push_back(str);
-//        class_results.push_back(c);
-//    }
-//    nbv_srv.request.clusters_indices = clusters_indices;
-//    nbv_srv.request.class_results = class_results;
+    // Fake classification because it does not seem to work
+    ROS_WARN("test_active_exploration_server : fake classification!");
+    vector<squirrel_object_perception_msgs::Classification> class_results;
+    string squirrel_dir = "/home/squirrel/tim_data/training_set_3/training/";
+    for (size_t i = 0; i < seg_srv.response.clusters_indices.size(); ++i)
+    {
+        squirrel_object_perception_msgs::Classification c;
+        std_msgs::String str;
+        str.data = "apple/";
+        c.class_type.push_back(str);
+        str.data = "bottle/";
+        c.class_type.push_back(str);
+        str.data = "spray_bottle/";
+        c.class_type.push_back(str);
+        c.confidence.push_back(0.2);
+        c.confidence.push_back(0.3);
+        c.confidence.push_back(0.5);
+        str.data = squirrel_dir + "apple//3a92a256ad1e060ec048697b91f69d2/esf/pose_0.txt";
+        c.pose.push_back(str);
+        str.data = squirrel_dir + "bottle//1cf98e5b6fff5471c8724d5673a063a6/esf/pose_0.txt";
+        c.pose.push_back(str);
+        str.data = squirrel_dir + "spray_bottle//9b9a4bb5550f00ea586350d6e78ecc7/esf/pose_0.txt";
+        c.pose.push_back(str);
+        class_results.push_back(c);
+    }
+    nbv_srv.request.class_results = class_results;
 
 
 //    // --- Test 1: given locations
@@ -253,10 +249,10 @@ int main(int argc, char **argv)
 //        }
 //        nbv_srv.request.locations = locations;
 //        // Call the service
-//        ROS_INFO("test_active_exploration_server::main : calling next best view service with given locations");
+//        ROS_INFO("test_active_exploration_server : calling next best view service with given locations");
 //        if (!nbv_client.call(nbv_srv))
 //        {
-//            ROS_ERROR("test_active_exploration_server::main : could not call the next best view service");
+//            ROS_ERROR("test_active_exploration_server : could not call the next best view service");
 //            return EXIT_FAILURE;
 //        }
 //        // Print out the best index
@@ -273,30 +269,32 @@ int main(int argc, char **argv)
 //        }
 //    }
 
-//    // --- Test 2: without locations (they must be generated)
-//    nbv_srv.request.locations.clear();
-//    nbv_srv.request.robot_height = robot_height;
-//    nbv_srv.request.robot_radius = robot_radius;
-//    nbv_srv.request.distance_from_center = distance_from_center;
-//    nbv_srv.request.num_locations = num_locations;
-//    ROS_INFO("test_active_exploration_server::main : calling next best view service without given locations");
-//    if (!nbv_client.call(nbv_srv))
-//    {
-//        ROS_ERROR("test_active_exploration_server::main : could not call the next best view service");
-//        return EXIT_FAILURE;
-//    }
-//    // Print out the best index
-//    cout << endl;
-//    ROS_INFO("Next best view index is %i", nbv_srv.response.nbv_ix);
-//    // Print out the locations and their utilities
-//    cout << "locations and utilities:" << endl;
-//    for (size_t i = 0; i < nbv_srv.response.generated_locations.size(); ++i)
-//    {
-//        cout << "[" << nbv_srv.response.generated_locations[i].x << " "
-//             << nbv_srv.response.generated_locations[i].y << " "
-//             << nbv_srv.response.generated_locations[i].z << "] -> "
-//             << nbv_srv.response.utilities[i] << endl;
-//    }
+    // --- Test 2: without locations (they must be generated)
+    nbv_srv.request.locations.clear();
+    nbv_srv.request.robot_height = robot_height;
+    nbv_srv.request.robot_radius = robot_radius;
+    nbv_srv.request.distance_from_center = distance_from_center;
+    nbv_srv.request.num_locations = num_locations;
+    ROS_INFO("test_active_exploration_server : calling next best view service without given locations");
+    if (!nbv_client.call(nbv_srv))
+    {
+        ROS_ERROR("test_active_exploration_server : could not call the next best view service");
+        return EXIT_FAILURE;
+    }
+    // Print out the best index
+    cout << endl;
+    ROS_INFO("Next best view index is %i", nbv_srv.response.nbv_ix);
+    // Print out the locations and their utilities
+    cout << "locations and utilities:" << endl;
+    for (size_t i = 0; i < nbv_srv.response.generated_locations.size(); ++i)
+    {
+        cout << "[" << nbv_srv.response.generated_locations[i].x << " "
+             << nbv_srv.response.generated_locations[i].y << " "
+             << nbv_srv.response.generated_locations[i].z << "] -> "
+             << nbv_srv.response.utilities[i] << endl;
+    }
+    // Send the next best location as a waypoint
+    // TODO
 
     // End
     ros::shutdown();
