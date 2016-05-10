@@ -389,7 +389,7 @@ int main(int argc, char **argv)
              << nbv_srv.response.utilities[i] << endl;
     }
     // Publish the markers
-    ros::Publisher marker_pub = n.advertise<visualization_msgs::MarkerArray>("active_exploration_waypoints", 1000);
+    //ros::Publisher marker_pub = n.advertise<visualization_msgs::MarkerArray>("active_exploration_waypoints", 1000);
 
     // Send the next best location as a waypoint
     // TODO

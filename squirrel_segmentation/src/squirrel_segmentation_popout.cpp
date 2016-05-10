@@ -68,7 +68,13 @@ bool SegmentationPopoutNode::segment(squirrel_object_perception_msgs::SegmentIni
 //  vg.setInputCloud (cloud_);
 //  vg.setLeafSize (0.01f, 0.01f, 0.01f);
 //  vg.filter (*cloud_filtered);
-  copyPointCloud(cloud_, cloud_filtered);
+  cloud_filtered->resize(cloud_->size());
+  for (size_t i = 0; i < cloud_->size(); ++i)
+  {
+     cloud_filtered->points[i].x = cloud_->points[i].x;
+     cloud_filtered->points[i].y = cloud_->points[i].y;
+     cloud_filtered->points[i].z = cloud_->points[i].z;
+  }
 
   ROS_INFO("%s: cloud filtered", ros::this_node::getName().c_str());
 
