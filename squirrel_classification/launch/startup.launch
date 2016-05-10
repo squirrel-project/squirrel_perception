@@ -1,7 +1,7 @@
 <launch>
 
-  <arg name="models_dir" default="/home/mz/work/classifier/eval/all/trained_models" /> <!-- required -->
-  <arg name="training_dir" default="/home/mz/work/classifier/eval/all/models" />  <!-- required -->
+  <arg name="models_dir" default="$(find squirrel_classification)/data/models" />  <!-- required -->
+  <arg name="training_dir" default="$(find squirrel_classification)/data/training" />   <!-- required -->
   <arg name="nn" default="10" />
   <arg name="chop_z" default="2.5" />
 
