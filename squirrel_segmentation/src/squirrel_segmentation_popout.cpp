@@ -49,42 +49,107 @@ void SegmentationPopoutNode::initialize(int argc, char ** argv)
 
 bool SegmentationPopoutNode::segment(squirrel_object_perception_msgs::SegmentInit::Request & req, squirrel_object_perception_msgs::SegmentInit::Response & response)
 {
-    bool ret = false;
+  // Segment the largest planar com
+  bool ret = false;
 
-    ROS_INFO("%s: new point cloud", ros::this_node::getName().c_str());
+  ROS_INFO("%s: new point cloud", ros::this_node::getName().c_str());
 
-    // clear results for a new segmentation run
-    results.clear();
+  // clear results for a new segmentation run
+  results.clear();
 
-    pcl::PointCloud<PointT>::Ptr inCloud(new pcl::PointCloud<PointT>());
-    pcl::fromROSMsg (req.cloud, *inCloud);
-    cloud_ = inCloud->makeShared();
+  pcl::PointCloud<PointT>::Ptr inCloud(new pcl::PointCloud<PointT>());
+  pcl::fromROSMsg (req.cloud, *inCloud);
+  cloud_ = inCloud->makeShared();
 
-    pcl::PointCloud<PointT>::Ptr cloud_f (new pcl::PointCloud<PointT>);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_f (new pcl::PointCloud<pcl::PointXYZ>);
 
-    // Create the filtering object: downsample the dataset using a leaf size of 1cm
-    pcl::VoxelGrid<PointT> vg;
-    pcl::PointCloud<PointT>::Ptr cloud_filtered (new pcl::PointCloud<PointT>);
-    vg.setInputCloud (cloud_);
-    vg.setLeafSize (0.01f, 0.01f, 0.01f);
-    vg.filter (*cloud_filtered);
+//  // Create the filtering object: downsample the dataset using a leaf size of 1cm
+//  pcl::VoxelGrid<pcl::PointXYZ> vg;
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered (new pcl::PointCloud<pcl::PointXYZ>);
+//  vg.setInputCloud (cloud_);
+//  vg.setLeafSize (0.01f, 0.01f, 0.01f);
+//  vg.filter (*cloud_filtered);
+  copyPointCloud(cloud_, cloud_filtered);
 
-    ROS_INFO("%s: cloud filtered", ros::this_node::getName().c_str());
+  ROS_INFO("%s: cloud filtered", ros::this_node::getName().c_str());
 
-    pcl::SACSegmentation<PointT> seg;
-    pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
-    pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
-    pcl::PointCloud<PointT>::Ptr cloud_plane (new pcl::PointCloud<PointT> ());
-    seg.setOptimizeCoefficients (true);
-    seg.setModelType (pcl::SACMODEL_PLANE);
-    seg.setMethodType (pcl::SAC_RANSAC);
-    seg.setMaxIterations (100);
-    seg.setDistanceThreshold (0.02);
+  pcl::SACSegmentation<pcl::PointXYZ> seg;
+  pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
+  pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_plane (new pcl::PointCloud<pcl::PointXYZ> ());
+  seg.setOptimizeCoefficients (true);
+  seg.setModelType (pcl::SACMODEL_PLANE);
+  seg.setMethodType (pcl::SAC_RANSAC);
+  seg.setMaxIterations (100);
+  seg.setDistanceThreshold (0.02);
 
-    // Segment the largest planar component from the remaining cloud
-    seg.setInputCloud (cloud_filtered);
-    seg.segment (*inliers, *coefficients);
-    if (inliers->indices.size () == 0)
+  // Segment the largest planar component from the remaining cloud
+  seg.setInputCloud (cloud_filtered);
+  seg.segment (*inliers, *coefficients);
+  if (inliers->indices.size () == 0)
+  {
+    ROS_ERROR("%s: Failed to estimate the ground plane.", ros::this_node::getName().c_str());
+    return ret;
+  }
+
+  ROS_INFO("%s: cloud plane segmented", ros::this_node::getName().c_str());
+
+  // Extract the planar inliers from the input cloud
+  pcl::ExtractIndices<pcl::PointXYZ> extract;
+  extract.setInputCloud (cloud_filtered);
+  extract.setIndices (inliers);
+  extract.setNegative (false);
+
+  // Get the points associated with the planar surface
+  extract.filter (*cloud_plane);
+  std::cout << ros::this_node::getName() << ": PointCloud representing the planar component: " << cloud_plane->points.size () << " data points." << std::endl;
+
+  // Remove the planar inliers, extract the rest
+  extract.setNegative (true);
+  extract.filter (*cloud_f);
+  *cloud_filtered = *cloud_f;
+
+  // Creating the KdTree object for the search method of the extraction
+  pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
+  tree->setInputCloud (cloud_filtered);
+
+  ROS_INFO("%s: kd-tree created", ros::this_node::getName().c_str());
+
+  std::vector<pcl::PointIndices> cluster_indices;
+  pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
+  ec.setClusterTolerance (0.02); // 2cm
+  ec.setMinClusterSize (100);
+  ec.setMaxClusterSize (25000);
+  ec.setSearchMethod (tree);
+  ec.setInputCloud (cloud_filtered);
+  ec.extract (cluster_indices);
+
+  std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> clusters;
+  for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
+  {
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZ>);
+    for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); ++pit)
+      cloud_cluster->points.push_back (cloud_filtered->points[*pit]);
+    cloud_cluster->width = cloud_cluster->points.size ();
+    cloud_cluster->height = 1;
+    cloud_cluster->is_dense = true;
+    clusters.push_back(cloud_cluster);
+    std::cout << ros::this_node::getName() << "PointCloud representing the Cluster: " << cloud_cluster->points.size () << " data points." << std::endl;
+  }
+
+  ROS_INFO("%s: found all clusters", ros::this_node::getName().c_str());
+
+  // transform to base, as this is more convenient to conduct sanity checks
+  for(size_t i = 0; i < clusters.size(); i++)
+    tranformCluster2base_link(clusters[i]);
+
+  for(size_t i = 0; i < clusters.size(); i++)
+  {
+    Eigen::Vector4f centroid;
+    Eigen::Matrix3f covariance_matrix;
+    pcl::computeMeanAndCovarianceMatrix(*clusters[i], covariance_matrix, centroid);
+    if(isValidCluster(clusters[i], centroid))   
+>>>>>>> 9b5a2d442b05c1a5c2a474212a86d29d65b0dd3a
     {
         ROS_ERROR("%s: Failed to estimate the ground plane.", ros::this_node::getName().c_str());
         return ret;
