@@ -31,16 +31,13 @@ int main(int argc, char **argv)
     ros::NodeHandle n("~");
 
     // Get the parameters
-    string data_name = "";
     double variance = _VARIANCE;
     double robot_height = _ROBOT_HEIGHT;
     double robot_radius = _ROBOT_RADIUS;
     double distance_from_center = _DISTANCE_FROM_CENTER;
     int num_locations = _NUM_LOCATIONS;
     double tree_resolution = _TREE_RESOLUTION;
-    bool reverse_transforms = false;
     bool occlusions = true;
-    bool multiple_locations = false;
     // Read the input if it exists
     n.getParam ("variance", variance);
     n.getParam ("robot_height", robot_height);
@@ -48,7 +45,6 @@ int main(int argc, char **argv)
     n.getParam ("distance_from_center", distance_from_center);
     n.getParam ("num_locations", num_locations);
     n.getParam ("tree_resolution", tree_resolution);
-    n.getParam ("reverse_transforms", reverse_transforms);
     n.getParam ("occlusions", occlusions);
     // Print out the input
     ROS_INFO("test_active_exploration_server : input parameters");
@@ -58,18 +54,14 @@ int main(int argc, char **argv)
     cout << "Distance from center = " << distance_from_center << endl;
     cout << "Num locations = " << num_locations << endl;
     cout << "Tree resolution = " << tree_resolution << endl;
-    if (reverse_transforms)
-        cout << "Reverse transforms = TRUE" << endl;
-    else
-        cout << "Reverse transforms = FALSE" << endl;
     if (occlusions)
         cout << "Occlusions = TRUE" << endl;
     else
         cout << "Occlusions = FALSE" << endl;
 
+    // To pass to the service
     Eigen::Vector4f pose;
-    Eigen::Matrix4f transform;
-    vector<vector<int> > segs;
+    sensor_msgs::PointCloud2 cloud_msg;
 
     // Get the point cloud
     sensor_msgs::PointCloud2ConstPtr scene = ros::topic::waitForMessage<sensor_msgs::PointCloud2>("/kinect/depth_registered/points",
@@ -94,6 +86,7 @@ int main(int argc, char **argv)
     tf(2,1) = r[2][1];
     tf(2,2) = r[2][2];
     tf(2,3) = t[2];
+    Eigen::Matrix4f transform;
     transform = tf.inverse();  // inverse the transform
     // Transform the point cloud
     PCLPointCloud2 pcl_pc2;
@@ -116,7 +109,6 @@ int main(int argc, char **argv)
     }
     cout << "total = " << cloud.size() << ", nan = " << nan_count << ", valid = " << valid_count << endl;
     // Convert back to ros message
-    sensor_msgs::PointCloud2 cloud_msg;
     pcl::toROSMsg(cloud, cloud_msg);
 
     // Get the pose
@@ -167,7 +159,7 @@ int main(int argc, char **argv)
     nbv_srv.request.camera_pose.position.y = pose[1];
     nbv_srv.request.camera_pose.position.z = pose[2];
     nbv_srv.request.variance = variance;
-    nbv_srv.request.cloud = cloud_msg;
+    //nbv_srv.request.cloud = cloud_msg;  // CHANGED!
     nbv_srv.request.occlusions = occlusions;
     // Octomap - Only works with binary conversion!
     octomap_msgs::Octomap oc_msg;
@@ -202,7 +194,7 @@ int main(int argc, char **argv)
     cv_ptr->image = image;
     cv_ptr->toImageMsg(in_image);
     // Segment initialisation
-    seg_init_srv.request.saliency_map = in_image;
+    //seg_init_srv.request.saliency_map = in_image;
     seg_init_srv.request.cloud = *scene;
     if (!seg_init_client.call(seg_init_srv))
     {
@@ -210,39 +202,79 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
     // Segment once
+    PointCloud<PointT> segment_cloud;
     nbv_srv.request.clusters_indices.clear();
+    vector<vector<int> > segs;
     int s = 0;
     while (seg_client.call(seg_srv))
     {
-        if (seg_srv.response.clusters_indices[0].data.size() > 0)
+        // Get the points for the segment
+        pcl_conversions::toPCL(seg_srv.response.points[0], pcl_pc2);
+        PointCloud<PointT> pc;
+        fromPCLPointCloud2(pcl_pc2, pc);
+        transformPointCloud(pc, pc, transform);
+        // Save point cloud
+        if (pc.size() > 0)
         {
-            vector<int> ss = seg_srv.response.clusters_indices[0].data;
-            PointCloud<PointT> seg_cloud;
-            copyPointCloud(cloud, ss, seg_cloud);
-            f = "/home/squirrel/tim_seg_cloud_" + boost::lexical_cast<string>(s) + ".pcd";
-            io::savePCDFileBinary (f, seg_cloud);
-            cout << "Points in segment " << s << ":" << endl;
-            nan_count = 0;
-            valid_count = 0;
-            for (size_t i = 0; i < seg_cloud.size(); ++i)
+            segment_cloud.insert(segment_cloud.end(), pc.begin(), pc.end());
+            vector<int> ss;
+            int start_index = segment_cloud.size();
+            int count = 0;
+            for (size_t i = 0; i < pc.size(); ++i)
             {
-                //cout << seg_cloud.points[i].x << " " << seg_cloud.points[i].y << " " << seg_cloud.points[i].z << endl;
-                if (isnan(seg_cloud.points[i].x))
-                    nan_count++;
-                else
-                    valid_count++;
+                if (!isnan(pc.points[i].x))
+                    ss.push_back(start_index + count);
             }
-            cout << "total = " << seg_cloud.size() << ", nan = " << nan_count << ", valid = " << valid_count << endl;
-            if (valid_count > 0)
+            if (ss.size() > 0)
+            {
                 segs.push_back(ss);
+                f = "/home/squirrel/tim_seg_cloud_" + boost::lexical_cast<string>(s) + ".pcd";
+                io::savePCDFileBinary (f, seg_cloud);
+            }
             else
+            {
                 ROS_WARN("Segment %i has no valid points", s);
+            }
         }
         else
         {
             ROS_WARN("Segment %i is empty", s);
         }
         ++s;
+
+//        if (seg_srv.response.clusters_indices[0].data.size() > 0)
+//        {
+//            vector<int> ss = seg_srv.response.clusters_indices[0].data;
+//            PointCloud<PointT> seg_cloud;
+//            copyPointCloud(cloud, ss, seg_cloud);
+//            cout << "Points in segment " << s << ":" << endl;
+//            nan_count = 0;
+//            valid_count = 0;
+//            for (size_t i = 0; i < seg_cloud.size(); ++i)
+//            {
+//                //cout << seg_cloud.points[i].x << " " << seg_cloud.points[i].y << " " << seg_cloud.points[i].z << endl;
+//                if (isnan(seg_cloud.points[i].x))
+//                    nan_count++;
+//                else
+//                    valid_count++;
+//            }
+//            cout << "total = " << seg_cloud.size() << ", nan = " << nan_count << ", valid = " << valid_count << endl;
+//            if (valid_count > 0)
+//            {
+//                segs.push_back(ss);
+//                f = "/home/squirrel/tim_seg_cloud_" + boost::lexical_cast<string>(s) + ".pcd";
+//                io::savePCDFileBinary (f, seg_cloud);
+//            }
+//            else
+//            {
+//                ROS_WARN("Segment %i has no valid points", s);
+//            }
+//        }
+//        else
+//        {
+//            ROS_WARN("Segment %i is empty", s);
+//        }
+//        ++s;
     }
     nbv_srv.request.clusters_indices.resize(segs.size());
     for (size_t i = 0; i < segs.size(); ++i)
@@ -290,6 +322,10 @@ int main(int argc, char **argv)
         class_results.push_back(c);
     }
     nbv_srv.request.class_results = class_results;
+
+    // Set the cloud to match the segments
+    pcl::toROSMsg(segment_cloud, cloud_msg);
+    nbv_srv.request.cloud = cloud_msg;
 
 
 //    // --- Test 1: given locations
@@ -357,140 +393,4 @@ int main(int argc, char **argv)
     // End
     ros::shutdown();
     return EXIT_SUCCESS;
-}
-
-bool load_data(const string &data_name, const bool &reverse_transforms, vector<Eigen::Vector4f> &poses,
-               vector<PointCloud<PointT> > &clouds, vector<Eigen::Matrix4f> &transforms, vector<vector<vector<int> > > &indices)
-{
-    // Clear the vectors
-    poses.clear();
-    clouds.clear();
-    transforms.clear();
-    indices.clear();
-
-    // If this is a single file, then load it
-    if (data_name.size() > 4 && data_name.substr(data_name.size()-4) == ".pcd")
-    {
-        ROS_INFO("test_active_exploration_server::load_data : single file %s", data_name.c_str());
-        // Single point cloud input
-        PointCloud<PointT> cloud;
-        if (io::loadPCDFile<PointT> (data_name.c_str(), cloud) == -1)
-        {
-            ROS_ERROR("test_active_exploration_server::load_data : could not load point cloud %s", data_name.c_str());
-            return false;
-        }
-        // Get the directory from the filename
-        string cloud_path_name;
-        string cloud_filename;
-        if (!split_filename(data_name, cloud_path_name, cloud_filename))
-        {
-            ROS_ERROR("test_active_exploration_server::load_data : could not get path and filename from string %s", data_name.c_str());
-            return false;
-        }
-        // Get the transform
-        Eigen::Vector4f pose;
-        PointCloud<PointT> transformed_cloud;
-        Eigen::Matrix4f transform;
-        if (!transform_cloud_from_file(cloud_path_name, cloud_filename, cloud, transformed_cloud, pose, transform))
-        {
-            ROS_ERROR("test_active_exploration_server::load_data : error transforming point cloud from file %s", data_name.c_str());
-            return false;
-        }
-        else
-        {
-            // Add to vectors
-            poses.push_back(pose);
-            clouds.push_back(cloud);
-            // Reverse transform
-            Eigen::Matrix4f transform_inv = transform;
-            if (reverse_transforms)
-                transform_inv = transform.inverse();
-            transform = transform_inv;
-            transforms.push_back(transform);
-        }
-        // Get the segment indices
-        // First get the index number of the point cloud
-        // Get the dot
-        size_t dot = data_name.find_last_of('.');
-        if (dot == string::npos)
-        {
-            ROS_ERROR("test_active_exploration_server::load_data : could not read extension of file %s", cloud_filename.c_str());
-            return false;
-        }
-        // Get the index name
-        int ix = -1;
-        size_t underscore = cloud_filename.find_last_of('_');
-        if (underscore != string::npos && dot != string::npos && (dot - underscore) > 0)
-        {
-            int str_len = dot - underscore;
-            string str_ix = cloud_filename.substr(underscore+1,str_len-1);
-            ix = atoi(str_ix.c_str());
-        }
-        else
-        {
-            ROS_ERROR("test_active_exploration_server::load_data : could not read the index in file %s", cloud_filename.c_str());
-            return false;
-        }
-        // Append zeros to front
-        string ix_str = boost::lexical_cast<string>(ix);
-        while (ix_str.size() < 10)
-            ix_str = "0" + ix_str;
-        string segment_indices_str;
-        vector<vector<int> > segment_indices;
-        int seg_count = 0;
-        // Load the segment indices for each segment associated to this cloud
-        while (true)
-        {
-            // Create the count string
-            string count_str = boost::lexical_cast<string>(seg_count);
-            while (count_str.size() < 2)
-                count_str = "0" + count_str;
-            segment_indices_str = add_backslash(cloud_path_name) + _INDICES_PREFIX + count_str + "_" + ix_str + ".pcd";
-            // If valid file then load it
-            if (boost::filesystem::exists(segment_indices_str))
-            {
-                PointCloud<IndexPoint> in_cloud;
-                if (io::loadPCDFile<IndexPoint>(segment_indices_str.c_str(), in_cloud) == -1)
-                {
-                    ROS_WARN("test_active_exploration_server::load_data : could not read index file");
-                    break;
-                }
-                else
-                {
-                    // Append the point cloud indices
-                    vector<int> in_indices;
-                    in_indices.resize(in_cloud.points.size());
-                    for (size_t j = 0; j < in_cloud.points.size(); ++j)
-                        in_indices[j] = in_cloud.points[j].idx;
-                    segment_indices.push_back(in_indices);
-                }
-            }
-            // Otherwise finish
-            else
-            {
-                break;
-            }
-            // Next segment
-            ++seg_count;
-        }
-        indices.push_back(segment_indices);
-    }
-    // Otherwise it is a directory and must load all files in the directory
-    else
-    {
-        if (!load_test_directory_with_segment_indices(data_name, reverse_transforms, poses, clouds, transforms, indices))
-        {
-            ROS_ERROR("test_active_exploration_server::load_data : could not load the data from the directory %s", data_name.c_str());
-            return false;
-        }
-        // This can also work without getting the segment indices if segmentation was working
-//        if (!load_test_directory(data_name, reverse_transforms, poses, clouds, transforms))
-//        {
-//            ROS_ERROR("test_active_exploration_server::load_data : could not load the data from the directory %s", data_name.c_str());
-//            return false;
-//        }
-    }
-
-    // Return success
-    return true;
 }
