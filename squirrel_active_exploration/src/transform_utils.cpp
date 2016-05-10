@@ -344,7 +344,11 @@ bool transform_cloud_to_cloud(const PointCloud<PointT> &source, const PointCloud
     Eigen::Matrix4f stf = Eigen::Matrix4f::Identity();
     stf.topLeftCorner(3,3) *= Eigen::Matrix3f::Identity() * scale;
     PointCloud<PointT> source_copy;
-    transformPointCloud(source, source_copy, stf);
+    transformPointCloud (source, source_copy, stf);
+
+    cout << "transform_cloud_to_cloud : after scaling, segment has " << source_copy.size() << " points" << endl;
+    for (size_t j = 0; j < source_copy.size(); ++j)
+        cout << source_copy.points[j].x << " " << source_copy.points[j].y << " " << source_copy.points[j].z << endl;
 
     // Transform the source to the center of its coordinate system
     Eigen::Vector4f source_pose;
@@ -355,6 +359,10 @@ bool transform_cloud_to_cloud(const PointCloud<PointT> &source, const PointCloud
     ctf(1,3) = -source_pose[1];
     ctf(2,3) = -source_pose[2];
     transformPointCloud (source_copy, source_copy, ctf);
+
+    cout << "transform_cloud_to_cloud : after centering, segment has " << source_copy.size() << " points" << endl;
+    for (size_t j = 0; j < source_copy.size(); ++j)
+        cout << source_copy.points[j].x << " " << source_copy.points[j].y << " " << source_copy.points[j].z << endl;
 
     // Downsample the point clouds
     PointCloud<PointT> source_ds;
