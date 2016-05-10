@@ -105,8 +105,16 @@ int main(int argc, char **argv)
     string f = "/home/squirrel/tim_cloud.pcd";
     io::savePCDFileBinary (f, cloud);
     cout << "The points in the cloud" << endl;
+    int nan_count = 0, valid_count = 0;
     for (size_t i = 0; i < cloud.size(); ++i)
-        cout << cloud.points[i].x << " " << cloud.points[i].y << " " << cloud.points[i].z << endl;
+    {
+        //cout << cloud.points[i].x << " " << cloud.points[i].y << " " << cloud.points[i].z << endl;
+        if (isnan(cloud.points[i].x))
+            nan_count++;
+        else
+            valid_count++;
+    }
+    cout << "total = " << cloud.size() << ", nan = " << nan_count << ", valid = " << valid_count << endl;
     // Convert back to ros message
     sensor_msgs::PointCloud2 cloud_msg;
     pcl::toROSMsg(cloud, cloud_msg);
@@ -202,27 +210,46 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
     // Segment once
-    if (!seg_client.call(seg_srv))
+    nbv_srv.request.clusters_indices.clear();
+    vector<vector<int> > segs;
+    int s = 0;
+    while (seg_client.call(seg_srv))
     {
-        ROS_ERROR("test_active_exploration_server : could not call the segmentation service");
-        return EXIT_FAILURE;
+        segs.push_back(seg_srv.response.clusters_indices[0].data);
+
+        PointCloud<PointT> seg_cloud;
+        if (seg_srv.response.clusters_indices[0].data.size() > 0)
+        {
+            copyPointCloud(cloud, seg_srv.response.clusters_indices[0].data, seg_cloud);
+            f = "/home/squirrel/tim_seg_cloud_" + boost::lexical_cast<string>(s) + ".pcd";
+            io::savePCDFileBinary (f, seg_cloud);
+            cout << "Points in segment " << s << ":" << endl;
+            nan_count = 0;
+            valid_count = 0;
+            for (size_t i = 0; i < seg_cloud.size(); ++i)
+            {
+                //cout << seg_cloud.points[i].x << " " << seg_cloud.points[i].y << " " << seg_cloud.points[i].z << endl;
+                if (isnan(seg_cloud.points[i].x))
+                    nan_count++;
+                else
+                    valid_count++;
+            }
+            cout << "total = " << seg_cloud.size() << ", nan = " << nan_count << ", valid = " << valid_count << endl;
+        }
+        else
+        {
+            cout << "Segment " << s << " is empty" << endl;
+        }
+        ++s;
     }
-    nbv_srv.request.clusters_indices = seg_srv.response.clusters_indices;
-
-
-    cout << "Number of segments: " << seg_srv.response.clusters_indices.size() << endl;
-    cout << "Indices of this segment" << endl;
-    for (size_t i = 0; i < seg_srv.response.clusters_indices[0].data.size(); ++i)
-        cout << seg_srv.response.clusters_indices[0].data[i] << endl;
-    PointCloud<PointT> seg_cloud;
-    copyPointCloud(cloud, seg_srv.response.clusters_indices[0].data, seg_cloud);
-    f = "/home/squirrel/tim_seg_cloud.pcd";
-    io::savePCDFileBinary (f, cloud);
-    cout << "Points in the segment" << endl;
-    for (size_t i = 0; i < seg_cloud.size(); ++i)
-        cout << seg_cloud.points[i].x << " " << seg_cloud.points[i].y << " " << seg_cloud.points[i].z << endl;
+    nbv_srv.request.clusters_indices.resize(s);
+    for (size_t i = 0; i < s; ++i)
+    {
+        nbv_srv.request.clusters_indices[i].data = segs[i];
+    }
 
     ROS_INFO("test_active_exploration_server : successfully segmented the scene");
+    cin.ignore();
 
 
 //    // Classify
