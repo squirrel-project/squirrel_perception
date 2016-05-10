@@ -21,7 +21,7 @@
 class SegmentationPopoutNode
 {
 private:
-  typedef pcl::PointXYZ PointT;
+  typedef  pcl::PointXYZRGB PointT;
   static const double MAX_OBJECT_DIST = 1.5;
   static const double MAX_OBJECT_HEIGHT = 0.25;
 
@@ -33,7 +33,7 @@ private:
     double size;  // diameter of bounding sphere
     std::string name;
 
-    PersistentObject(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_cluster, double x, double y, double z)
+    PersistentObject(pcl::PointCloud<PointT>::Ptr &cloud_cluster, double x, double y, double z)
     {
       std::stringstream ss;
       ss << "cluster" << cnt++;
@@ -97,9 +97,9 @@ private:
   geometry_msgs::PoseStamped base_link2kinect(double x, double y, double z);
   geometry_msgs::PoseStamped base_link2map(double x, double y, double z);
   geometry_msgs::PoseStamped transform(double x, double y, double z, const std::string &from, const std::string &to);
-  void transformCluster2base_link(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_cluster);
-  void transformBase2Kinect(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_cluster);
-  bool isValidCluster(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_cluster, Eigen::Vector4f &centroid);
+  void transformCluster2base_link(pcl::PointCloud<PointT>::Ptr &cloud_cluster);
+  void transformBase2Kinect(pcl::PointCloud<PointT>::Ptr &cloud_cluster);
+  bool isValidCluster(pcl::PointCloud<PointT>::Ptr &cloud_cluster, Eigen::Vector4f &centroid);
   void visualizePersistentObject(PersistentObject &obj);
 
   bool segment(squirrel_object_perception_msgs::SegmentInit::Request & req, squirrel_object_perception_msgs::SegmentInit::Response & response);

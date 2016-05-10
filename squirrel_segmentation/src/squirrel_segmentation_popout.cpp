@@ -60,21 +60,21 @@ bool SegmentationPopoutNode::segment(squirrel_object_perception_msgs::SegmentIni
     pcl::fromROSMsg (req.cloud, *inCloud);
     cloud_ = inCloud->makeShared();
 
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_f (new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::PointCloud<PointT>::Ptr cloud_f (new pcl::PointCloud<PointT>);
 
     // Create the filtering object: downsample the dataset using a leaf size of 1cm
-    pcl::VoxelGrid<pcl::PointXYZ> vg;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered (new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::VoxelGrid<PointT> vg;
+    pcl::PointCloud<PointT>::Ptr cloud_filtered (new pcl::PointCloud<PointT>);
     vg.setInputCloud (cloud_);
     vg.setLeafSize (0.01f, 0.01f, 0.01f);
     vg.filter (*cloud_filtered);
 
     ROS_INFO("%s: cloud filtered", ros::this_node::getName().c_str());
 
-    pcl::SACSegmentation<pcl::PointXYZ> seg;
+    pcl::SACSegmentation<PointT> seg;
     pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
     pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_plane (new pcl::PointCloud<pcl::PointXYZ> ());
+    pcl::PointCloud<PointT>::Ptr cloud_plane (new pcl::PointCloud<PointT> ());
     seg.setOptimizeCoefficients (true);
     seg.setModelType (pcl::SACMODEL_PLANE);
     seg.setMethodType (pcl::SAC_RANSAC);
@@ -93,7 +93,7 @@ bool SegmentationPopoutNode::segment(squirrel_object_perception_msgs::SegmentIni
     ROS_INFO("%s: cloud plane segmented", ros::this_node::getName().c_str());
 
     // Extract the planar inliers from the input cloud
-    pcl::ExtractIndices<pcl::PointXYZ> extract;
+    pcl::ExtractIndices<PointT> extract;
     extract.setInputCloud (cloud_filtered);
     extract.setIndices (inliers);
     extract.setNegative (false);
@@ -107,28 +107,32 @@ bool SegmentationPopoutNode::segment(squirrel_object_perception_msgs::SegmentIni
     extract.filter (*cloud_f);
     *cloud_filtered = *cloud_f;
 
+    std::vector<int> indices;
+    pcl::removeNaNFromPointCloud(*cloud_filtered, *cloud_filtered, indices);
+
     // Creating the KdTree object for the search method of the extraction
-    pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
+    pcl::search::KdTree<PointT>::Ptr tree (new pcl::search::KdTree<PointT>);
     tree->setInputCloud (cloud_filtered);
 
     ROS_INFO("%s: kd-tree created", ros::this_node::getName().c_str());
 
     std::vector<pcl::PointIndices> cluster_indices;
-    pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
-    ec.setClusterTolerance (0.02); // 2cm
+    pcl::EuclideanClusterExtraction<PointT> ec;
+    ec.setClusterTolerance (0.06); // 2cm
     ec.setMinClusterSize (100);
     ec.setMaxClusterSize (25000);
     ec.setSearchMethod (tree);
     ec.setInputCloud (cloud_filtered);
     ec.extract (cluster_indices);
 
-    std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> clusters;
+    std::vector<pcl::PointCloud<PointT>::Ptr> clusters;
     for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
     {
-        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZ>);
+        pcl::PointCloud<PointT>::Ptr cloud_cluster (new pcl::PointCloud<PointT>);
         for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); ++pit)
             cloud_cluster->points.push_back (cloud_filtered->points[*pit]);
-        cloud_cluster->width = cloud_cluster->points.size ();
+        cloud_cluster->header.frame_id="/kinect_depth_optical_frame";
+	cloud_cluster->width = cloud_cluster->points.size ();
         cloud_cluster->height = 1;
         cloud_cluster->is_dense = true;
         clusters.push_back(cloud_cluster);
@@ -193,6 +197,7 @@ bool SegmentationPopoutNode::returnNextResult(squirrel_object_perception_msgs::S
 {
     double x_min = 1000.;
     size_t selected = results.size();
+    std::cout << results.size();
     // return the nearest object not returned yet
     for(size_t i = 0; i < results.size(); i++)
     {
@@ -330,7 +335,7 @@ geometry_msgs::PoseStamped SegmentationPopoutNode::transform(double x, double y,
  *
  * use pcl_ros::transformPointCloud
  */
-void SegmentationPopoutNode::transformCluster2base_link(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_cluster)
+void SegmentationPopoutNode::transformCluster2base_link(pcl::PointCloud<PointT>::Ptr &cloud_cluster)
 {
     try
     {
@@ -355,7 +360,7 @@ void SegmentationPopoutNode::transformCluster2base_link(pcl::PointCloud<pcl::Poi
     }
 }
 
-void SegmentationPopoutNode::transformBase2Kinect(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_cluster)
+void SegmentationPopoutNode::transformBase2Kinect(pcl::PointCloud<PointT>::Ptr &cloud_cluster)
 {
     try
     {
@@ -372,7 +377,7 @@ void SegmentationPopoutNode::transformBase2Kinect(pcl::PointCloud<pcl::PointXYZ>
 /**
  * Perform sanity checks to rule out stupid clusters like walls, people ..
  */
-bool SegmentationPopoutNode::isValidCluster(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_cluster, Eigen::Vector4f &centroid)
+bool SegmentationPopoutNode::isValidCluster(pcl::PointCloud<PointT>::Ptr &cloud_cluster, Eigen::Vector4f &centroid)
 {
     // reject objects too far away (e.g. the wall when looking straight)
     // NOTE: cluster is in base_link frame, with x pointing forward, z up

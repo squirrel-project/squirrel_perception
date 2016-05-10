@@ -27,7 +27,8 @@ public:
 private:
   ros::NodeHandle nh_;
   ros::Subscriber legsSub_;
-  ros::Subscriber legsSub2_;
+  ros::Subscriber attentionSub;
+  ros::Publisher fakespeechPub;
   ros::ServiceClient controllerSrv_;
   ros::Time last_observation_;
   boost::mutex observeMutex_;
@@ -37,8 +38,7 @@ private:
   geometry_msgs::PointStamped next_;
   std::string reason_;
 
-  void legsCallback(const std_msgs::String& msg);
-  void legsCallback2(const people_msgs::People& msg);
+  void legsCallback(const people_msgs::People& msg);
   void robotInFovCallback(const std_msgs::String& msg);
   void observeTimerCallback(const ros::TimerEvent&);
   void faceTimerCallback(const ros::TimerEvent&);

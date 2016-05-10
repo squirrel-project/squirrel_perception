@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
 
-	<arg name="robot" default="robotino"/>
+	<arg name="robot" default="tuw-robotino2"/>
 	
 	<include file="$(find squirrel_object_perception)/launch/$(arg robot).launch" >
 	</include>
