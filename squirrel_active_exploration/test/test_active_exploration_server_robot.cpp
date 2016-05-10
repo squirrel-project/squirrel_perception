@@ -102,8 +102,11 @@ int main(int argc, char **argv)
     fromPCLPointCloud2(pcl_pc2, cloud);
     transformPointCloud(cloud, cloud, transform);
     // Save point cloud
-    string f = "/home/squirrel/tim_seg_cloud.pcd";
+    string f = "/home/squirrel/tim_cloud.pcd";
     io::savePCDFileBinary (f, cloud);
+    cout << "The points in the cloud" << endl;
+    for (size_t i = 0; i < cloud.size(); ++i)
+        cout << cloud.points[i].x << " " << cloud.points[i].y << " " << cloud.points[i].z << endl;
     // Convert back to ros message
     sensor_msgs::PointCloud2 cloud_msg;
     pcl::toROSMsg(cloud, cloud_msg);
@@ -205,6 +208,19 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
     nbv_srv.request.clusters_indices = seg_srv.response.clusters_indices;
+
+
+    cout << "Number of segments: " << seg_srv.response.clusters_indices.size() << endl;
+    cout << "Indices of this segment" << endl;
+    for (size_t i = 0; i < seg_srv.response.clusters_indices[0].data.size(); ++i)
+        cout << seg_srv.response.clusters_indices[0].data[i] << endl;
+    PointCloud<PointT> seg_cloud;
+    copyPointCloud(cloud, seg_srv.response.clusters_indices[0].data, seg_cloud);
+    f = "/home/squirrel/tim_seg_cloud.pcd";
+    io::savePCDFileBinary (f, cloud);
+    cout << "Points in the segment" << endl;
+    for (size_t i = 0; i < seg_cloud.size(); ++i)
+        cout << seg_cloud.points[i].x << " " << seg_cloud.points[i].y << " " << seg_cloud.points[i].z << endl;
 
     ROS_INFO("test_active_exploration_server : successfully segmented the scene");
 

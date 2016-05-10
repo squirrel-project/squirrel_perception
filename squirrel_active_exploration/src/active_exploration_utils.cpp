@@ -567,6 +567,10 @@ namespace active_exploration_utils
                 PointCloud<PointT> seg;
                 copyPointCloud(transformed_cloud, segments[i], seg);
 
+                cout << "transform_instances_to_map : segment " << i << " has " << seg.size() << " points" << endl;
+                for (size_t j = 0; j < seg.size(); ++j)
+                    cout << seg.points[j].x << " " << seg.points[j].y << " " << seg.points[j].z << endl;
+
                 // Read the clouds
                 for (vector<InstLookUp>::size_type j = 0; j < instance_directories[i].size(); ++j)
                 {
