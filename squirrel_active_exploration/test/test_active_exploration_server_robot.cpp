@@ -211,16 +211,14 @@ int main(int argc, char **argv)
     }
     // Segment once
     nbv_srv.request.clusters_indices.clear();
-    vector<vector<int> > segs;
     int s = 0;
     while (seg_client.call(seg_srv))
     {
-        segs.push_back(seg_srv.response.clusters_indices[0].data);
-
-        PointCloud<PointT> seg_cloud;
         if (seg_srv.response.clusters_indices[0].data.size() > 0)
         {
-            copyPointCloud(cloud, seg_srv.response.clusters_indices[0].data, seg_cloud);
+            vector<int> ss = seg_srv.response.clusters_indices[0].data;
+            PointCloud<PointT> seg_cloud;
+            copyPointCloud(cloud, ss, seg_cloud);
             f = "/home/squirrel/tim_seg_cloud_" + boost::lexical_cast<string>(s) + ".pcd";
             io::savePCDFileBinary (f, seg_cloud);
             cout << "Points in segment " << s << ":" << endl;
@@ -235,15 +233,19 @@ int main(int argc, char **argv)
                     valid_count++;
             }
             cout << "total = " << seg_cloud.size() << ", nan = " << nan_count << ", valid = " << valid_count << endl;
+            if (valid_count > 0)
+                segs.push_back(ss);
+            else
+                ROS_WARN("Segment %i has no valid points", s);
         }
         else
         {
-            cout << "Segment " << s << " is empty" << endl;
+            ROS_WARN("Segment %i is empty", s);
         }
         ++s;
     }
-    nbv_srv.request.clusters_indices.resize(s);
-    for (size_t i = 0; i < s; ++i)
+    nbv_srv.request.clusters_indices.resize(segs.size());
+    for (size_t i = 0; i < segs.size(); ++i)
     {
         nbv_srv.request.clusters_indices[i].data = segs[i];
     }
@@ -266,7 +268,7 @@ int main(int argc, char **argv)
     ROS_WARN("test_active_exploration_server : fake classification!");
     vector<squirrel_object_perception_msgs::Classification> class_results;
     string squirrel_dir = "/home/squirrel/tim_data/training_set_3/training/";
-    for (size_t i = 0; i < seg_srv.response.clusters_indices.size(); ++i)
+    for (size_t i = 0; i < segs.size(); ++i)
     {
         squirrel_object_perception_msgs::Classification c;
         std_msgs::String str;
