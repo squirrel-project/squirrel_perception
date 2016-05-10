@@ -347,8 +347,16 @@ bool transform_cloud_to_cloud(const PointCloud<PointT> &source, const PointCloud
     transformPointCloud (source, source_copy, stf);
 
     cout << "transform_cloud_to_cloud : after scaling, segment has " << source_copy.size() << " points" << endl;
+    int nan_count = 0, valid_count = 0;
     for (size_t j = 0; j < source_copy.size(); ++j)
-        cout << source_copy.points[j].x << " " << source_copy.points[j].y << " " << source_copy.points[j].z << endl;
+    {
+        //cout << source_copy.points[j].x << " " << source_copy.points[j].y << " " << source_copy.points[j].z << endl;
+        if (isnan(source_copy.points[j].x))
+            nan_count++;
+        else
+            valid_count++;
+    }
+    cout << "nan = " << nan_count << ", valid = " << valid_count << endl;
 
     // Transform the source to the center of its coordinate system
     Eigen::Vector4f source_pose;
@@ -361,8 +369,18 @@ bool transform_cloud_to_cloud(const PointCloud<PointT> &source, const PointCloud
     transformPointCloud (source_copy, source_copy, ctf);
 
     cout << "transform_cloud_to_cloud : after centering, segment has " << source_copy.size() << " points" << endl;
+    nan_count = 0;
+    valid_count = 0;
     for (size_t j = 0; j < source_copy.size(); ++j)
-        cout << source_copy.points[j].x << " " << source_copy.points[j].y << " " << source_copy.points[j].z << endl;
+    {
+        //cout << source_copy.points[j].x << " " << source_copy.points[j].y << " " << source_copy.points[j].z << endl;
+        if (isnan(source_copy.points[j].x))
+            nan_count++;
+        else
+            valid_count++;
+    }
+    cout << "nan = " << nan_count << ", valid = " << valid_count << endl;
+
 
     // Downsample the point clouds
     PointCloud<PointT> source_ds;
