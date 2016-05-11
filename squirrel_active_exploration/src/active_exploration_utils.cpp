@@ -1964,7 +1964,8 @@ namespace active_exploration_utils
             single_vis = true;
         for (vector<Eigen::Vector4f>::size_type i = 0; i < map_locations.size(); ++i)
         {
-            cout << " * * * LOCATION " << i << endl;
+            cout << " * * * LOCATION " << i << ": "
+                 << map_locations[i][0] << " " << map_locations[i][1] << " " << map_locations[i][2] << endl;
             utilities[i] = 0;
             // Consider the contribution from each segment that needs to be viewed
             vector<vector<PointCloud<PointT> > > expected_clouds;
@@ -2107,6 +2108,8 @@ namespace active_exploration_utils
         p.points[0].z = location_in_map[2];
         transformPointCloud(p, p, map_to_model_tf);
         Eigen::Vector4f map_loc_model_frame (p.points[0].x, p.points[0].y, p.points[0].z, 0);
+        ROS_INFO("active_exploration_utils::get_expected_point_cloud : location in map [%.2f %.2f %.2f]",
+                 location_in_map[0], location_in_map[1], location_in_map[2]);
         // Read in the octree from file
         OcTree tree (emap._octree_file);
         // Go through every point in the emap cloud and find if it is visible from the location
@@ -2125,8 +2128,11 @@ namespace active_exploration_utils
             for (size_t i = 0; i < ds_cloud->size(); ++i)
             {
                 OcTreeKey key;
-                if (tree.coordToKeyChecked(ds_cloud->points[i].x, ds_cloud->points[i].y, ds_cloud->points[i].z, key))
-                    map_key_to_points[key].push_back(i);
+                if (!isnan(ds_cloud->points[i].x))
+                {
+                    if (tree.coordToKeyChecked(ds_cloud->points[i].x, ds_cloud->points[i].y, ds_cloud->points[i].z, key))
+                        map_key_to_points[key].push_back(i);
+                }
             }
 
             vector<int> visible_indices = get_visible_points_in_cloud(tree, map_loc_model_frame, *ds_cloud, map_key_to_points);
@@ -2301,7 +2307,7 @@ namespace active_exploration_utils
             point3d voxel_coord = tree.keyToCoord(it->first);
             // Cast a ray from the origin to the cloud point
             KeyRay kr;
-            if (tree.computeRayKeys(origin_coord, voxel_coord, kr))
+            if (!isnan(voxel_coord.x()) && tree.computeRayKeys(origin_coord, voxel_coord, kr))
             {
                 // Check each key and and if all are not occupied then this point is visible from the origin
                 for (KeyRay::iterator kit = kr.begin(), end = kr.end(); kit != end; ++kit)

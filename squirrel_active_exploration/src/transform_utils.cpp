@@ -436,10 +436,10 @@ bool transform_cloud_to_cloud(const PointCloud<PointT> &source, const PointCloud
         // Try the different rotations
         for (size_t j = 0; j < rotations.size(); ++j)
         {
-            cout << "1. ICP with source_ds = " << source_ds_ptr->size() << endl;
+            //cout << "1. ICP with source_ds = " << source_ds_ptr->size() << endl;
             Eigen::Matrix4f rtf = rotations[j];
             transformPointCloud(*source_ds_ptr, *source_ptr, rtf);
-            cout << "2. ICP with source = " << source_ptr->size() << endl;
+            //cout << "2. ICP with source = " << source_ptr->size() << endl;
             // Align the center of the cloud before doing icp
             Eigen::Vector4f rotated_pose;
             compute3DCentroid (*source_ptr, rotated_pose);
@@ -449,11 +449,11 @@ bool transform_cloud_to_cloud(const PointCloud<PointT> &source, const PointCloud
             atf(1,3) = target_pose[1] - rotated_pose[1];
             atf(2,3) = target_pose[2] - rotated_pose[2];
             transformPointCloud (*source_ptr, *source_ptr, atf);
-            cout << "3. ICP with source = " << source_ptr->size() << endl;
+            //cout << "3. ICP with source = " << source_ptr->size() << endl;
             // ICP to refine the alignment
             Eigen::Matrix4f itf;
             double icp_score;
-            cout << "4. ICP with source = " << source_ptr->size() << " target = " << target_ptr->size() << endl;
+            //cout << "4. ICP with source = " << source_ptr->size() << " target = " << target_ptr->size() << endl;
             if (!icp(source_ptr, target_ptr, itf, icp_score, false))
             {
                 ROS_ERROR("transform_utils::transform_cloud_to_cloud : error in icp refinement");

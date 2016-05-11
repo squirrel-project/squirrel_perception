@@ -336,6 +336,7 @@ private:
                 p.y = _map_locations[i][1];
                 p.z = _map_locations[i][2];
                 response.generated_locations.push_back(p);
+                cout << p.x << " " << p.y << " " << p.z << endl;
             }
         }
 
