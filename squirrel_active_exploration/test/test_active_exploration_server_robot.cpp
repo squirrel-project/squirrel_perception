@@ -172,15 +172,15 @@ int main(int argc, char **argv)
 //    }
 //    nbv_srv.request.map = oc_msg;
 
-    // Convert octomap to cloud
-    PointCloud<PointT> oc_cloud = octree_to_cloud(tree);
-    PointT pt;
-    pt.x = pose[0];
-    pt.y = pose[1];
-    pt.z = pose[2];
-    oc_cloud.push_back(pt);
-    f = "/home/squirrel/tim_oc_cloud.pcd";
-    io::savePCDFileBinary (f, oc_cloud);
+//    // Convert octomap to cloud
+//    PointCloud<PointT> oc_cloud = octree_to_cloud(tree);
+//    PointT pt;
+//    pt.x = pose[0];
+//    pt.y = pose[1];
+//    pt.z = pose[2];
+//    oc_cloud.push_back(pt);
+//    f = "/home/squirrel/tim_oc_cloud.pcd";
+//    io::savePCDFileBinary (f, oc_cloud);
 
     // This is how the segmentation and classification SHOULD work
     sensor_msgs::Image in_image;
@@ -460,7 +460,7 @@ int main(int argc, char **argv)
 
     while(ros::ok)
     {
-        pub_marker.publish(marker_array_msg);
+        marker_pub.publish(marker_array_msg);
         ros::spinOnce();
     }
 
