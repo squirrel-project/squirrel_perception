@@ -145,16 +145,16 @@ int main(int argc, char **argv)
     ros::ServiceClient classify_client = n.serviceClient<squirrel_object_perception_msgs::Classify>("/squirrel_classify");
     squirrel_object_perception_msgs::Classify classify_srv;
 
-    // Create an octree with the point cloud input
-    OcTree tree (tree_resolution);
-    // Add the point cloud
-    // Otherwise insert the point cloud
-    point3d pos (pose[0], pose[1], pose[2]);
-    octomap::Pointcloud o_cloud;
-    pointCloud2ToOctomap(cloud_msg, o_cloud);
-    tree.insertPointCloud(o_cloud, pos);
-    // Save octomap
-    tree.writeBinary("/home/squirrel/tim_tree.bt");
+//    // Create an octree with the point cloud input
+//    OcTree tree (tree_resolution);
+//    // Add the point cloud
+//    // Otherwise insert the point cloud
+//    point3d pos (pose[0], pose[1], pose[2]);
+//    octomap::Pointcloud o_cloud;
+//    pointCloud2ToOctomap(cloud_msg, o_cloud);
+//    tree.insertPointCloud(o_cloud, pos);
+//    // Save octomap
+//    tree.writeBinary("/home/squirrel/tim_tree.bt");
 
     // Set the fields in the service
     nbv_srv.request.camera_pose.position.x = pose[0];
@@ -163,14 +163,14 @@ int main(int argc, char **argv)
     nbv_srv.request.variance = variance;
     //nbv_srv.request.cloud = cloud_msg;  // CHANGED!
     nbv_srv.request.occlusions = occlusions;
-    // Octomap - Only works with binary conversion!
-    octomap_msgs::Octomap oc_msg;
-    if (!octomap_msgs::binaryMapToMsg(tree, oc_msg))
-    {
-        ROS_ERROR("test_active_exploration_server : could not convert the octomap");
-        return EXIT_FAILURE;
-    }
-    nbv_srv.request.map = oc_msg;
+//    // Octomap - Only works with binary conversion!
+//    octomap_msgs::Octomap oc_msg;
+//    if (!octomap_msgs::binaryMapToMsg(tree, oc_msg))
+//    {
+//        ROS_ERROR("test_active_exploration_server : could not convert the octomap");
+//        return EXIT_FAILURE;
+//    }
+//    nbv_srv.request.map = oc_msg;
 
     // Convert octomap to cloud
     PointCloud<PointT> oc_cloud = octree_to_cloud(tree);
@@ -286,8 +286,6 @@ int main(int argc, char **argv)
     }
 
     ROS_INFO("test_active_exploration_server : successfully segmented the scene");
-    cin.ignore();
-
 
 //    // Classify
 //    classify_srv.request.cloud = cloud_msg;
@@ -311,24 +309,42 @@ int main(int argc, char **argv)
         c.class_type.push_back(str);
         str.data = "bottle/";
         c.class_type.push_back(str);
-        str.data = "spray_bottle/";
-        c.class_type.push_back(str);
+        //str.data = "spray_bottle/";
+        //c.class_type.push_back(str);
         c.confidence.push_back(0.2);
         c.confidence.push_back(0.3);
-        c.confidence.push_back(0.5);
+        //c.confidence.push_back(0.5);
         str.data = squirrel_dir + "apple//3a92a256ad1e060ec048697b91f69d2/esf/pose_0.txt";
         c.pose.push_back(str);
         str.data = squirrel_dir + "bottle//1cf98e5b6fff5471c8724d5673a063a6/esf/pose_0.txt";
         c.pose.push_back(str);
-        str.data = squirrel_dir + "spray_bottle//9b9a4bb5550f00ea586350d6e78ecc7/esf/pose_0.txt";
-        c.pose.push_back(str);
+        //str.data = squirrel_dir + "spray_bottle//9b9a4bb5550f00ea586350d6e78ecc7/esf/pose_0.txt";
+        //c.pose.push_back(str);
         class_results.push_back(c);
     }
     nbv_srv.request.class_results = class_results;
 
     // Set the cloud to match the segments
-    //pcl::toROSMsg(segment_cloud, cloud_msg);
+    pcl::toROSMsg(segment_cloud, cloud_msg);
     nbv_srv.request.cloud = cloud_msg;
+
+    // Create an octree with the point cloud input
+    OcTree tree (tree_resolution);
+    // Add the point cloud
+    // Otherwise insert the point cloud
+    point3d pos (pose[0], pose[1], pose[2]);
+    octomap::Pointcloud o_cloud;
+    pointCloud2ToOctomap(cloud_msg, o_cloud);
+    tree.insertPointCloud(o_cloud, pos);
+
+    // Octomap - Only works with binary conversion!
+    octomap_msgs::Octomap oc_msg;
+    if (!octomap_msgs::binaryMapToMsg(tree, oc_msg))
+    {
+        ROS_ERROR("test_active_exploration_server : could not convert the octomap");
+        return EXIT_FAILURE;
+    }
+    nbv_srv.request.map = oc_msg;
 
 
 //    // --- Test 1: given locations
