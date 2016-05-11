@@ -210,62 +210,28 @@ int main(int argc, char **argv)
     int s = 0;
     while (seg_client.call(seg_srv))
     {
-//        // Get the points for the segment
-//        pcl_conversions::toPCL(seg_srv.response.points[0], pcl_pc2);
-//        PointCloud<PointT> pc;
-//        fromPCLPointCloud2(pcl_pc2, pc);
-//        transformPointCloud(pc, pc, transform);
-//        // Save point cloud
-//        if (pc.size() > 0)
-//        {
-//            segment_cloud.insert(segment_cloud.end(), pc.begin(), pc.end());
-//            vector<int> ss;
-//            int start_index = segment_cloud.size();
-//            int count = 0;
-//            for (size_t i = 0; i < pc.size(); ++i)
-//            {
-//                if (!isnan(pc.points[i].x))
-//                    ss.push_back(start_index + count);
-//            }
-//            if (ss.size() > 0)
-//            {
-//                segs.push_back(ss);
-//                f = "/home/squirrel/tim_seg_cloud_" + boost::lexical_cast<string>(s) + ".pcd";
-//                io::savePCDFileBinary (f, pc);
-//            }
-//            else
-//            {
-//                ROS_WARN("Segment %i has no valid points", s);
-//            }
-//        }
-//        else
-//        {
-//            ROS_WARN("Segment %i is empty", s);
-//        }
-//        ++s;
-
-        if (seg_srv.response.clusters_indices[0].data.size() > 0)
+        // Get the points for the segment
+        pcl_conversions::toPCL(seg_srv.response.points[0], pcl_pc2);
+        PointCloud<PointT> pc;
+        fromPCLPointCloud2(pcl_pc2, pc);
+        transformPointCloud(pc, pc, transform);
+        // Save point cloud
+        if (pc.size() > 0)
         {
-            vector<int> ss = seg_srv.response.clusters_indices[0].data;
-            PointCloud<PointT> seg_cloud;
-            copyPointCloud(cloud, ss, seg_cloud);
-            cout << "Points in segment " << s << ":" << endl;
-            nan_count = 0;
-            valid_count = 0;
-            for (size_t i = 0; i < seg_cloud.size(); ++i)
+            segment_cloud.insert(segment_cloud.end(), pc.begin(), pc.end());
+            vector<int> ss;
+            int start_index = segment_cloud.size();
+            int count = 0;
+            for (size_t i = 0; i < pc.size(); ++i)
             {
-                //cout << seg_cloud.points[i].x << " " << seg_cloud.points[i].y << " " << seg_cloud.points[i].z << endl;
-                if (isnan(seg_cloud.points[i].x))
-                    nan_count++;
-                else
-                    valid_count++;
+                if (!isnan(pc.points[i].x))
+                    ss.push_back(start_index + count);
             }
-            cout << "total = " << seg_cloud.size() << ", nan = " << nan_count << ", valid = " << valid_count << endl;
-            if (valid_count > 0)
+            if (ss.size() > 0)
             {
                 segs.push_back(ss);
                 f = "/home/squirrel/tim_seg_cloud_" + boost::lexical_cast<string>(s) + ".pcd";
-                io::savePCDFileBinary (f, seg_cloud);
+                io::savePCDFileBinary (f, pc);
             }
             else
             {
@@ -277,6 +243,40 @@ int main(int argc, char **argv)
             ROS_WARN("Segment %i is empty", s);
         }
         ++s;
+
+//        if (seg_srv.response.clusters_indices[0].data.size() > 0)
+//        {
+//            vector<int> ss = seg_srv.response.clusters_indices[0].data;
+//            PointCloud<PointT> seg_cloud;
+//            copyPointCloud(cloud, ss, seg_cloud);
+//            cout << "Points in segment " << s << ":" << endl;
+//            nan_count = 0;
+//            valid_count = 0;
+//            for (size_t i = 0; i < seg_cloud.size(); ++i)
+//            {
+//                //cout << seg_cloud.points[i].x << " " << seg_cloud.points[i].y << " " << seg_cloud.points[i].z << endl;
+//                if (isnan(seg_cloud.points[i].x))
+//                    nan_count++;
+//                else
+//                    valid_count++;
+//            }
+//            cout << "total = " << seg_cloud.size() << ", nan = " << nan_count << ", valid = " << valid_count << endl;
+//            if (valid_count > 0)
+//            {
+//                segs.push_back(ss);
+//                f = "/home/squirrel/tim_seg_cloud_" + boost::lexical_cast<string>(s) + ".pcd";
+//                io::savePCDFileBinary (f, seg_cloud);
+//            }
+//            else
+//            {
+//                ROS_WARN("Segment %i has no valid points", s);
+//            }
+//        }
+//        else
+//        {
+//            ROS_WARN("Segment %i is empty", s);
+//        }
+//        ++s;
     }
 
     nbv_srv.request.clusters_indices.resize(segs.size());
@@ -392,6 +392,62 @@ int main(int argc, char **argv)
     }
     // Publish the markers
     ros::Publisher marker_pub = n.advertise<visualization_msgs::MarkerArray>("active_exploration_waypoints", 1000);
+    visualization_msgs::Marker marker;
+    visualization_msgs::MarkerArray marker_array_msg;
+
+    marker_array_msg.markers.resize(nbv_srv.response.generated_locations.size()+1);
+    for (size_t i = 0; i < nbv_srv.response.generated_locations.size(); ++i)
+    {
+        marker_array_msg.markers[i].header.frame_id = "map";
+        marker_array_msg.markers[i].header.stamp = ros::Time();
+        marker_array_msg.markers[i].ns = "test_active_exploration_server";
+        marker_array_msg.markers[i].id = i;
+        marker_array_msg.markers[i].type = visualization_msgs::Marker::SPHERE;
+        marker_array_msg.markers[i].action = visualization_msgs::Marker::ADD;
+        marker_array_msg.markers[i].pose.position.x = nbv_srv.response.generated_locations[i].x;
+        marker_array_msg.markers[i].pose.position.y = nbv_srv.response.generated_locations[i].y;
+        marker_array_msg.markers[i].pose.position.z = nbv_srv.response.generated_locations[i].z;
+        marker_array_msg.markers[i].pose.orientation.x = 0.0;
+        marker_array_msg.markers[i].pose.orientation.y = 0.0;
+        marker_array_msg.markers[i].pose.orientation.z = 0.0;
+        marker_array_msg.markers[i].pose.orientation.w = 1.0;
+        marker_array_msg.markers[i].scale.x = 0.8;
+        marker_array_msg.markers[i].scale.y = 0.8;
+        marker_array_msg.markers[i].scale.z = 0.8;
+        marker_array_msg.markers[i].color.a = 1.0;
+        marker_array_msg.markers[i].color.r = 0.0;
+        marker_array_msg.markers[i].color.g = 1.0;
+        marker_array_msg.markers[i].color.b = 0.0;
+    }
+    // Add best location
+    int sz = nbv_srv.response.generated_locations.size();
+    marker_array_msg.markers[sz].header.frame_id = "map";
+    marker_array_msg.markers[sz].header.stamp = ros::Time();
+    marker_array_msg.markers[sz].ns = "test_active_exploration_server";
+    marker_array_msg.markers[sz].id = nbv_srv.response.generated_locations.size();
+    marker_array_msg.markers[sz].type = visualization_msgs::Marker::SPHERE;
+    marker_array_msg.markers[sz].action = visualization_msgs::Marker::ADD;
+    marker_array_msg.markers[sz].pose.position.x = nbv_srv.response.generated_locations[nbv_srv.response.nbv_ix].x;
+    marker_array_msg.markers[sz].pose.position.y = nbv_srv.response.generated_locations[nbv_srv.response.nbv_ix].y;
+    marker_array_msg.markers[sz].pose.position.z = nbv_srv.response.generated_locations[nbv_srv.response.nbv_ix].z;
+    marker_array_msg.markers[sz].pose.orientation.x = 0.0;
+    marker_array_msg.markers[sz].pose.orientation.y = 0.0;
+    marker_array_msg.markers[sz].pose.orientation.z = 0.0;
+    marker_array_msg.markers[sz].pose.orientation.w = 1.0;
+    marker_array_msg.markers[sz].scale.x = 1.0;
+    marker_array_msg.markers[sz].scale.y = 1.0;
+    marker_array_msg.markers[sz].scale.z = 1.0;
+    marker_array_msg.markers[sz].color.a = 1.0;
+    marker_array_msg.markers[sz].color.r = 1.0;
+    marker_array_msg.markers[sz].color.g = 0.0;
+    marker_array_msg.markers[sz].color.b = 1.0;
+
+    while(ros::ok)
+    {
+        pub_marker.publish(marker_array_msg);
+        ros::spinOnce();
+    }
+
 
     // Send the next best location as a waypoint
     // TODO

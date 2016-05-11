@@ -822,6 +822,22 @@ bool downsample_point_cloud(const PointCloud<PointT> &in_cloud, PointCloud<Point
         return false;
     }
 
+    // Hack to just get a point cloud in the ball park of the right number of points
+    out_cloud.clear();
+    int num = 25;
+    if (in_cloud.size() <= num)
+    {
+        out_cloud = in_cloud;
+        return true;
+    }
+    for (int i = 0; i < num; ++i)
+    {
+        int r = int_rand(0, in_cloud.size());
+        out_cloud.push_back(in_cloud.points[r]);
+    }
+    cout << "final ds points = " << out_cloud.size() << endl;
+    return true;
+
     // First iteration assumes now that the cloud is larger than _ICP_POINT_MIN
 
     VoxelGrid<PointT> grid;
