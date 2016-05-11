@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(squirrel_classification)
 
-find_package(catkin REQUIRED COMPONENTS cv_bridge geometry_msgs roscpp rospy sensor_msgs squirrel_object_perception_msgs std_msgs visualization_msgs)
+find_package(catkin REQUIRED COMPONENTS cv_bridge geometry_msgs roscpp rospy sensor_msgs squirrel_object_perception_msgs std_msgs visualization_msgs classifier_srv_definitions)
 
 find_package(PCL 1.7 REQUIRED)
 find_package(OpenCV 2.4 REQUIRED)
@@ -10,12 +10,12 @@ find_package(V4R REQUIRED)
 catkin_package(
   INCLUDE_DIRS include #  LIBRARIES squirrel_classification
  CATKIN_DEPENDS #  DEPENDS system_lib
- geometry_msgs sensor_msgs squirrel_object_perception_msgs std_msgs visualization_msgs
+ geometry_msgs sensor_msgs squirrel_object_perception_msgs std_msgs visualization_msgs classifier_srv_definitions
 )
 
 include_directories(include ${catkin_INCLUDE_DIRS} ${V4R_INCLUDE_DIRS} ${PCL_INCLUDE_DIRS})
 
-add_executable(squirrel_classification src/shape_simple_classifier_node.cpp)
+add_executable(squirrel_classification src/classifier.cpp)
 
 target_link_libraries(squirrel_classification ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${V4R_LIBS})
 

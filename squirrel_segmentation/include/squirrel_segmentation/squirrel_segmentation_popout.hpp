@@ -15,13 +15,14 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <tf/transform_listener.h>
 #include <tf/transform_broadcaster.h>
-#include "squirrel_object_perception_msgs/SegmentInit.h"
-#include "squirrel_object_perception_msgs/SegmentOnce.h"
+#include <v4r/segmentation/pcl_segmentation_methods.h>
+#include <squirrel_object_perception_msgs/SegmentInit.h>
+#include <squirrel_object_perception_msgs/SegmentOnce.h>
 
 class SegmentationPopoutNode
 {
 private:
-  typedef pcl::PointXYZ PointT;
+  typedef pcl::PointXYZRGB PointT;
   static const double MAX_OBJECT_DIST = 1.5;
   static const double MAX_OBJECT_HEIGHT = 0.25;
 
@@ -33,7 +34,7 @@ private:
     double size;  // diameter of bounding sphere
     std::string name;
 
-    PersistentObject(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_cluster, double x, double y, double z)
+    PersistentObject(pcl::PointCloud<PointT>::Ptr &cloud_cluster, double x, double y, double z)
     {
       std::stringstream ss;
       ss << "cluster" << cnt++;
@@ -92,14 +93,15 @@ private:
   std::list<PersistentObject> knownObjects;
   // point index vectors of current segmentation call
   std::vector<SegmentationResult> results;
+  v4r::PCLSegmenter<PointT> *segmenter_;
 
   geometry_msgs::PoseStamped kinect2base_link(double x, double y, double z);
   geometry_msgs::PoseStamped base_link2kinect(double x, double y, double z);
   geometry_msgs::PoseStamped base_link2map(double x, double y, double z);
   geometry_msgs::PoseStamped transform(double x, double y, double z, const std::string &from, const std::string &to);
-  void transformCluster2base_link(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_cluster);
-  void transformBase2Kinect(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_cluster);
-  bool isValidCluster(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_cluster, Eigen::Vector4f &centroid);
+  void transformCluster2base_link(pcl::PointCloud<PointT>::Ptr &cloud_cluster);
+  void transformBase2Kinect(pcl::PointCloud<PointT>::Ptr &cloud_cluster);
+  bool isValidCluster(pcl::PointCloud<PointT>::Ptr &cloud_cluster, Eigen::Vector4f &centroid);
   void visualizePersistentObject(PersistentObject &obj);
 
   bool segment(squirrel_object_perception_msgs::SegmentInit::Request & req, squirrel_object_perception_msgs::SegmentInit::Response & response);
