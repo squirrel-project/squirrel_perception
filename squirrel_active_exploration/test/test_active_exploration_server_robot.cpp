@@ -218,17 +218,20 @@ int main(int argc, char **argv)
         // Save point cloud
         if (pc.size() > 0)
         {
-            segment_cloud.insert(segment_cloud.end(), pc.begin(), pc.end());
             vector<int> ss;
             int start_index = segment_cloud.size();
             int count = 0;
+            bool add_cloud = true;
             for (size_t i = 0; i < pc.size(); ++i)
             {
                 if (!isnan(pc.points[i].x))
                     ss.push_back(start_index + count);
+                else
+                    add_cloud = false;
             }
-            if (ss.size() > 0)
+            if (ss.size() > 0 && add_cloud)
             {
+                segment_cloud.insert(segment_cloud.end(), pc.begin(), pc.end());
                 segs.push_back(ss);
                 f = "/home/squirrel/tim_seg_cloud_" + boost::lexical_cast<string>(s) + ".pcd";
                 io::savePCDFileBinary (f, pc);
@@ -301,7 +304,7 @@ int main(int argc, char **argv)
     ROS_WARN("test_active_exploration_server : fake classification!");
     vector<squirrel_object_perception_msgs::Classification> class_results;
     string squirrel_dir = "/home/squirrel/tim_data/training_set_3/training/";
-    for (size_t i = 0; i < segs.size(); ++i)
+    for (size_t i = 0; i < nbv_srv.request.clusters_indices.size(); ++i)
     {
         squirrel_object_perception_msgs::Classification c;
         std_msgs::String str;
