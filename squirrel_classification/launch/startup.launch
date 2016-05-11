@@ -1,14 +1,19 @@
 <launch>
 
-  <arg name="models_dir" default="$(find squirrel_classification)/data/models" />
-  <arg name="training_dir" default="$(find squirrel_classification)/data/training" />
+  <arg name="models_dir" default="/home/squirrel/tim_data/training_set_3/models" />  <!-- required -->
+  <arg name="training_dir" default="/home/squirrel/tim_data/training_set_3/training" />   <!-- required -->
+  <arg name="nn" default="10" />
+  <arg name="chop_z" default="2.5" />
 
-  <node name="squirrel_classification"
-        pkg="squirrel_classification"
-        type="squirrel_classification"
-        required="true" output="screen">
-        <param name="models_dir" type="string" value="$(arg models_dir)"/>
-        <param name="training_dir" type="string" value="$(arg training_dir)"/>
+  <!-- classifier node from V4R ROS wrapper -->
+  <node pkg="object_classifier" type="object_classifier_node" name="v4r_object_classifier" output="screen" >
+    <param name="models_dir" value="$(arg models_dir)" type="string"/>
+    <param name="training_dir" value="$(arg training_dir)" type="string"/>
+    <param name="nn" value="$(arg nn)" type="int"/>
+    <param name="chop_z" value="$(arg chop_z)" type="double"/>
   </node>
+
+  <!-- and the SQUIRREL node for wrapping that .. -->
+  <node name="squirrel_classification" pkg="squirrel_classification" type="squirrel_classification" required="true" output="screen" />
 
 </launch>

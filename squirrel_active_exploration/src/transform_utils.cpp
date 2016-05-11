@@ -821,7 +821,8 @@ bool downsample_point_cloud(const PointCloud<PointT> &in_cloud, PointCloud<Point
         out_cloud = in_cloud;
         return false;
     }
-
+    
+    /**
     // Hack to just get a point cloud in the ball park of the right number of points
     out_cloud.clear();
     int num = 25;
@@ -837,6 +838,7 @@ bool downsample_point_cloud(const PointCloud<PointT> &in_cloud, PointCloud<Point
     }
     cout << "final ds points = " << out_cloud.size() << endl;
     return true;
+    **/
 
     // First iteration assumes now that the cloud is larger than _ICP_POINT_MIN
 

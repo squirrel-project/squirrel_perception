@@ -18,6 +18,7 @@
 
 #include <squirrel_object_perception_msgs/LookAtImagePosition.h>
 #include <squirrel_object_perception_msgs/LookAtPosition.h>
+#include <squirrel_object_perception_msgs/LookAtPanTilt.h>
 #include <squirrel_object_perception_msgs/FixatePosition.h>
 #include <squirrel_object_perception_msgs/ClearFixation.h>
 
@@ -31,7 +32,7 @@ public:
 private:
   ros::NodeHandle nh_;
   ros::Publisher panPub_, tiltPub_;
-  ros::ServiceServer lookImageSrv_, lookSrv_, fixateSrv_, clearSrv_;
+  ros::ServiceServer lookImageSrv_, lookSrv_, fixateSrv_, clearSrv_, lookPanTiltSrv_;
   ros::Subscriber panStateSub_, tiltStateSub_;
   tf::TransformListener listener_;
   boost::mutex jointMutex_;
@@ -41,6 +42,8 @@ private:
                            squirrel_object_perception_msgs::LookAtImagePosition::Response &res);
   bool lookAtPosition(squirrel_object_perception_msgs::LookAtPosition::Request &req,
                       squirrel_object_perception_msgs::LookAtPosition::Response &res);
+  bool lookAtPanTilt(squirrel_object_perception_msgs::LookAtPanTilt::Request &req,
+                      squirrel_object_perception_msgs::LookAtPanTilt::Response &res);
   bool fixatePosition(squirrel_object_perception_msgs::FixatePosition::Request &req,
                       squirrel_object_perception_msgs::FixatePosition::Response &res);
   bool clearFixation(squirrel_object_perception_msgs::ClearFixation::Request &req,
