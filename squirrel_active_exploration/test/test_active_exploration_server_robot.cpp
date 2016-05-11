@@ -1,5 +1,7 @@
 #include <ros/ros.h>
 #include <octomap_ros/conversions.h>
+#include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
 #include <squirrel_object_perception_msgs/SegmentInit.h>
 #include <squirrel_object_perception_msgs/SegmentOnce.h>
 #include <squirrel_object_perception_msgs/Classify.h>
@@ -389,7 +391,7 @@ int main(int argc, char **argv)
              << nbv_srv.response.utilities[i] << endl;
     }
     // Publish the markers
-    //ros::Publisher marker_pub = n.advertise<visualization_msgs::MarkerArray>("active_exploration_waypoints", 1000);
+    ros::Publisher marker_pub = n.advertise<visualization_msgs::MarkerArray>("active_exploration_waypoints", 1000);
 
     // Send the next best location as a waypoint
     // TODO

@@ -62,19 +62,20 @@ bool SegmentationPopoutNode::segment(squirrel_object_perception_msgs::SegmentIni
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_f (new pcl::PointCloud<pcl::PointXYZ>);
 
-//  // Create the filtering object: downsample the dataset using a leaf size of 1cm
-//  pcl::VoxelGrid<pcl::PointXYZ> vg;
+  // Create the filtering object: downsample the dataset using a leaf size of 1cm
+  pcl::VoxelGrid<pcl::PointXYZ> vg;
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered (new pcl::PointCloud<pcl::PointXYZ>);
-//  vg.setInputCloud (cloud_);
-//  vg.setLeafSize (0.01f, 0.01f, 0.01f);
-//  vg.filter (*cloud_filtered);
-  cloud_filtered->resize(cloud_->size());
-  for (size_t i = 0; i < cloud_->size(); ++i)
-  {
-     cloud_filtered->points[i].x = cloud_->points[i].x;
-     cloud_filtered->points[i].y = cloud_->points[i].y;
-     cloud_filtered->points[i].z = cloud_->points[i].z;
-  }
+  vg.setInputCloud (cloud_);
+  vg.setLeafSize (0.01f, 0.01f, 0.01f);
+  vg.filter (*cloud_filtered);
+//  cloud_filtered->resize(cloud_->size());
+//  for (size_t i = 0; i < cloud_->size(); ++i)
+//  {
+//     cloud_filtered->points[i].x = cloud_->points[i].x;
+//     cloud_filtered->points[i].y = cloud_->points[i].y;
+//     cloud_filtered->points[i].z = cloud_->points[i].z;
+//  }
+//  copyPointCloud(*cloud_, *cloud_filtered);
 
   ROS_INFO("%s: cloud filtered", ros::this_node::getName().c_str());
 
