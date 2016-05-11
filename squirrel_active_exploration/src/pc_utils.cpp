@@ -171,8 +171,8 @@ bool icp(const PointCloud<PointT>::Ptr source, const PointCloud<PointT>::Ptr tar
     {
         tgt = target;
     }
-    cout << "source " << src->size() << " (" << source->size() << ")" << endl;
-    cout << "target " << tgt->size() << " (" << target->size() << ")" << endl;
+    //cout << "source " << src->size() << " (" << source->size() << ")" << endl;
+    //cout << "target " << tgt->size() << " (" << target->size() << ")" << endl;
 
     // Compute surface normals and curvature
     PointCloud<PointNormal>::Ptr points_with_normals_src (new PointCloud<PointNormal>);
@@ -185,17 +185,17 @@ bool icp(const PointCloud<PointT>::Ptr source, const PointCloud<PointT>::Ptr tar
 
     norm_est.setInputCloud (src);
     norm_est.compute (*points_with_normals_src);
-    cout << "source with normals " << points_with_normals_src->size() << endl;
+    //cout << "source with normals " << points_with_normals_src->size() << endl;
     copyPointCloud (*src, *points_with_normals_src);
-    cout << "source with normals " << points_with_normals_src->size() << endl;
-    cout << "source " << src->size() << endl;
+    //cout << "source with normals " << points_with_normals_src->size() << endl;
+    //cout << "source " << src->size() << endl;
 
     norm_est.setInputCloud (tgt);
     norm_est.compute (*points_with_normals_tgt);
-    cout << "target with normals " << points_with_normals_tgt->size() << endl;
+    //cout << "target with normals " << points_with_normals_tgt->size() << endl;
     copyPointCloud (*tgt, *points_with_normals_tgt);
-    cout << "target with normals " << points_with_normals_tgt->size() << endl;
-    cout << "target " << tgt->size() << endl;
+    //cout << "target with normals " << points_with_normals_tgt->size() << endl;
+    //cout << "target " << tgt->size() << endl;
 
     // Instantiate our custom point representation (defined above) ...
     MyPointRepresentation point_representation;
@@ -257,7 +257,7 @@ bool icp(const PointCloud<PointT>::Ptr source, const PointCloud<PointT>::Ptr tar
     }
     catch(...)
     {
-        printf(ANSI_COLOR_RED  "ERROR utils::icp : could not perform icp!"  ANSI_COLOR_RESET "\n");
+        printf(ANSI_COLOR_RED  "ERROR pc_utils::icp : could not perform icp!"  ANSI_COLOR_RESET "\n");
     }
 
     score = reg.getFitnessScore();
