@@ -1,7 +1,7 @@
 <launch> 
-  <node name="squirrel_create_examine_waypoint"
+  <node name="squirrel_perception_waypoints_server"
         pkg="squirrel_perception_waypoint"
-        type="squirrel_create_examine_waypoint" 
+        type="squirrel_perception_waypoints_server" 
         required="true">
   </node>
 </launch>
