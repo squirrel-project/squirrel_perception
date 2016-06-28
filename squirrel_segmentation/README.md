@@ -26,7 +26,6 @@ roslaunch squirrel_segmentation startup.launch
 
 ## 3. Software architecture <a id="3--software-architecture"/> 
 
-head_pose_estimation 
-estimate_focus ![estimate_focus](segmentation.png "Architecture")
+![segmentation](segmentation.png "Architecture")
 
 <a href="#top">top</a>
