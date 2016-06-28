@@ -1,13 +1,5 @@
+<a id="top"/> 
 squirrel_active_exploration
-===========================
-
-
-Maintanier: <br />
-[Tim Patten] (https://github.com/tpatten) <br />
-t.patten@acfr.usyd.edu.au <br />
-Australian Centre for Field Robotics, The University of Sydney
-
-## Overview
 
 The squirrel_active_exploration package evaluates the utility of potential viewpoints in an environment. It can be used to plan the next-best-view by comparing the utility of candidate viewpoints and selecting the one with the highest utility. The package operates with RGB-D data in the form of point clouds (.pcd). This can be from a dataset or from a hardware device. For use with a dataset, the clouds must be aligned to a common map frame with a set of transformation files (see [Willow Garage dataset](https://repo.acin.tuwien.ac.at/tmp/permanent/dataset_index.php) for an example). <br />
 During the online operation, a belief about each object is maintained consisting of its pose and class. The planner considers future viewpoints and determines the next view that will best improve the beliefs. This is done by maximising a utility function. <br />
@@ -26,6 +18,28 @@ Bibtex <br />
     pages = {73-81}, <br />
     month = {Jan} }
 
+Technical Maintainer: [Tim Patten](https://github.com/tpatten (Tim Patten; Australian Centre for Field Robotics, The University of Sydney) - t.patten@acfr.usyd.edu.au
+
+
+##Contents
+
+1. <a href="#1--installation-requirements">Installation Requirements</a>
+2. <a href="#2--execution">Execution</a>
+3. <a href="#3--software-architecture">Software architecture</a>
+
+
+## 1. Installation Requirements: <a id="1--installation-requirements"/> 
+
+####Debian packages
+
+####ROS packages
+The ROS packages dependencies can be installed with the command:
+```
+rosdep install --from-path squirrel_active_exploration -i -y
+```
+
+## Overview
+
 ## Requirements
 *squirrel_active_exploration* requires additional nodes to run. <br />
 Classification from [squirrel_classification] (https://github.com/squirrel-project/squirrel_perception/blob/indigo_dev/squirrel_classification/launch/startup.launch). <br />
@@ -43,6 +57,7 @@ How to train:
   * `entropy_map.launch` will generate files with in the training directory that contain the entropy information as well information
 about pose, point clouds, point cloud centroids, classification probablities and an occupancy tree file.
 
+## 2. Execution: <a id="2--execution"/> 
 ## Running with dataset
 Run the launch file `run_dataset.launch`. <br />
 This will load the point cloud and transform files specified in the data directory. The transforms will be used to convert each point cloud into a common frame and the viewpoint locations will be computed. Each viewpoint will be considered a candidate viewpoint during planning. As the program runs it will be selecting the next best view and each view will be removed from the future options. The program will save each viewpoint along with the observed objects with their class distribution. Additionally, a *results.txt* file
@@ -70,14 +85,14 @@ The map coverage component generates a list of waypoints that, when combined, vi
 The algorithm works be ray tracing through an [octomap](http://octomap.github.io/) occupancy grid. Initially a grid search is performed in the map to determine a set of locations that are free for the robot to move to (i.e. locations in the map that are occupied or unreachable are not considered). At each location, the set of grid cells that will be observed are determined. For speed ups, ray tracing is only performed for locations on the floor of the map. <br />
 Once the locations are analysed, a subset of locations are selected that maximally cover the map. The optimization process greedily selects locations that will add the most number of unobserved grid cells to the observed set. <br />
 First run
-```
+``
 roslaunch squirrel_active_exploration squirrel_map_coverge_server.launch
-````
+```
 This starts the map coverage server. Each call to this will generate the waypoints that cover the input map. This is a ros service that can be called in a number of different ways. <br />
 An example is provided by running
 ```
 roslaunch squirrel_active_exploration squirrel_map_coverge.launch
-````
+```
 which will call the map coverage server with a map file (.bt or .ot). This launch file specifies some important parameters.
 * *tree_depth*: is the resolution of the tree to perform the ray tracing, setting it to 14 rather than the default 16 returns a result much faster with similar quality
 * *robot_height*: specifies the height of the sensor and seeds the start point for every ray tracing operation
@@ -93,3 +108,10 @@ The server also operates with [ros octomap](http://wiki.ros.org/octomap) message
 The output of the ros service is a list of points. The list of waypoints are unordered and it is up to the calling function to plan a path through the waypoints.
 
 The definitions for the messages are found in [CoveragePlanFile.srv](https://github.com/squirrel-project/squirrel_common/blob/indigo_dev/squirrel_object_perception_msgs/srv/CoveragePlanFile.srv) and [CoveragePlan.srv](https://github.com/squirrel-project/squirrel_common/blob/indigo_dev/squirrel_object_perception_msgs/srv/CoveragePlan.srv) for usage with an input file or a ros topic.
+
+## 3. Software architecture <a id="3--software-architecture"/> 
+
+squirrel_active_exploration ![squirrel_active_exploration](squirrel_active_exploration.png "Architecture")
+
+<a href="#top">top</a>
+
