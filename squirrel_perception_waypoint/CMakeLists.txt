@@ -117,9 +117,9 @@ catkin_package(
 
 include_directories(include ${catkin_INCLUDE_DIRS})
 
-add_executable(squirrel_create_examine_waypoint src/squirrel_create_examine_waypoint.cpp)
+add_executable(squirrel_perception_waypoints_server src/squirrel_create_examine_waypoint.cpp)
 
-target_link_libraries(squirrel_create_examine_waypoint ${catkin_LIBRARIES})
+target_link_libraries(squirrel_perception_waypoints_server ${catkin_LIBRARIES})
 
 #############
 ## Install ##

@@ -100,7 +100,7 @@ protected:
         pcl::fromROSMsg(object.cloud, *segmented_object);
 	
 	pcl::PCDWriter writer;
-        //writer.write<PointT>("before_recognize.pcd", *segmented_object, false);
+    //writer.write<PointT>("before_recognize.pcd", *segmented_object, false);
 
 	transformPointCloud(segmented_object, segmented_object->header.frame_id, "/kinect_depth_optical_frame");
 
@@ -396,7 +396,7 @@ protected:
 
 	pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
         pcl::fromROSMsg(this->scene, *cloud);
-    //pcl::io::savePCDFileBinary("/home/edith/edith_rec_test/before_segmentation.pcd", *cloud);
+    //pcl::io::savePCDFileBinary("before_segmentation.pcd", *cloud);
 
         ros::ServiceClient client = nh_.serviceClient<squirrel_object_perception_msgs::SegmentInit>("/squirrel_segmentation_incremental_init");
         squirrel_object_perception_msgs::SegmentInit srv;
@@ -462,13 +462,8 @@ protected:
             
 	    double diam = std::sqrt(std::pow(x_diam,2) + std::pow(y_diam,2));
 
-            //std::cout << "Size from Segmenter: " << "X(" << min_p.x << ";" << max_p.x << ")" <<
-            //                         " Y(" << min_p.y << ";" << max_p.y << ")" <<
-            //                         " Z(" << min_p.z << ";" << max_p.z << ")";
 	    //std::cout << "Diam from Segmenter: " << diam << "; Height: " << z_diam << std::endl;
-            //std::cout << "Position from Segmenter in map-frame (" << obj.sceneObject.pose.position.x << "; "
-            //             << obj.sceneObject.pose.position.y << "; " << obj.sceneObject.pose.position.z << "; " << std::endl;
-	    obj.sceneObject.bounding_cylinder.diameter = diam;
+            obj.sceneObject.bounding_cylinder.diameter = diam;
             obj.sceneObject.bounding_cylinder.height = z_diam;
             this->objects.push_back(obj);
             return true;
@@ -584,10 +579,6 @@ public:
 
 	if (sceneConst != NULL)
         {
-	    
-	    pcl::PointCloud<PointT>::Ptr test(new pcl::PointCloud<PointT>);
-        pcl::fromROSMsg(*sceneConst, *test);
-	//pcl::io::savePCDFileBinary("scene.pcd", *test);
             scene = *sceneConst;
 	    sceneConst.reset();
             ROS_INFO("%s: Received data", action_name_.c_str());
@@ -632,9 +623,7 @@ public:
                         pass.setFilterFieldName("z");
                         pass.setFilterLimits(min_p.z, max_p.z);
                         pass.setInputCloud(cloud);
-                        pass.filter(*cloud); 
-
-			pcl::io::savePCDFileBinary("before_segmentation.pcd", *cloud);*/
+                        pass.filter(*cloud); */
 
                         pcl::toROSMsg(*cloud, scene);
                     }
@@ -693,16 +682,14 @@ public:
 	std::cout << "Number of segmented objects: " << objects.size() << std::endl;
         for(objectIterator = objects.begin(); objectIterator != objects.end(); objectIterator++)
         {
-            success = do_recognition((*objectIterator).sceneObject);
+            do_recognition((*objectIterator).sceneObject);
+            success = compareToDB((*objectIterator).sceneObject);
+            visualizeObject((*objectIterator).sceneObject);
             //success = add_object_to_db((*objectIterator).sceneObject);
             if (!success)
                 break;
         }
-	/*squirrel_object_perception_msgs::SceneObject sceneObjectTemp;
-	sceneObjectTemp.cloud = scene;
-	sceneObjectTemp.category = "unknown";
-	sceneObjectTemp.id = "object1";
-	do_recognition(sceneObjectTemp);*/
+	
         if(success)
         {
             //result_.sequence = feedback_.sequence;
