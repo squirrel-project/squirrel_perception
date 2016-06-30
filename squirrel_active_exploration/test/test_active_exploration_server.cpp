@@ -12,7 +12,7 @@ using namespace octomap;
 // Default definitions, should be replaced by program arguments
 #define _VARIANCE 0.5
 #define _TREE_DEPTH 14  // 14 => resolution of 0.1m, initial tree depth is 16 => 0.025m
-#define _ROBOT_HEIGHT 0.75
+#define _CAMERA_HEIGHT 0.75  // height of camera above robot base
 #define _ROBOT_RADIUS 0.22
 #define _DISTANCE_FROM_CENTER 2
 #define _NUM_LOCATIONS 10
@@ -29,35 +29,39 @@ int main(int argc, char **argv)
     ros::NodeHandle n("~");
 
     // Get the parameters
-    string data_name = "";
+    string data_dir = "";
+    string train_dir = "";
     double variance = _VARIANCE;
-    double robot_height = _ROBOT_HEIGHT;
+    double camera_height = _CAMERA_HEIGHT;
     double robot_radius = _ROBOT_RADIUS;
     double distance_from_center = _DISTANCE_FROM_CENTER;
     int num_locations = _NUM_LOCATIONS;
     double tree_resolution = _TREE_RESOLUTION;
     bool reverse_transforms = false;
     bool occlusions = true;
+    bool working_classifier = false;
     bool multiple_locations = false;
     // Read the input if it exists
-    if (!n.getParam ("data_name", data_name))
+    if (!n.getParam ("data_dir", data_dir))
     {
-        ROS_ERROR("test_active_exploration_server::main : you must enter a filename!");
+        ROS_ERROR("test_active_exploration_server : you must enter a directory or filename!");
         return EXIT_FAILURE;
     }
+    n.getParam ("train_dir", train_dir);
     n.getParam ("variance", variance);
-    n.getParam ("robot_height", robot_height);
+    n.getParam ("camera_height", camera_height);
     n.getParam ("robot_radius", robot_radius);
     n.getParam ("distance_from_center", distance_from_center);
     n.getParam ("num_locations", num_locations);
     n.getParam ("tree_resolution", tree_resolution);
     n.getParam ("reverse_transforms", reverse_transforms);
     n.getParam ("occlusions", occlusions);
+    n.getParam ("working_classifier", working_classifier);
     // Print out the input
     ROS_INFO("test_active_exploration_server : input parameters");
-    cout << "Data name = " << data_name << endl;
+    cout << "Data directory = " << data_dir << endl;
     cout << "Variance = " << variance << endl;
-    cout << "Robot height = " << robot_height << endl;
+    cout << "Camera height = " << camera_height << endl;
     cout << "Robot radius = " << robot_radius << endl;
     cout << "Distance from center = " << distance_from_center << endl;
     cout << "Num locations = " << num_locations << endl;
@@ -70,15 +74,30 @@ int main(int argc, char **argv)
         cout << "Occlusions = TRUE" << endl;
     else
         cout << "Occlusions = FALSE" << endl;
+    if (working_classifier)
+        cout << "Classifier = TRUE" << endl;
+    else
+        cout << "Classifier = FALSE" << endl;
+    // If classifier is not working, then needs a valid training directory
+    if (!working_classifier)
+    {
+        if (train_dir.size() == 0)
+        {
+            ROS_ERROR("test_active_exploration_server : classifier is assumed not working, you must enter a training directory");
+            return EXIT_FAILURE;
+        }
+        // Add backslash
+        train_dir = add_backslash(train_dir);
+    }
 
     // Load the clouds from the file
     vector<Eigen::Vector4f> poses;
     vector<PointCloud<PointT> > clouds;
     vector<Eigen::Matrix4f> transforms;
     vector<vector<vector<int> > > indices;
-    if (!load_data(data_name, reverse_transforms, poses, clouds, transforms, indices))
+    if (!load_data(data_dir, reverse_transforms, poses, clouds, transforms, indices))
     {
-        ROS_ERROR("test_active_exploration_server::main : could not load the data");
+        ROS_ERROR("test_active_exploration_server : could not load the data");
         return EXIT_FAILURE;
     }
     // Get a single pose, cloud and transform
@@ -88,7 +107,7 @@ int main(int argc, char **argv)
     vector<vector<int> > segs;
     if (poses.size() == 0)
     {
-        ROS_ERROR("test_active_exploration_server::main : iposes is empty");
+        ROS_ERROR("test_active_exploration_server : iposes is empty");
         return EXIT_FAILURE;
     }
     else if (poses.size() == 1)
@@ -104,7 +123,7 @@ int main(int argc, char **argv)
         int r = int_rand(0, poses.size()-1);
         if (r < 0 || r >= poses.size())
         {
-            ROS_ERROR("test_active_exploration_server::main : invalid random number %i for poses of size %lu", r, poses.size());
+            ROS_ERROR("test_active_exploration_server : invalid random number %i for poses of size %lu", r, poses.size());
             return EXIT_FAILURE;
         }
         // Otherwise get the elements
@@ -141,13 +160,6 @@ int main(int argc, char **argv)
     pointCloud2ToOctomap(cloud_msg, o_cloud);
     tree.insertPointCloud(o_cloud, pos);
 
-    // Set the fields in the service
-    nbv_srv.request.camera_pose.position.x = pose[0];
-    nbv_srv.request.camera_pose.position.y = pose[1];
-    nbv_srv.request.camera_pose.position.z = pose[2];
-    nbv_srv.request.variance = variance;
-    nbv_srv.request.cloud = cloud_msg;
-    nbv_srv.request.occlusions = occlusions;
     // Octomap - Only works with binary conversion!
 //    vector<int8_t> map_data;
 //    if (!octomap_msgs::fullMapToMsgData(tree, map_data))
@@ -162,60 +174,69 @@ int main(int argc, char **argv)
     octomap_msgs::Octomap oc_msg;
     if (!octomap_msgs::binaryMapToMsg(tree, oc_msg))
     {
-        ROS_ERROR("test_active_exploration_server::main : could not convert the octomap");
+        ROS_ERROR("test_active_exploration_server : could not convert the octomap");
         return EXIT_FAILURE;
     }
-    nbv_srv.request.map = oc_msg;
 
-    // This is how the segmentation and classification SHOULD work
-    // Segment
-    seg_srv.request.cloud = cloud_msg;
-    if (!seg_client.call(seg_srv))
+    // Segmentation (from preloaded data)
+    vector<std_msgs::Int32MultiArray> clusters_indices;
+    for (size_t i = 0; i < segs.size(); ++i)
     {
-        ROS_ERROR("test_active_exploration_server::main : could not call the segmentation service");
-        return EXIT_FAILURE;
+        std_msgs::Int32MultiArray s;
+        s.data = segs[i];
+        clusters_indices.push_back(s);
     }
-    nbv_srv.request.clusters_indices = seg_srv.response.clusters_indices;
+
     // Classify
-    classify_srv.request.cloud = cloud_msg;
-    classify_srv.request.clusters_indices = seg_srv.response.clusters_indices;
-    if (!classify_client.call(classify_srv))
+    vector<squirrel_object_perception_msgs::Classification> class_results;
+    if (working_classifier)
     {
-        ROS_ERROR("test_active_exploration_server::main : could not call the classification service");
-        return EXIT_FAILURE;
+        classify_srv.request.cloud = cloud_msg;
+        classify_srv.request.clusters_indices = seg_srv.response.clusters_indices;
+        if (!classify_client.call(classify_srv))
+        {
+            ROS_ERROR("test_active_exploration_server : could not call the classification service");
+            return EXIT_FAILURE;
+        }
+        class_results = classify_srv.response.class_results;
     }
-    nbv_srv.request.class_results = classify_srv.response.class_results;
+    else
+    {
+        // Fake lassification if it is not working
+        ROS_WARN("test_active_exploration_server_robot : fake classification!");
+        for (size_t i = 0; i < segs.size(); ++i)
+        {
+            squirrel_object_perception_msgs::Classification c;
+            std_msgs::String str;
+            str.data = "apple/";
+            c.class_type.push_back(str);
+            str.data = "bottle/";
+            c.class_type.push_back(str);
+            str.data = "spray_bottle/";
+            c.class_type.push_back(str);
+            c.confidence.push_back(0.2);
+            c.confidence.push_back(0.3);
+            c.confidence.push_back(0.5);
+            str.data = train_dir + "apple//3a92a256ad1e060ec048697b91f69d2/esf/pose_0.txt";
+            c.pose.push_back(str);
+            str.data = train_dir + "bottle//1cf98e5b6fff5471c8724d5673a063a6/esf/pose_0.txt";
+            c.pose.push_back(str);
+            str.data = train_dir + "spray_bottle//9b9a4bb5550f00ea586350d6e78ecc7/esf/pose_0.txt";
+            c.pose.push_back(str);
+            class_results.push_back(c);
+        }
+    }
 
-//    // Fake segmentation and classification because they do not seem to work
-//    vector<std_msgs::Int32MultiArray> clusters_indices;
-//    vector<squirrel_object_perception_msgs::Classification> class_results;
-//    string squirrel_dir = "/home/tpat8946/ros_ws/squirrel/src/squirrel_perception/squirrel_active_exploration/data/training_set_3/training/";
-//    for (size_t i = 0; i < segs.size(); ++i)
-//    {
-//        std_msgs::Int32MultiArray s;
-//        s.data = segs[i];
-//        clusters_indices.push_back(s);
-//        squirrel_object_perception_msgs::Classification c;
-//        std_msgs::String str;
-//        str.data = "apple/";
-//        c.class_type.push_back(str);
-//        str.data = "bottle/";
-//        c.class_type.push_back(str);
-//        str.data = "spray_bottle/";
-//        c.class_type.push_back(str);
-//        c.confidence.push_back(0.2);
-//        c.confidence.push_back(0.3);
-//        c.confidence.push_back(0.5);
-//        str.data = squirrel_dir + "apple//3a92a256ad1e060ec048697b91f69d2/esf/pose_0.txt";
-//        c.pose.push_back(str);
-//        str.data = squirrel_dir + "bottle//1cf98e5b6fff5471c8724d5673a063a6/esf/pose_0.txt";
-//        c.pose.push_back(str);
-//        str.data = squirrel_dir + "spray_bottle//9b9a4bb5550f00ea586350d6e78ecc7/esf/pose_0.txt";
-//        c.pose.push_back(str);
-//        class_results.push_back(c);
-//    }
-//    nbv_srv.request.clusters_indices = clusters_indices;
-//    nbv_srv.request.class_results = class_results;
+    // Set the fields in the service
+    nbv_srv.request.robot_pose.position.x = pose[0];
+    nbv_srv.request.robot_pose.position.y = pose[1];
+    nbv_srv.request.robot_pose.position.z = pose[2];
+    nbv_srv.request.variance = variance;
+    nbv_srv.request.cloud = cloud_msg;
+    nbv_srv.request.map = oc_msg;
+    nbv_srv.request.occlusions = occlusions;
+    nbv_srv.request.clusters_indices = clusters_indices;
+    nbv_srv.request.class_results = class_results;
 
 
     // --- Test 1: given locations
@@ -233,10 +254,10 @@ int main(int argc, char **argv)
         }
         nbv_srv.request.locations = locations;
         // Call the service
-        ROS_INFO("test_active_exploration_server::main : calling next best view service with given locations");
+        ROS_INFO("test_active_exploration_server : calling next best view service with given locations");
         if (!nbv_client.call(nbv_srv))
         {
-            ROS_ERROR("test_active_exploration_server::main : could not call the next best view service");
+            ROS_ERROR("test_active_exploration_server : could not call the next best view service");
             return EXIT_FAILURE;
         }
         // Print out the best index
@@ -255,14 +276,14 @@ int main(int argc, char **argv)
 
     // --- Test 2: without locations (they must be generated)
     nbv_srv.request.locations.clear();
-    nbv_srv.request.robot_height = robot_height;
+    nbv_srv.request.camera_height = camera_height;
     nbv_srv.request.robot_radius = robot_radius;
     nbv_srv.request.distance_from_center = distance_from_center;
     nbv_srv.request.num_locations = num_locations;
-    ROS_INFO("test_active_exploration_server::main : calling next best view service without given locations");
+    ROS_INFO("test_active_exploration_server : calling next best view service without given locations");
     if (!nbv_client.call(nbv_srv))
     {
-        ROS_ERROR("test_active_exploration_server::main : could not call the next best view service");
+        ROS_ERROR("test_active_exploration_server : could not call the next best view service");
         return EXIT_FAILURE;
     }
     // Print out the best index

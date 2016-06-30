@@ -3,7 +3,7 @@
 
   <arg name="hostname" default="localhost" />
 
-  <arg name="training_directory" default="/home/squirrel/tim_data/training_set_3/training/" />
+  <arg name="training_directory" default="$(find squirrel_active_exploration)/data/training/" />
   <arg name="descriptor" default="esf" />
   <arg name="classification" default="true" />
   <arg name="inspect" default="false" />

@@ -5,7 +5,7 @@
 #include "squirrel_active_exploration/octomap_utils.h"
 
 #define _DEFAULT_VARIANCE 0.5
-#define _DEFAULT_ROBOT_HEIGHT 0.7
+#define _DEFAULT_CAMERA_HEIGHT 0.7
 #define _DEFAULT_ROBOT_RADIUS 0.22
 #define _DEFAULT_DISTANCE_FROM_CENTER 2.0
 #define _DEFAULT_NUM_LOCATIONS 10
@@ -53,10 +53,10 @@ private:
     ros::ServiceClient _em_client;  // service client for entropy map
     Hypothesis _hyp;  // structure to store hypothesis information
     SIM_TYPE _plan_type;  // the method for planning the next best view
-    Eigen::Vector4f _camera_pose;  // the current pose of the camera (sensor on robot)
+    Eigen::Vector4f _robot_pose;  // the current pose of the robot
     vector<Eigen::Vector4f> _map_locations;  // the locations in the map to evaluate
     double _variance;  // variance in the utility function
-    double _robot_height;  // height of the robot (and therefore sensor)
+    double _camera_height;  // height of the camera (above the robot pose in baselink frame)
     double _robot_radius;  // radius of the robot (for occupancy checking)
     double _distance_from_center;  // the distance from the center of an object to put a viewpoint
     int _num_locations;  // the number of locations around each object to evaluate
@@ -87,8 +87,8 @@ private:
     {
         // Print out the input
         ROS_INFO("squirrel_active_exploration_server : input to service");
-        ROS_INFO("Pose = %.2f %.2f %.2f", request.camera_pose.position.x, request.camera_pose.position.y,
-                 request.camera_pose.position.z);
+        ROS_INFO("Pose = %.2f %.2f %.2f", request.robot_pose.position.x, request.robot_pose.position.y,
+                 request.robot_pose.position.z);
         ROS_INFO("Point cloud size = %lu", request.cloud.data.size());
         ROS_INFO("Number of clusters = %lu", request.clusters_indices.size());
         ROS_INFO("Number of classification results = %lu", request.class_results.size());
@@ -98,10 +98,10 @@ private:
             ROS_WARN("Number of candidate locations = %lu", request.locations.size());
 
         // Set the camera pose
-        _camera_pose[0] = request.camera_pose.position.x;
-        _camera_pose[1] = request.camera_pose.position.y;
-        _camera_pose[2] = request.camera_pose.position.z;
-        _camera_pose[3] = 0;
+        _robot_pose[0] = request.robot_pose.position.x;
+        _robot_pose[1] = request.robot_pose.position.y;
+        _robot_pose[2] = request.robot_pose.position.z;
+        _robot_pose[3] = 0;
 
         // Read the variance
         if (request.variance > 0)
@@ -161,7 +161,9 @@ private:
         if (request.map.binary)
         {
             // Convert the message to a map
-            tree_ptr = octomap_msgs::binaryMsgToMap(request.map);
+            AbstractOcTree *abstract_tree_ptr = octomap_msgs::binaryMsgToMap(request.map);
+            // Cast to regular octree
+            tree_ptr = dynamic_cast<OcTree*>(abstract_tree_ptr);
         }
         else
         {
@@ -291,12 +293,12 @@ private:
         {
             ROS_WARN("squirrel_active_exploration_server : no map locations specified, must generate them in the map");
             // Get the parameters from the message
-            _robot_height = _DEFAULT_ROBOT_HEIGHT;
-            if (request.robot_height > 0 && request.robot_height < 2.0)
-                _robot_height = request.robot_height;
+            _camera_height = _DEFAULT_CAMERA_HEIGHT;
+            if (request.camera_height > 0 && request.camera_height < 2.0)
+                _camera_height = request.camera_height;
             else
-                ROS_WARN("squirrel_active_exploration_server : robot height %.2f is invalid, using default value %.2f",
-                         request.robot_height, static_cast<double>(_DEFAULT_ROBOT_HEIGHT));
+                ROS_WARN("squirrel_active_exploration_server : camera height %.2f is invalid, using default value %.2f",
+                         request.camera_height, static_cast<double>(_DEFAULT_CAMERA_HEIGHT));
 
             _robot_radius = _DEFAULT_ROBOT_RADIUS;
             if (request.robot_radius > 0 && request.robot_radius < 2.0)
@@ -383,7 +385,7 @@ private:
             // Get the surrounding locations (they will have the same z value as the original pose)
             vector<Eigen::Vector4f> p = poses[i].get_surrounding_locations(_distance_from_center,
                                                                            _num_locations,
-                                                                           _camera_pose[2]);
+                                                                           _robot_pose[2]);
             // Add to the set of locations
             circle_poses.push_back(p);
         }
@@ -410,7 +412,7 @@ private:
         // Remove locations that are too near object centers
         if (tree.size() > 0)
         {
-            if (!remove_occupied_locations(tree, _robot_height, _robot_radius, circle_poses))
+            if (!remove_occupied_locations(tree, _camera_height, _robot_radius, circle_poses))
             {
                 ROS_WARN("squirrel_active_exploration_server : could not remove occupied locations");
                 return false;
@@ -535,7 +537,7 @@ private:
      *
      * Return true on success or false on failure.
      */
-    bool remove_occupied_locations(const OcTree &tree, const double &robot_height, const double robot_radius,
+    bool remove_occupied_locations(const OcTree &tree, const double &camera_height, const double robot_radius,
                                    vector<vector<Eigen::Vector4f> > &locations)
     {
         // Construct a point cloud representation of the tree
@@ -544,7 +546,7 @@ private:
         double zground = octree_ground_height(tree, _TREE_SEARCH_DEPTH);
         double zmin = zground  + _GROUND_THRESH;
         //double zmin = zground + _robot_height/2;
-        double zmax = zground + robot_height;
+        double zmax = zground + camera_height;
         double zheight = zmin + tree.getResolution();
 
         // Get the points in the point cloud that are within the z bounds
