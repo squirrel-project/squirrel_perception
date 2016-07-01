@@ -26,7 +26,7 @@ roslaunch squirrel_object_perception startup.launch**
 
 ## 3. Software architecture <a id="3--software-architecture"/> 
 
-look_for_objects![look_for_objects](squirrel_look_for_objects.png "Architecture squirrel_look_for_objects")
-find_dynamic_objects ![find_dynamic_objects](squirrel_find_dynamic_objects.png "Architecture squirrel_find_dynamic_objects")
+look_for_objects![look_for_objects](look_for_objects.png "Architecture look_for_objects")
+find_dynamic_objects ![find_dynamic_objects](find_dynamic_objects.png "Architecture find_dynamic_objects")
 
 <a href="#top">top</a>
