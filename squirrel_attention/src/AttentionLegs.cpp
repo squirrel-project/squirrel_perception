@@ -10,7 +10,7 @@
 
 #include <math.h>
 #include <ios>
-#include <squirrel_object_perception_msgs/LookAtImagePosition.h>
+#include <robotino_msgs/LookAtImagePosition.h>
 #include <squirrel_attention/AttentionLegs.h>
 
 using namespace std;

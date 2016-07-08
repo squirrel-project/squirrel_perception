@@ -54,8 +54,8 @@ void AttentionController::tiltStateCallback(const dynamixel_msgs::JointState::Co
   jointMutex_.unlock();
 }
 
-bool AttentionController::lookAtImagePosition(squirrel_object_perception_msgs::LookAtImagePosition::Request &req,
-                                             squirrel_object_perception_msgs::LookAtImagePosition::Response &res)
+bool AttentionController::lookAtImagePosition(robotino_msgs::LookAtImagePosition::Request &req,
+                                             robotino_msgs::LookAtImagePosition::Response &res)
 {
   jointMutex_.lock();
   std_msgs::Float64 panMsg, tiltMsg;
@@ -72,8 +72,8 @@ bool AttentionController::lookAtImagePosition(squirrel_object_perception_msgs::L
   return true;
 }
 
-bool AttentionController::lookAtPosition(squirrel_object_perception_msgs::LookAtPosition::Request &req,
-                                        squirrel_object_perception_msgs::LookAtPosition::Response &res)
+bool AttentionController::lookAtPosition(robotino_msgs::LookAtPosition::Request &req,
+                                        robotino_msgs::LookAtPosition::Response &res)
 {
   jointMutex_.lock();
   std_msgs::Float64 panMsg, tiltMsg;
@@ -89,8 +89,8 @@ bool AttentionController::lookAtPosition(squirrel_object_perception_msgs::LookAt
   return true;
 }
 
-bool AttentionController::lookAtPanTilt(squirrel_object_perception_msgs::LookAtPanTilt::Request &req,
-                                        squirrel_object_perception_msgs::LookAtPanTilt::Response &res)
+bool AttentionController::lookAtPanTilt(robotino_msgs::LookAtPanTilt::Request &req,
+                                        robotino_msgs::LookAtPanTilt::Response &res)
 {
   jointMutex_.lock();
   std_msgs::Float64 panMsg, tiltMsg;
@@ -105,14 +105,14 @@ bool AttentionController::lookAtPanTilt(squirrel_object_perception_msgs::LookAtP
   jointMutex_.unlock();
   return true;
 }
-bool AttentionController::fixatePosition(squirrel_object_perception_msgs::FixatePosition::Request &req,
-                                        squirrel_object_perception_msgs::FixatePosition::Response &res)
+bool AttentionController::fixatePosition(robotino_msgs::FixatePosition::Request &req,
+                                        robotino_msgs::FixatePosition::Response &res)
 {
   return true;
 }
 
-bool AttentionController::clearFixation(squirrel_object_perception_msgs::ClearFixation::Request &req,
-                                       squirrel_object_perception_msgs::ClearFixation::Response &res)
+bool AttentionController::clearFixation(robotino_msgs::ClearFixation::Request &req,
+                                       robotino_msgs::ClearFixation::Response &res)
 {
   return true;
 }

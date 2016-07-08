@@ -11,7 +11,7 @@
 
 #include <math.h>
 #include <ios>
-#include <squirrel_object_perception_msgs/LookAtPosition.h>
+#include <robotino_msgs/LookAtPosition.h>
 #include <squirrel_attention/AttentionFusion.h>
 #include <people_msgs/People.h>
 #include <tf/LinearMath/Transform.h>
@@ -22,7 +22,7 @@ using namespace std;
 AttentionFusion::AttentionFusion()
 {
   legsSub_ = nh_.subscribe("/leg_persons", 2, &AttentionFusion::legsCallback, this);
-  controllerSrv_ = nh_.serviceClient<squirrel_object_perception_msgs::LookAtPosition>("/attention/look_at_position");
+  controllerSrv_ = nh_.serviceClient<robotino_msgs::LookAtPosition>("/attention/look_at_position");
   timer = nh_.createTimer(ros::Duration(2.5), &AttentionFusion::observeTimerCallback, this);
   facetimer = nh_.createTimer(ros::Duration(2.5), &AttentionFusion::faceTimerCallback, this);
   last_observation_ = ros::Time::now();
@@ -89,7 +89,7 @@ void AttentionFusion::observeTimerCallback(const ros::TimerEvent&)
      observeMutex_.unlock();
      return;
     
-    squirrel_object_perception_msgs::LookAtPosition srv;
+    robotino_msgs::LookAtPosition srv;
     srv.request.target = next_.point;
     srv.request.why = reason_;
     

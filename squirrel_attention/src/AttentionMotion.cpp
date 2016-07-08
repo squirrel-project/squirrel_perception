@@ -14,7 +14,7 @@
 #include <boost/graph/graph_concepts.hpp>
 #include <sensor_msgs/image_encodings.h>
 #include <cv_bridge/cv_bridge.h>
-#include <squirrel_object_perception_msgs/LookAtImagePosition.h>
+#include <robotino_msgs/LookAtImagePosition.h>
 #include <squirrel_attention/AttentionMotion.h>
 
 using namespace cv;
@@ -31,7 +31,7 @@ AttentionMotion::AttentionMotion()
   MIN_FLOW_ = 4./(float)subsample_;
   imageSub_= it_.subscribe("/camera/rgb/image_raw", 1, &AttentionMotion::imageCallback, this);
   imagePub_ = it_.advertise("/attention_motion/saliency", 1);
-  controllerSrv_ = nh_.serviceClient<squirrel_object_perception_msgs::LookAtImagePosition>("/attention/look_at_image_position");
+  controllerSrv_ = nh_.serviceClient<robotino_msgs::LookAtImagePosition>("/attention/look_at_image_position");
   panStateSub_ = nh_.subscribe("/pan_controller/state", 2, &AttentionMotion::panStateCallback, this);
   tiltStateSub_ = nh_.subscribe("/tilt_controller/state", 2, &AttentionMotion::tiltStateCallback, this);
   steadyTimer_ = nh_.createTimer(ros::Duration(0.25), &AttentionMotion::cameraSteadyCallback, this, false, false);
@@ -195,7 +195,7 @@ void AttentionMotion::imageCallback(const sensor_msgs::ImageConstPtr& msg)
 
   if(haveFlow)
   {
-    squirrel_object_perception_msgs::LookAtImagePosition lookSrv;
+    robotino_msgs::LookAtImagePosition lookSrv;
     // HACK: Here I assume fixed camera parameters for a Kinect/Asus
     lookSrv.request.x = cx*subsample_ - 320.;
     lookSrv.request.y = cy*subsample_ - 240.;

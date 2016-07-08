@@ -6,7 +6,7 @@
 #include <squirrel_object_perception_msgs/Classification.h>
 #include <squirrel_object_perception_msgs/Classify.h>
 #include <squirrel_object_perception_msgs/GetSaliency3DSymmetry.h>
-#include <squirrel_object_perception_msgs/LookAtPanTilt.h>
+#include <robotino_msgs/LookAtPanTilt.h>
 #include <squirrel_object_perception_msgs/SegmentInit.h>
 #include <squirrel_object_perception_msgs/SegmentOnce.h>
 #include <squirrel_object_perception_msgs/SegmentsToObjects.h>
@@ -185,8 +185,8 @@ protected:
     {
         if (!ros::service::waitForService("/attention/look_at_pan_tilt", ros::Duration(5.0)))
             return false;
-        ros::ServiceClient client = nh_.serviceClient<squirrel_object_perception_msgs::LookAtPanTilt>("/attention/look_at_pan_tilt");
-        squirrel_object_perception_msgs::LookAtPanTilt srv;
+        ros::ServiceClient client = nh_.serviceClient<robotino_msgs::LookAtPanTilt>("/attention/look_at_pan_tilt");
+        robotino_msgs::LookAtPanTilt srv;
         srv.request.pan = -1.1;
         srv.request.tilt = 0.7;
         if (client.call(srv))
