@@ -344,7 +344,19 @@ bool transform_cloud_to_cloud(const PointCloud<PointT> &source, const PointCloud
     Eigen::Matrix4f stf = Eigen::Matrix4f::Identity();
     stf.topLeftCorner(3,3) *= Eigen::Matrix3f::Identity() * scale;
     PointCloud<PointT> source_copy;
-    transformPointCloud(source, source_copy, stf);
+    transformPointCloud (source, source_copy, stf);
+
+    cout << "transform_cloud_to_cloud : after scaling, segment has " << source_copy.size() << " points" << endl;
+    int nan_count = 0, valid_count = 0;
+    for (size_t j = 0; j < source_copy.size(); ++j)
+    {
+        //cout << source_copy.points[j].x << " " << source_copy.points[j].y << " " << source_copy.points[j].z << endl;
+        if (isnan(source_copy.points[j].x))
+            nan_count++;
+        else
+            valid_count++;
+    }
+    cout << "nan = " << nan_count << ", valid = " << valid_count << endl;
 
     // Transform the source to the center of its coordinate system
     Eigen::Vector4f source_pose;
@@ -355,6 +367,20 @@ bool transform_cloud_to_cloud(const PointCloud<PointT> &source, const PointCloud
     ctf(1,3) = -source_pose[1];
     ctf(2,3) = -source_pose[2];
     transformPointCloud (source_copy, source_copy, ctf);
+
+    cout << "transform_cloud_to_cloud : after centering, segment has " << source_copy.size() << " points" << endl;
+    nan_count = 0;
+    valid_count = 0;
+    for (size_t j = 0; j < source_copy.size(); ++j)
+    {
+        //cout << source_copy.points[j].x << " " << source_copy.points[j].y << " " << source_copy.points[j].z << endl;
+        if (isnan(source_copy.points[j].x))
+            nan_count++;
+        else
+            valid_count++;
+    }
+    cout << "nan = " << nan_count << ", valid = " << valid_count << endl;
+
 
     // Downsample the point clouds
     PointCloud<PointT> source_ds;
@@ -410,8 +436,10 @@ bool transform_cloud_to_cloud(const PointCloud<PointT> &source, const PointCloud
         // Try the different rotations
         for (size_t j = 0; j < rotations.size(); ++j)
         {
+            //cout << "1. ICP with source_ds = " << source_ds_ptr->size() << endl;
             Eigen::Matrix4f rtf = rotations[j];
             transformPointCloud(*source_ds_ptr, *source_ptr, rtf);
+            //cout << "2. ICP with source = " << source_ptr->size() << endl;
             // Align the center of the cloud before doing icp
             Eigen::Vector4f rotated_pose;
             compute3DCentroid (*source_ptr, rotated_pose);
@@ -421,9 +449,11 @@ bool transform_cloud_to_cloud(const PointCloud<PointT> &source, const PointCloud
             atf(1,3) = target_pose[1] - rotated_pose[1];
             atf(2,3) = target_pose[2] - rotated_pose[2];
             transformPointCloud (*source_ptr, *source_ptr, atf);
+            //cout << "3. ICP with source = " << source_ptr->size() << endl;
             // ICP to refine the alignment
             Eigen::Matrix4f itf;
             double icp_score;
+            //cout << "4. ICP with source = " << source_ptr->size() << " target = " << target_ptr->size() << endl;
             if (!icp(source_ptr, target_ptr, itf, icp_score, false))
             {
                 ROS_ERROR("transform_utils::transform_cloud_to_cloud : error in icp refinement");
@@ -791,6 +821,24 @@ bool downsample_point_cloud(const PointCloud<PointT> &in_cloud, PointCloud<Point
         out_cloud = in_cloud;
         return false;
     }
+    
+    /**
+    // Hack to just get a point cloud in the ball park of the right number of points
+    out_cloud.clear();
+    int num = 25;
+    if (in_cloud.size() <= num)
+    {
+        out_cloud = in_cloud;
+        return true;
+    }
+    for (int i = 0; i < num; ++i)
+    {
+        int r = int_rand(0, in_cloud.size());
+        out_cloud.push_back(in_cloud.points[r]);
+    }
+    cout << "final ds points = " << out_cloud.size() << endl;
+    return true;
+    **/
 
     // First iteration assumes now that the cloud is larger than _ICP_POINT_MIN
 

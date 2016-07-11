@@ -102,10 +102,10 @@ compute_visibility(const octomap::OcTree &tree, const std::vector<octomap::point
 
 void valid_on_ground(const octomap::OcTree &tree, const double &robot_radius,
                      const double &zmin, const double &zmax, const double &floor_height,
-                     const octomap::point3d &location, bool &valid);
+                     const octomap::point3d &location, bool &valid, const bool &check_floor = true);
 
 void valid_on_ground(const octomap::OcTree &tree, const double &robot_radius, const double &zmin, const double &zmax, const double &floor_height,
-                     std::vector<std::pair<std::vector<octomap::OcTreeKey>, octomap::point3d> > &locations);
+                     std::vector<std::pair<std::vector<octomap::OcTreeKey>, octomap::point3d> > &locations, const bool &check_floor = true);
 
 std::vector<octomap::point3d> exhaustive_coverage_set(const octomap::OcTree &tree, const robot_parameters &robot, const double &step,
                                                       const unsigned int &depth);

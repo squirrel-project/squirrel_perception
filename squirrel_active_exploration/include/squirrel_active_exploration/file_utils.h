@@ -10,4 +10,6 @@ std::string add_backslash(const std::string &str);
 
 std::string rem_backslash(const std::string &str);
 
+bool split_filename(const std::string& str, std::string &path, std::string &file);
+
 #endif // FILE_UTILS_H

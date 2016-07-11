@@ -81,7 +81,7 @@ bool InstanceEntropyMap::load_data()
         string f = string(dirp->d_name);
         if (strcmp(f.c_str(),".") != 0 && strcmp(f.c_str(),"..") != 0)
         {
-            //cout << f << endl;
+            //cout << "f: " << f << endl;
             // Get the number
             size_t underscore = f.find_last_of('_');
             size_t dot = f.find_last_of('.');
@@ -107,7 +107,7 @@ bool InstanceEntropyMap::load_data()
                     ifstream myfile (filename.c_str());
                     if (myfile.is_open())
                     {
-                        Eigen::Matrix4f tr;
+                        Eigen::Matrix4f tr = Eigen::Matrix4f::Identity();
                         int i = 0, j = 0;
                         string word;
                         while (myfile >> word)
@@ -121,10 +121,10 @@ bool InstanceEntropyMap::load_data()
                             }
                         }
                         // NOTE these are in the incorrect direction, need to take the inverse
-                        tr = tr.inverse();
-                        Eigen::Matrix4f *tr_ptr (new Eigen::Matrix4f(tr));
+                        Eigen::Matrix4f tri = tr.inverse();
+                        Eigen::Matrix4f *tr_ptr (new Eigen::Matrix4f(tri));
                         transform_map[ix] = tr_ptr;
-                        //cout << *tr_ptr << endl;
+                        //cout << "*tr_ptr: " << *tr_ptr << endl;
                     }
                     myfile.close();
                 }
@@ -988,13 +988,13 @@ bool EntropyMap::initialize(ros::NodeHandle *node)
     ROS_INFO("_training_directory: %s", _training_directory.c_str());
     ROS_INFO("_descriptor_name:    %s", _descriptor_name.c_str());
     if (_do_classification)
-        ROS_INFO("_do_classification:   TRUE");
+        ROS_INFO("_do_classification:  TRUE");
     else
-        ROS_INFO("_do_classification:   FALSE");
+        ROS_INFO("_do_classification:  FALSE");
     if (_do_inspect)
-        ROS_INFO("_do_inspect:          TRUE");
+        ROS_INFO("_do_inspect:         TRUE");
     else
-        ROS_INFO("_do_inspect:          FALSE");
+        ROS_INFO("_do_inspect:         FALSE");
 
     // Load the data
     if (!load_data())

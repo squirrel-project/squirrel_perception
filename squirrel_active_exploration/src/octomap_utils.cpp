@@ -286,7 +286,7 @@ vector<keys_box> compute_visibility(const OcTree &tree, const vector<point3d> &l
 }
 
 void valid_on_ground(const OcTree &tree, const double &robot_radius, const double &zmin, const double &zmax,
-                     const double &floor_height, const point3d &location, bool &valid)
+                     const double &floor_height, const point3d &location, bool &valid, const bool &check_floor)
 {
     // Search the voxels in a bounding box
     point3d min (location.x()-robot_radius, location.y()-robot_radius, zmin);
@@ -294,6 +294,8 @@ void valid_on_ground(const OcTree &tree, const double &robot_radius, const doubl
     // Find all voxels in this bounding box
     valid = true;
     bool valid_ground = false;
+    if (!check_floor)
+        valid_ground = true;
     for (OcTree::leaf_bbx_iterator it = tree.begin_leafs_bbx(min,max), end = tree.end_leafs_bbx(); it != end; ++it)
     {
         // Check that there are no obstacles at this location
@@ -318,7 +320,7 @@ void valid_on_ground(const OcTree &tree, const double &robot_radius, const doubl
 }
 
 void valid_on_ground(const OcTree &tree, const double &robot_radius, const double &zmin, const double &zmax, const double &floor_height,
-                     vector<keys_box> &locations)
+                     vector<keys_box> &locations, const bool &check_floor)
 {
     // A new vector
     vector<keys_box> new_locations;
@@ -327,7 +329,7 @@ void valid_on_ground(const OcTree &tree, const double &robot_radius, const doubl
     {
         point3d loc = locations[i].second;
         bool valid = true;
-        valid_on_ground(tree, robot_radius, zmin, zmax, floor_height, loc, valid);
+        valid_on_ground(tree, robot_radius, zmin, zmax, floor_height, loc, valid, check_floor);
         if (valid)
             new_locations.push_back(locations[i]);
     }

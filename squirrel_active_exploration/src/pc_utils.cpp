@@ -98,16 +98,17 @@ Eigen::Vector4f extract_camera_position(const PointCloud<PointT> &cloud, const d
     double phi = atan(centroid[1]/centroid[0]);
     // Get a the sensor location that is at a certain radius in direction from centroid towards origin
     Eigen::Vector4f cam_pos;
-    cam_pos[0]= centroid[0] + radius*sin(theta)*cos(phi);
-    cam_pos[1]= centroid[1] + radius*sin(theta)*sin(phi);
-    cam_pos[2]= centroid[2] + radius*cos(theta);
-    cam_pos[3]= 0;
+    cam_pos[0] = centroid[0] + radius*sin(theta)*cos(phi);
+    cam_pos[1] = centroid[1] + radius*sin(theta)*sin(phi);
+    cam_pos[2] = centroid[2] + radius*cos(theta);
+    cam_pos[3] = 0;
 
     return cam_pos;
 }
 
 bool icp(const PointCloud<PointT>::Ptr source, const PointCloud<PointT>::Ptr target, Eigen::Matrix4f &transform, double &score, const bool &downsample)
 {
+    //cout << "utils::icp : starting icp" << endl;
     // Set the transform to the identity matrix
     transform = Eigen::Matrix4f::Identity();
     // Set the score to infinity
@@ -184,11 +185,17 @@ bool icp(const PointCloud<PointT>::Ptr source, const PointCloud<PointT>::Ptr tar
 
     norm_est.setInputCloud (src);
     norm_est.compute (*points_with_normals_src);
+    //cout << "source with normals " << points_with_normals_src->size() << endl;
     copyPointCloud (*src, *points_with_normals_src);
+    //cout << "source with normals " << points_with_normals_src->size() << endl;
+    //cout << "source " << src->size() << endl;
 
     norm_est.setInputCloud (tgt);
     norm_est.compute (*points_with_normals_tgt);
+    //cout << "target with normals " << points_with_normals_tgt->size() << endl;
     copyPointCloud (*tgt, *points_with_normals_tgt);
+    //cout << "target with normals " << points_with_normals_tgt->size() << endl;
+    //cout << "target " << tgt->size() << endl;
 
     // Instantiate our custom point representation (defined above) ...
     MyPointRepresentation point_representation;
@@ -250,7 +257,7 @@ bool icp(const PointCloud<PointT>::Ptr source, const PointCloud<PointT>::Ptr tar
     }
     catch(...)
     {
-        printf(ANSI_COLOR_RED  "ERROR utils::icp : could not perform icp!"  ANSI_COLOR_RESET "\n");
+        printf(ANSI_COLOR_RED  "ERROR pc_utils::icp : could not perform icp!"  ANSI_COLOR_RESET "\n");
     }
 
     score = reg.getFitnessScore();

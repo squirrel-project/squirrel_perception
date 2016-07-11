@@ -19,7 +19,8 @@
   <!-- NOTE: for now we use the simple ground plane popout segmentation -->
   <node name="squirrel_segmentation_incremental"
         pkg="squirrel_segmentation"
-        type="squirrel_segmentation_popout">
+        type="squirrel_segmentation_popout"
+		output="screen">
   </node>
 
 
