@@ -145,7 +145,7 @@ void SquirrelTrackingNode::receiveImage(const sensor_msgs::Image::ConstPtr &msg)
   double conf;
   cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(msg);
   cv::Mat image = cv_ptr->image;
-  // ROS_INFO("squirrel_tracking: new image");
+  ROS_INFO("squirrel_tracking: new image");
   if(tracker->track(image, pose, conf))
   {
     ROS_INFO("squirrel_tracking: conf %.3f, pos %.3f %.3f %.3f", conf, pose(0,3), pose(1,3), pose(2,3));
@@ -174,7 +174,7 @@ void SquirrelTrackingNode::receiveImage(const sensor_msgs::Image::ConstPtr &msg)
   }
   else
   {
-    // ROS_INFO("squirrel_tracking: tracking failed for this image");
+    ROS_INFO("squirrel_tracking: tracking failed for this image");
   }
 }
 

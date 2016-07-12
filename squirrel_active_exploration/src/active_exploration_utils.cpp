@@ -567,6 +567,18 @@ namespace active_exploration_utils
                 PointCloud<PointT> seg;
                 copyPointCloud(transformed_cloud, segments[i], seg);
 
+                cout << "transform_instances_to_map : segment " << i << " has " << seg.size() << " points" << endl;
+                int nan_count = 0, valid_count = 0;
+                for (size_t j = 0; j < seg.size(); ++j)
+                {
+                    //cout << seg.points[j].x << " " << seg.points[j].y << " " << seg.points[j].z << endl;
+                    if (isnan(seg.points[j].x))
+                        nan_count++;
+                    else
+                        valid_count++;
+                }
+                cout << "nan = " << nan_count << ", valid = " << valid_count << endl;
+
                 // Read the clouds
                 for (vector<InstLookUp>::size_type j = 0; j < instance_directories[i].size(); ++j)
                 {
@@ -1611,8 +1623,9 @@ namespace active_exploration_utils
 
     /* === PLANNING === */
 
-    bool next_best_view(int &next_best_index, const OcTree &tree, const Hypothesis &hypothesis, const SIM_TYPE &sim,
-                        const vector<Eigen::Vector4f> &map_locations, const double &variance, const bool &do_visualize)
+    bool next_best_view(int &next_best_index, vector<double> &utilities, const OcTree &tree, const Hypothesis &hypothesis,
+                        const SIM_TYPE &sim, const vector<Eigen::Vector4f> &map_locations, const double &variance,
+                        const bool &do_visualize)
     {
         ROS_INFO("active_exploration_utils::next_best_view : starting");
         next_best_index = -1;
@@ -1671,7 +1684,7 @@ namespace active_exploration_utils
                     segs_max_ent = entropies[i];
             }
         }
-        // If segs for planning is empty then just plan for the objct with the  highest entropy
+        // If segs for planning is empty then just plan for the objct with the highest entropy
         if (segs_for_planning.size() == 0)
         {
             // If there are no rankings available
@@ -1815,10 +1828,11 @@ namespace active_exploration_utils
 
             // Compute the utility for each location
             if (all_model_views)
-                next_best_index = gaussian_weighted_next_best_view(tree, hypothesis, map_locations, segs_for_planning, model_views,
-                                                                   scaled_model_utilities, uncertainty_weight, variance, unoccluded, do_visualize);
+                next_best_index = gaussian_weighted_next_best_view(utilities, tree, hypothesis, map_locations, segs_for_planning,
+                                                                   model_views, scaled_model_utilities, uncertainty_weight, variance,
+                                                                   unoccluded, do_visualize);
             else
-                next_best_index = nearest_next_best_view(class_estimates, map_locations, segs_for_planning, model_views,
+                next_best_index = nearest_next_best_view(utilities, class_estimates, map_locations, segs_for_planning, model_views,
                                                          scaled_model_utilities, uncertainty_weight);
         }
         // Check that the index is valid
@@ -1833,11 +1847,21 @@ namespace active_exploration_utils
         return true;
     }
 
-    int nearest_next_best_view(const vector<Classification> &class_estimates, const vector<Eigen::Vector4f> &map_locations,
-                               const vector<int> &seg_indices,
+    bool next_best_view(int &next_best_index, const OcTree &tree, const Hypothesis &hypothesis, const SIM_TYPE &sim,
+                        const vector<Eigen::Vector4f> &map_locations, const double &variance, const bool &do_visualize)
+    {
+        vector<double> utilities;
+        return next_best_view(next_best_index, utilities, tree, hypothesis, sim, map_locations, variance, do_visualize);
+    }
+
+    int nearest_next_best_view(vector<double> &utilities, const vector<Classification> &class_estimates,
+                               const vector<Eigen::Vector4f> &map_locations, const vector<int> &seg_indices,
                                const vector<vector<pair<vector<PointCloud<PointT> >,vector<Eigen::Vector4f> > > > &model_views,
                                const vector<vector<vector<double> > > &scaled_model_utilities, const vector<double> &uncertainty_weight)
     {
+        // This function does not compute utilities using the objective function, therefore keep it empty
+        utilities.clear();
+
         // For each segment find the closest location in the map
         vector<pair<int,double> > nearest_indices;
         for (vector<int>::size_type i = 0; i < seg_indices.size(); ++i)
@@ -1908,8 +1932,18 @@ namespace active_exploration_utils
         }
     }
 
-    int gaussian_weighted_next_best_view(const OcTree &tree, const Hypothesis &hypothesis, const vector<Eigen::Vector4f> &map_locations,
-                                         const vector<int> &seg_indices,
+    int nearest_next_best_view(const vector<Classification> &class_estimates,
+                               const vector<Eigen::Vector4f> &map_locations, const vector<int> &seg_indices,
+                               const vector<vector<pair<vector<PointCloud<PointT> >,vector<Eigen::Vector4f> > > > &model_views,
+                               const vector<vector<vector<double> > > &scaled_model_utilities, const vector<double> &uncertainty_weight)
+    {
+        vector<double> utilities;
+        return nearest_next_best_view(utilities, class_estimates, map_locations, seg_indices, model_views, scaled_model_utilities,
+                                      uncertainty_weight);
+    }
+
+    int gaussian_weighted_next_best_view(vector<double> &utilities, const OcTree &tree, const Hypothesis &hypothesis,
+                                         const vector<Eigen::Vector4f> &map_locations, const vector<int> &seg_indices,
                                          const vector<vector<pair<vector<PointCloud<PointT> >,vector<Eigen::Vector4f> > > > &model_views,
                                          const vector<vector<vector<double> > > &scaled_model_utilities,
                                          const vector<double> &uncertainty_weight, const double &variance, const bool &unoccluded,
@@ -1920,9 +1954,9 @@ namespace active_exploration_utils
         vector<vector<InstLookUp> > instance_directories = hypothesis._instance_directories;
         vector<vector<OcTreeKey> > octree_keys = hypothesis._octree_keys;
         vector<vector<InstToMapTF> > transforms = hypothesis._transforms;
-
-        vector<double> utilities;
+        utilities.clear();
         utilities.resize(map_locations.size());
+
         // Do one visualization if do_visualize is set to true
         bool single_vis = false;
         // WARN : no visualization ever when commented out
@@ -1930,7 +1964,8 @@ namespace active_exploration_utils
             single_vis = true;
         for (vector<Eigen::Vector4f>::size_type i = 0; i < map_locations.size(); ++i)
         {
-            //cout << " * * * LOCATION " << i << endl;
+            cout << " * * * LOCATION " << i << ": "
+                 << map_locations[i][0] << " " << map_locations[i][1] << " " << map_locations[i][2] << endl;
             utilities[i] = 0;
             // Consider the contribution from each segment that needs to be viewed
             vector<vector<PointCloud<PointT> > > expected_clouds;
@@ -2005,6 +2040,18 @@ namespace active_exploration_utils
         return distance(utilities.begin(), max_element(utilities.begin(), utilities.end()));
     }
 
+    int gaussian_weighted_next_best_view(const OcTree &tree, const Hypothesis &hypothesis,
+                                         const vector<Eigen::Vector4f> &map_locations, const vector<int> &seg_indices,
+                                         const vector<vector<pair<vector<PointCloud<PointT> >,vector<Eigen::Vector4f> > > > &model_views,
+                                         const vector<vector<vector<double> > > &scaled_model_utilities,
+                                         const vector<double> &uncertainty_weight, const double &variance, const bool &unoccluded,
+                                         const bool &do_visualize)
+    {
+        vector<double> utilities;
+        return gaussian_weighted_next_best_view(utilities, tree, hypothesis, map_locations, seg_indices, model_views,
+                                                scaled_model_utilities, uncertainty_weight, variance, unoccluded, do_visualize);
+    }
+
     int extracted_point_cloud_next_best_view(const vector<Eigen::Vector4f> &map_locations, const vector<int> &seg_indices,
                                              const vector<double> &uncertainty_weight, const SIM_TYPE &sim)
     {
@@ -2061,6 +2108,8 @@ namespace active_exploration_utils
         p.points[0].z = location_in_map[2];
         transformPointCloud(p, p, map_to_model_tf);
         Eigen::Vector4f map_loc_model_frame (p.points[0].x, p.points[0].y, p.points[0].z, 0);
+        ROS_INFO("active_exploration_utils::get_expected_point_cloud : location in map [%.2f %.2f %.2f]",
+                 location_in_map[0], location_in_map[1], location_in_map[2]);
         // Read in the octree from file
         OcTree tree (emap._octree_file);
         // Go through every point in the emap cloud and find if it is visible from the location
@@ -2079,8 +2128,11 @@ namespace active_exploration_utils
             for (size_t i = 0; i < ds_cloud->size(); ++i)
             {
                 OcTreeKey key;
-                if (tree.coordToKeyChecked(ds_cloud->points[i].x, ds_cloud->points[i].y, ds_cloud->points[i].z, key))
-                    map_key_to_points[key].push_back(i);
+                if (!isnan(ds_cloud->points[i].x))
+                {
+                    if (tree.coordToKeyChecked(ds_cloud->points[i].x, ds_cloud->points[i].y, ds_cloud->points[i].z, key))
+                        map_key_to_points[key].push_back(i);
+                }
             }
 
             vector<int> visible_indices = get_visible_points_in_cloud(tree, map_loc_model_frame, *ds_cloud, map_key_to_points);
@@ -2255,7 +2307,7 @@ namespace active_exploration_utils
             point3d voxel_coord = tree.keyToCoord(it->first);
             // Cast a ray from the origin to the cloud point
             KeyRay kr;
-            if (tree.computeRayKeys(origin_coord, voxel_coord, kr))
+            if (!isnan(voxel_coord.x()) && tree.computeRayKeys(origin_coord, voxel_coord, kr))
             {
                 // Check each key and and if all are not occupied then this point is visible from the origin
                 for (KeyRay::iterator kit = kr.begin(), end = kr.end(); kit != end; ++kit)

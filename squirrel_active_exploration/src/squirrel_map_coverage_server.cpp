@@ -56,13 +56,32 @@ private:
         else
             ROS_WARN("squirrel_map_coverage_server : visualization = OFF");
 
+//        // Get the octree
+//        OcTree *tree_ptr;
+//        // If the header specifies it is binary
+//        if (req.map.binary)
+//        {
+//            // Convert the message to a map
+//            tree_ptr = octomap_msgs::binaryMsgToMap(req.map);
+//        }
+//        else
+//        {
+//             // Convert the message to a map
+//             AbstractOcTree *abstract_tree_ptr = octomap_msgs::fullMsgToMap(req.map);
+//             // Cast to regular octree
+//             tree_ptr = dynamic_cast<OcTree*>(abstract_tree_ptr);
+//        }
+//        OcTree tree = *tree_ptr;
+
         // Get the octree
         OcTree *tree_ptr;
         // If the header specifies it is binary
         if (req.map.binary)
         {
             // Convert the message to a map
-            tree_ptr = octomap_msgs::binaryMsgToMap(req.map);
+            AbstractOcTree *abstract_tree_ptr = octomap_msgs::binaryMsgToMap(req.map);
+            // Cast to regular octree
+            tree_ptr = dynamic_cast<OcTree*>(abstract_tree_ptr);
         }
         else
         {

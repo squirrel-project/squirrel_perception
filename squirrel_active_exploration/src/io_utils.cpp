@@ -175,8 +175,10 @@ bool load_test_directory(const string &dir, const bool &invert_transform, vector
                 poses.push_back(position);
                 //clouds.push_back(transformed_cloud);
                 clouds.push_back(cloud);
+                Eigen::Matrix4f transform_inv = transform;
                 if (invert_transform)
-                    transform = transform.inverse();
+                    transform_inv = transform.inverse();
+                transform = transform_inv;
                 transforms.push_back(transform);
             }
         }
@@ -541,7 +543,7 @@ bool load_test_directory_with_segment_indices(const string &dir, const bool &inv
         // Take the inverse because it is reversed in the transform_cloud_from_file function
         Eigen::Matrix4f tri = transform;
         if (invert_transform)
-            tri = tri.inverse();
+            tri = transform.inverse();
         poses.push_back(position);
         transforms.push_back(tri);
         // Get the segment indices
