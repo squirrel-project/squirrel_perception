@@ -143,7 +143,21 @@ void AttentionFusion::legsCallback(const people_msgs::People& msg)
     observeMutex_.lock();
     reason_ = "leg";
     observeMutex_.unlock();
-  }
+
+    robotino_msgs::LookAtPosition srv;
+    srv.request.target = next_.point;
+    srv.request.why = reason_;
+    
+    if (controllerSrv_.call(srv))
+    {
+      ROS_INFO("call service /attention/look_at_position with: %f %f %f", next_.point.x, next_.point.y, next_.point.z);
+    ros::Duration(2.5).sleep();
+    }
+    else
+    {
+      ROS_ERROR("Failed to call service /attention/look_at_position");
+    }
+ } 
 }
 
 void faceCallback(const people_msgs::People& msg)

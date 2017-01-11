@@ -1,4 +1,7 @@
 <launch> 
+  <include file="$(find squirrel_leg_detector)/launch/startup.launch" />
+  <include file="$(find attention_tracker)/launch/startup.launch" />
+
   <node name="squirrel_attention_controller"
         pkg="squirrel_attention"
         type="attention_controller" 
