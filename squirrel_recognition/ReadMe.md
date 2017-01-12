@@ -3,7 +3,7 @@
 
 The current recognizer uses mutiple pipeline using SHOT and SIFT descriptors and then hypotheses verification to produce reliable recognized objects. A service is provided that returns the recognized objects. 
 
-Technical Maintainer: [edith](https://github.com/edith-langer) (Edith Langer, TU Wien) - langer@acin.tuwien.ac.at
+Technical Maintainer: [jean-baptiste](https://github.com/jibweb) (Jean-Baptiste Weibel, TU Wien) - weibel@acin.tuwien.ac.at
 
 ##Contents
 
