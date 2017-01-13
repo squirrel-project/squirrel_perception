@@ -1,0 +1,8 @@
+<launch>
+  <node name="squirrel_fixate_on_3D_point_node"
+        pkg="squirrel_attention"
+        type="fixate_on_3D_point_node"
+        required="true" output="screen">
+  </node>
+
+</launch>
