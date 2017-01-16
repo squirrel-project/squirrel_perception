@@ -70,6 +70,7 @@ int main(int argc, char** argv)
     pan_pub.publish(panMsg);
     tilt_pub.publish(tiltMsg);
     continue;
+    ROS_DEBUG("We should not have reached this point. Ever.");
 
     dynamixel_controllers::SetRelativePosition srv;
     srv.request.position = rel_pan;
