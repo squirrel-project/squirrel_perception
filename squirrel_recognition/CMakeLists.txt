@@ -24,6 +24,7 @@ catkin_package(
    CATKIN_DEPENDS roscpp rospy squirrel_object_perception_msgs
 )
 
+#message(${V4R_INCLUDE_DIRS})
 ###########
 ## Build ##
 ###########
@@ -42,7 +43,8 @@ include_directories(include
 ## Declare a cpp executable
 add_executable(squirrel_recognizer src/recognizer_ros.cpp ${incs})
 add_executable(test_squirrel_recognizer src/test_recognizer.cpp ${incs})
-
+add_executable(squirrel_recognizer2d src/recognizer2d_ros.cpp ${incs})
+add_executable(test_squirrel_recognizer2d src/test_recognizer2d.cpp ${incs})
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
@@ -55,6 +57,20 @@ target_link_libraries(squirrel_recognizer
 )
 
 target_link_libraries(test_squirrel_recognizer
+   ${catkin_LIBRARIES}
+   ${PCL_LIBRARIES}
+   ${OpenCV_LIBS}
+   ${V4R_LIBS}
+)
+
+target_link_libraries(squirrel_recognizer2d
+   ${catkin_LIBRARIES}
+   ${PCL_LIBRARIES}
+   ${OpenCV_LIBS}
+   ${V4R_LIBS}
+)
+
+target_link_libraries(test_squirrel_recognizer2d
    ${catkin_LIBRARIES}
    ${PCL_LIBRARIES}
    ${OpenCV_LIBS}
