@@ -138,11 +138,11 @@ protected:
 		for (int i= 0; i < srv.response.ids.size(); i++) { 
                	 this->recognized_object.push_back(srv.response);
                	 object.category = srv.response.ids.at(i).data; //this is only ok, when just one object gets recognized
-               	 object.cloud = srv.response.model_clouds.at(i);
+               	 object.cloud = srv.response.models_cloud.at(i);
                	 object.cloud.header.frame_id = srv.request.cloud.header.frame_id;
                	 transformPointCloud(object.cloud, object.cloud.header.frame_id, "/map");
                	 std::cout << "Category: " << object.category << std::endl;
-               	 object.pose = transform(srv.response.centroids.at(i).x, srv.response.centroids.at(i).y, srv.response.centroids.at(i).z,
+               	 object.pose = transform(srv.response.centroid.at(i).x, srv.response.centroid.at(i).y, srv.response.centroid.at(i).z,
                	                         srv.request.cloud.header.frame_id, "/map").pose;
                	 //TODO: transform BBox from Recognizer to BCylinder for SceneObject
                	 //std::cout << "Position from Recognizer in map-frame (" << object.pose.position.x << "; "

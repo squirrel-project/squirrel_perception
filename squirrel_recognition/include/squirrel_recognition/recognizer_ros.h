@@ -1,6 +1,4 @@
-#include <squirrel_object_perception_msgs/get_configuration.h>
 #include <squirrel_object_perception_msgs/Recognize.h>
-#include <squirrel_object_perception_msgs/retrain_recognizer.h>
 
 #include <image_transport/image_transport.h>
 #include <v4r/apps/ObjectRecognizer.h>

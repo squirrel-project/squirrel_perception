@@ -280,11 +280,11 @@ RecognizerROS<PointT>::initialize (int argc, char ** argv)
 
     ROS_INFO("Ready to get service calls.");
 
-    vis_pc_pub_ = n_->advertise<sensor_msgs::PointCloud2>( "sv_recogniced_object_instances", 1 );
-    recognize_  = n_->advertiseService ("sv_recognition", &RecognizerROS::recognizeROS, this);
+    vis_pc_pub_ = n_->advertise<sensor_msgs::PointCloud2>( "recognized_object_instances", 1 );
+    recognize_  = n_->advertiseService ("squirrel_recognize_objects", &RecognizerROS::recognizeROS, this);
 
     it_.reset(new image_transport::ImageTransport(*n_));
-    image_pub_ = it_->advertise("sv_recogniced_object_instances_img", 1, true);
+    image_pub_ = it_->advertise("recognized_object_instances_img", 1, true);
 
     ROS_INFO("Ready to get service calls.");
     return true;
@@ -295,7 +295,7 @@ RecognizerROS<PointT>::initialize (int argc, char ** argv)
 int
 main (int argc, char ** argv)
 {
-    ros::init (argc, argv, "recognition_service");
+    ros::init (argc, argv, "squirrel_recognizer");
     v4r::RecognizerROS<pcl::PointXYZRGB> m;
     m.initialize (argc, argv);
     ros::spin ();
