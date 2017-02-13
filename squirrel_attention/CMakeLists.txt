@@ -118,6 +118,9 @@ add_executable(attention_controller src/AttentionController.cpp)
 add_executable(attention_motion src/AttentionMotion.cpp)
 add_executable(attention_fusion src/AttentionFusion.cpp)
 
+add_dependencies(attention_fusion robotino_msgs_generate_messages_cpp)
+add_dependencies(attention_controller robotino_msgs_generate_messages_cpp)
+add_dependencies(attention_motion robotino_msgs_generate_messages_cpp)
 #add_executable(squirrel_attention_test src/test.cpp)
 
 ## Add cmake target dependencies of the executable/library
