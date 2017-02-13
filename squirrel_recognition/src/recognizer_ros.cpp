@@ -37,8 +37,8 @@ namespace v4r
 {
 template<typename PointT>
 bool
-RecognizerROS<PointT>::respondSrvCall(recognition_srv_definitions::recognize::Request &req,
-                                      recognition_srv_definitions::recognize::Response &response) const
+RecognizerROS<PointT>::respondSrvCall(squirrel_object_perception_msgs::Recognize::Request &req,
+                                      squirrel_object_perception_msgs::Recognize::Response &response) const
 {
     typename pcl::PointCloud<PointT>::Ptr pRecognizedModels (new pcl::PointCloud<PointT>);
 
@@ -115,7 +115,7 @@ RecognizerROS<PointT>::respondSrvCall(recognition_srv_definitions::recognize::Re
         Eigen::Vector4f max;
         pcl::getMinMax3D (*model_aligned, min, max);
 
-        object_perception_msgs::BBox bbox;
+        squirrel_object_perception_msgs::BBox bbox;
         geometry_msgs::Point32 pt;
         pt.x = min[0]; pt.y = min[1]; pt.z = min[2]; bbox.point.push_back(pt);
         pt.x = min[0]; pt.y = min[1]; pt.z = max[2]; bbox.point.push_back(pt);
@@ -187,8 +187,8 @@ RecognizerROS<PointT>::respondSrvCall(recognition_srv_definitions::recognize::Re
 
 template<typename PointT>
 bool
-RecognizerROS<PointT>::recognizeROS(recognition_srv_definitions::recognize::Request &req,
-                                    recognition_srv_definitions::recognize::Response &response)
+RecognizerROS<PointT>::recognizeROS(squirrel_object_perception_msgs::Recognize::Request &req,
+                                    squirrel_object_perception_msgs::Recognize::Response &response)
 {
     scene_.reset(new pcl::PointCloud<PointT>());
     pcl::fromROSMsg (req.cloud, *scene_);
