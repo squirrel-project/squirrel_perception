@@ -89,6 +89,6 @@ target_link_libraries(squirrel_look_for_objects
 target_link_libraries(squirrel_find_dynamic_objects ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${OCTOMAP_LIBRARIES})
 #target_link_libraries(squirrel_dilate_octomap ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${OCTOMAP_LIBRARIES})
 
-install(DIRECTORY include/${PROJECT_NAME}/ DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+install(DIRECTORY include DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
 install(TARGETS squirrel_look_for_objects squirrel_find_dynamic_objects RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 catkin_install_python(PROGRAMS src/squirrel_object_perception/squirrel_look_for_objects.py DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
