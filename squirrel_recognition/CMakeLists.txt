@@ -41,6 +41,7 @@ include_directories(include
 
 ## Declare a cpp executable
 add_executable(squirrel_recognizer src/recognizer_ros.cpp ${incs})
+add_dependencies(squirrel_recognizer squirrel_object_perception_msgs_generate_messages_cpp)
 add_executable(test_squirrel_recognizer src/test_recognizer.cpp ${incs})
 add_executable(squirrel_recognizer_wizard src/recognizer_wizard.cpp ${incs})
 add_executable(test_squirrel_recognizer_wizard src/test_recognizer_wizard.cpp ${incs})
