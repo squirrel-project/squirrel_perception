@@ -1,0 +1,7 @@
+<launch>
+    <arg name="models_dir" value="$(find squirrel_object_perception)/data/models" />
+
+    <node pkg="squirrel_recognition" type="squirrel_recognizer_wizard" name="squirrel_recognizer_wizard" output="screen">
+        <param name="models_dir" value="$(arg models_dir)" />
+    </node>
+</launch>

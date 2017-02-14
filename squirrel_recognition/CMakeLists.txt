@@ -42,6 +42,8 @@ include_directories(include
 ## Declare a cpp executable
 add_executable(squirrel_recognizer src/recognizer_ros.cpp ${incs})
 add_executable(test_squirrel_recognizer src/test_recognizer.cpp ${incs})
+add_executable(squirrel_recognizer_wizard src/recognizer_wizard.cpp ${incs})
+add_executable(test_squirrel_recognizer_wizard src/test_recognizer_wizard.cpp ${incs})
 
 
 ## Add cmake target dependencies of the executable/library
@@ -60,6 +62,21 @@ target_link_libraries(test_squirrel_recognizer
    ${OpenCV_LIBS}
    ${V4R_LIBS}
 )
+
+target_link_libraries(squirrel_recognizer_wizard
+   ${catkin_LIBRARIES}
+   ${PCL_LIBRARIES}
+   ${OpenCV_LIBS}
+   ${V4R_LIBS}
+)
+
+target_link_libraries(test_squirrel_recognizer_wizard
+   ${catkin_LIBRARIES}
+   ${PCL_LIBRARIES}
+   ${OpenCV_LIBS}
+   ${V4R_LIBS}
+)
+
 
 #############
 ## Install ##
