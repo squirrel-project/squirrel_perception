@@ -71,32 +71,34 @@ target_link_libraries(test_squirrel_recognizer
    ${V4R_LIBS}
 )
 
-<<<<<<< HEAD
 target_link_libraries(squirrel_recognizer2d
-=======
-target_link_libraries(squirrel_recognizer_wizard
->>>>>>> c9c77ed22ef6f507940ed8523926455b85561f31
    ${catkin_LIBRARIES}
    ${PCL_LIBRARIES}
    ${OpenCV_LIBS}
    ${V4R_LIBS}
 )
 
-<<<<<<< HEAD
 target_link_libraries(test_squirrel_recognizer2d
-=======
-target_link_libraries(test_squirrel_recognizer_wizard
->>>>>>> c9c77ed22ef6f507940ed8523926455b85561f31
    ${catkin_LIBRARIES}
    ${PCL_LIBRARIES}
    ${OpenCV_LIBS}
    ${V4R_LIBS}
 )
 
-<<<<<<< HEAD
-=======
+target_link_libraries(squirrel_recognizer_wizard
+   ${catkin_LIBRARIES}
+   ${PCL_LIBRARIES}
+   ${OpenCV_LIBS}
+   ${V4R_LIBS}
+)
 
->>>>>>> c9c77ed22ef6f507940ed8523926455b85561f31
+target_link_libraries(test_squirrel_recognizer_wizard
+   ${catkin_LIBRARIES}
+   ${PCL_LIBRARIES}
+   ${OpenCV_LIBS}
+   ${V4R_LIBS}
+)
+
 #############
 ## Install ##
 #############
