@@ -22,6 +22,7 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${V4R_INCLUDE_DIRS} ${PCL_INC
 add_executable(object_tracker src/object_tracker.cpp)
 add_executable(lump_tracker src/lump_tracker.cpp)
 add_executable(meta_tracker src/meta_tracker.cpp)
+add_dependencies(meta_tracker squirrel_object_perception_msgs_generate_messages_cpp)
 
 target_link_libraries(object_tracker ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${V4R_LIBS} ceres glog cholmod amd klu btf spqr camd ccolamd cxsparse umfpack colamd ldl csparse blas lapack boost_thread boost_program_options boost_serialization boost_regex boost_filesystem boost_system)
 add_dependencies(object_tracker V4R ${catkin_EXPORTED_TARGETS})
