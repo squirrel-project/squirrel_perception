@@ -159,10 +159,6 @@ target_link_libraries(attention_fusion ${catkin_LIBRARIES})
 #target_link_libraries(squirrel_attention_test ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
 #add_dependencies(squirrel_attention_test v4r)
 
-add_dependencies(attention_controller robotino_msgs_generate_messages_cpp)
-add_dependencies(attention_motion robotino_msgs_generate_messages_cpp)
-add_dependencies(attention_fusion robotino_msgs_generate_messages_cpp)
-
 
 #############
 ## Install ##
