@@ -121,6 +121,8 @@ add_executable(squirrel_perception_waypoints_server src/squirrel_create_examine_
 
 target_link_libraries(squirrel_perception_waypoints_server ${catkin_LIBRARIES})
 
+add_dependencies(squirrel_perception_waypoints_server squirrel_waypoint_msgs_generate_messages_cpp)
+
 #############
 ## Install ##
 #############

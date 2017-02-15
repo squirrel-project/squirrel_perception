@@ -29,6 +29,7 @@ add_dependencies(object_tracker V4R ${catkin_EXPORTED_TARGETS})
 target_link_libraries(lump_tracker ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${V4R_LIBS})
 
 target_link_libraries(meta_tracker ${catkin_LIBRARIES})
+add_dependencies(meta_tracker squirrel_object_perception_msgs_generate_messages_cpp)
 
 add_dependencies(lump_tracker ${catkin_EXPORTED_TARGETS})
 install(TARGETS object_tracker lump_tracker RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

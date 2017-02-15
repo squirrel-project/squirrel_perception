@@ -43,6 +43,8 @@ include_directories(include
 add_executable(squirrel_recognizer src/recognizer_ros.cpp ${incs})
 add_executable(test_squirrel_recognizer src/test_recognizer.cpp ${incs})
 
+add_dependencies(squirrel_recognizer squirrel_object_perception_msgs_generate_messages_cpp)
+add_dependencies(test_squirrel_recognizer squirrel_object_perception_msgs_generate_messages_cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
