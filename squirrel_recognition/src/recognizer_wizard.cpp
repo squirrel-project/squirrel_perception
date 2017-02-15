@@ -31,20 +31,20 @@ public:
     bool callSvRecognizer(squirrel_object_perception_msgs::Recognize::Request &req,
                           squirrel_object_perception_msgs::Recognize::Response &res)
     {
-        std::cout << "Received point cloud." << std::endl;
+        std::cout << "[WIZARD] Received point cloud." << std::endl;
         squirrel_object_perception_msgs::Recognize srv;
         srv.request = req;
         bool vision_success = false;
 
         if (sv_rec_client_.call(srv) && srv.response.ids.size() > 0)
         {
-            std::cout << "Call done..." << std::endl;
+            std::cout << "[WIZARD] Call done..." << std::endl;
             vision_success = true;
             res = srv.response;
             return true;
         }
         else
-            ROS_ERROR("Failed to call service");
+            ROS_ERROR("[WIZARD] Failed to call service");
 
         float max_confidence = 0.;
         for (int i=0; i < res.confidences.size(); i++)
@@ -53,6 +53,7 @@ public:
                 max_confidence = res.confidences[i];
         }
 
+	std::cout << "[WIZARD] confidence: " << max_confidence << std::endl;
         if (!vision_success || max_confidence < confidence_threshold_)
         {
             while (true)
