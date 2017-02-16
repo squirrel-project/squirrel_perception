@@ -71,7 +71,7 @@ include_directories(${catkin_INCLUDE_DIRS} ${PCL_INCLUDE_DIRS} ${OCTOMAP_INCLUDE
 add_executable(squirrel_look_for_objects src/squirrel_look_for_objects_server.cpp)
 add_executable(squirrel_call_haf_grasping src/call_haf_grasping.cpp)
 add_executable(squirrel_find_dynamic_objects src/squirrel_find_dynamic_objects_server.cpp src/OctomapLib.cpp)
-add_executable(squirrel_look_for_objects_in_hand src/squirrel_recognize_objects_server.cpp)
+add_executable(squirrel_look_for_objects_in_hand src/squirrel_look_for_objects_in_hand.cpp)
 #add_executable(squirrel_dilate_octomap src/octomap_test.cpp src/OctomapLib.cpp)
 
 #add_dependencies(squirrel_look_for_objects squirrel_look_for_objects_gencfg)

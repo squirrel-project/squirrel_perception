@@ -1,18 +1,20 @@
 <launch> 
-  <arg name="recognizer_topic" default="/squirrel_recognizer_wizard/squirrel_wizard_recognize"/> <!--"/squirrel_recognizer/squirrel_recognize_objects"/-->
+  <arg name="recognizer_topic" default="/squirrel_recognizer_wizard/squirrel_wizard_recognize"/> <!--"/squirrel_recognizer/squirrel_recognize_objects"/--> 
 
+<arg name="recognizer2d_topic" default="/squirrel_recognizer_wizard/squirrel_wizard_recognize2d"/> <!--"/squirrel_recognizer/squirrel_recognize_objects_2d"/--> 
+  
   <node name="squirrel_look_for_objects"
         pkg="squirrel_object_perception"
         type="squirrel_look_for_objects"
         required="true" output="screen">
-        <param name="recognizer_topic" value="$(arg recognizer_topic)" />
+	<param name="recognizer_topic" value="$(arg recognizer_topic)" />
   </node>
 
   <node name="squirrel_look_for_objects_in_hand"
         pkg="squirrel_object_perception"
         type="squirrel_look_for_objects_in_hand"
         required="true" output="screen">
-        <param name="recognizer_topic" value="$(arg recognizer_topic)" />
+	<param name="recognizer_topic" value="$(arg recognizer2d_topic)" />
   </node>
 
 <!--
