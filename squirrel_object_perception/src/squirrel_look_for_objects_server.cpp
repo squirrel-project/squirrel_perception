@@ -30,6 +30,8 @@
 #include <pcl_ros/transforms.h>
 #include "mongodb_store/message_store.h"
 
+#define DEFAULT_RECOGNIZER_TOPIC_ "/squirrel_recognizer/squirrel_recognize_objects"
+
 
 class Object
 {
@@ -69,6 +71,9 @@ protected:
     visualization_msgs::Marker zyl_marker;
     std::vector<int32_t> vis_marker_ids;
 
+    // Recognition topic
+    std::string recognizer_topic_;
+
     void set_publish_feedback(std::string phase, std::string status, int percent)
     {
         this->feedback_.current_phase = phase;
@@ -89,9 +94,9 @@ protected:
 
     bool do_recognition(squirrel_object_perception_msgs::SceneObject &object)
     {
-        if (!ros::service::waitForService("/squirrel_recognizer/squirrel_recognize_objects", ros::Duration(5.0)))
+        if (!ros::service::waitForService(recognizer_topic_, ros::Duration(5.0)))
             return false;
-        ros::ServiceClient client = nh_.serviceClient<squirrel_object_perception_msgs::Recognize>("/squirrel_recognizer/squirrel_recognize_objects");
+        ros::ServiceClient client = nh_.serviceClient<squirrel_object_perception_msgs::Recognize>(recognizer_topic_);
 
         pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
         pcl::fromROSMsg(scene, *cloud);
@@ -133,7 +138,7 @@ protected:
         pcl::toROSMsg(*cloud, srv.request.cloud);
         if (client.call(srv))
         {
-            ROS_INFO("Called service %s: ", "/squirrel_recognizer/squirrel_recognize_objects");
+            ROS_INFO("Called service %s: ", recognizer_topic_.c_str());
             if (srv.response.ids.size() > 0) {
 		for (int i= 0; i < srv.response.ids.size(); i++) { 
                	 this->recognized_object.push_back(srv.response);
@@ -533,14 +538,21 @@ protected:
 
 public:
 
-    LookForObjectsAction(std::string name) :
+    LookForObjectsAction(ros::NodeHandle &nh, std::string name) :
         as_(nh_, name, boost::bind(&LookForObjectsAction::executeCB, this, _1), false),
         action_name_(name),
         message_store(nh_)
     {
+        nh_ = nh;
         id_cnt_ = 1;
         as_.start();
         success = false;
+
+        recognizer_topic_ = DEFAULT_RECOGNIZER_TOPIC_;
+        if(nh_.getParam ( "recognizer_topic", recognizer_topic_ ))
+            ROS_INFO("Listening to recognizer topic on %s", recognizer_topic_.c_str());
+        else
+            ROS_WARN("Recognizer topic not specified!");
 
         markerPublisher = nh_.advertise<visualization_msgs::Marker>("visualization_segm_objects", 0);
     }
@@ -710,9 +722,11 @@ public:
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "look_for_objects");
+    ros::NodeHandle n ("~");
     ROS_INFO("%s: started node", ros::this_node::getName().c_str());
 
-    LookForObjectsAction lookforobjects(ros::this_node::getName());
+    LookForObjectsAction lookforobjects(n, ros::this_node::getName());
+    ROS_INFO("%s: ready...", ros::this_node::getName().c_str());
     ros::spin();
 
     return 0;
