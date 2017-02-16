@@ -169,8 +169,8 @@ public:
         ros::init (argc, argv, "recognizer_wizard");
         n_ = new ros::NodeHandle ( "~" );
 
-        std::string service_name_sv_rec = "/squirrel_recognizer/squirrel_recognize_objects";
-        n_->getParam ( "service_recognition", service_name_sv_rec );
+        std::string service_name_sv_rec;
+
 
         if (!n_->getParam ( "mode", mode_ ))
         {
@@ -178,6 +178,18 @@ public:
             mode_ = "3d";
         }
         std::cout << "Wizard is running in mode " << mode_ << std::endl;
+
+        if (!n_->getParam ( "service_recognition", service_name_sv_rec ))
+        {
+            if (mode_ == "2d")
+            {
+                service_name_sv_rec = "/squirrel_recognizer/squirrel_recognize_objects_2d";
+            }
+            else
+            {
+                service_name_sv_rec = "/squirrel_recognizer/squirrel_recognize_objects";
+            }
+        }
 
         if(!n_->getParam ( "confidence_threshold", confidence_threshold_ ))
         {
