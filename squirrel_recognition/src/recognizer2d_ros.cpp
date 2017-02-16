@@ -55,20 +55,6 @@ cv::Point2f Recognizer2dROS::drawCoordinateSystem(cv::Mat &im, const Eigen::Matr
     return im_pt0;
 }
 
-void Recognizer2dROS::callSvCameraInfo(const sensor_msgs::CameraInfo::ConstPtr& camera_info)
-{
-    intrinsic(0,0)=camera_info->K[0]; //fx
-    intrinsic(1,1)=camera_info->K[4]; //fy
-    intrinsic(0,2)=camera_info->K[2]; //cx
-    intrinsic(1,2)=camera_info->K[5]; //cy
-
-    dist_coeffs = cv::Mat::zeros(camera_info->D.size(), 1, CV_64F);
-    for (size_t i = 0; i < camera_info->D.size(); i++) {
-        dist_coeffs(i,0) = camera_info->D[i];
-    }
-
-    sub_ci.shutdown();
-}
 
 bool
 Recognizer2dROS::recognize2dROS(squirrel_object_perception_msgs::Recognize2d::Request &req,
@@ -136,9 +122,16 @@ Recognizer2dROS::initialize (int argc, char ** argv)
     // init recognizer
 #ifdef USE_SIFT_GPU
     v4r::IMKRecognizer::Parameter param;
-    param.cb_param.nnr = .92;
+    /*param.cb_param.nnr = 0.92;
     param.cb_param.thr_desc_rnn = 0.3;
-    param.cb_param.max_dist = 0.4;
+    param.cb_param.max_dist = 0.4;*/
+    param.cb_param.nnr = 1.000001;
+    param.cb_param.thr_desc_rnn = 0.25;
+    param.cb_param.max_dist = FLT_MAX;
+    param.pnp_param.eta_ransac = 0.01;
+    param.pnp_param.max_rand_trials = 10000;
+    param.pnp_param.inl_dist = 4;
+    param.vc_param.cluster_dist = 40;
     v4r::FeatureDetector::Ptr detector(new v4r::FeatureDetector_KD_SIFTGPU());
     std::cout << "GPU SIFT" << std::endl;
 #else
@@ -150,13 +143,26 @@ Recognizer2dROS::initialize (int argc, char ** argv)
     std::cout << "CV SIFT" << std::endl;
 #endif
 
-    sub_ci = n_->subscribe ("/kinect/rgb/camera_info", 1, &Recognizer2dROS::callSvCameraInfo, this);
+    boost::shared_ptr<sensor_msgs::CameraInfo const> camera_info;
+    camera_info = ros::topic::waitForMessage<sensor_msgs::CameraInfo>("/kinect/rgb/camera_info", *n_, ros::Duration(10));
+    if (camera_info == NULL) {
+        ROS_INFO("Using fixed standard camera paramters");
+        intrinsic(0,0)=intrinsic(1,1)=525;
+        intrinsic(0,2)=320, intrinsic(1,2)=240;
+    } else {
+        intrinsic(0,0)=camera_info->K[0]; //fx
+        intrinsic(1,1)=camera_info->K[4]; //fy
+        intrinsic(0,2)=camera_info->K[2]; //cx
+        intrinsic(1,2)=camera_info->K[5]; //cy
+    }
 
     setup(argc, argv);
 
     imkRecognizer_.reset(new v4r::IMKRecognizer(param, detector, detector));
     imkRecognizer_->setCameraParameter(intrinsic, dist_coeffs); //get those parameters from the camera topic
     imkRecognizer_->setDataDirectory(base_dir); //that is the directory with all the models
+    if (!codebook_filename.empty())
+        imkRecognizer_->setCodebookFilename(codebook_filename);
 
     if (object_names.size() == 0) { //take all direcotry names from the base_dir
         object_names = v4r::io::getFoldersInDirectory(base_dir);
@@ -183,6 +189,7 @@ void Recognizer2dROS::setup(int argc, char **argv)
     general.add_options()
             ("help,h", "show help message")
             ("models_dir,d", po::value<std::string>(&base_dir)->required(), "Object model directory")
+            ("codebook_filename,c", po::value<std::string>(&codebook_filename), "Optional filename for codebook")
             ("object_names,n", po::value< std::vector<std::string> >(&object_names)->multitoken(), "Object names (if empty all directories from base_dir are used")
             ("thr_conf,t", po::value<double>(&thr_conf)->default_value(thr_conf), "Confidence value threshold (visualization)")
             ;

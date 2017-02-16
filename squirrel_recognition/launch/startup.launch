@@ -1,8 +1,15 @@
 <launch>
   <arg name="models_dir" value="$(find squirrel_object_perception)/data/models" />
+  
   <node pkg="squirrel_recognition" type="squirrel_recognizer" name="squirrel_recognizer" output="screen" respawn="true"
-    args="--models_dir=$(arg models_dir) --do_shot 1 --hv_ignore_color 1 --knn_sift 3 -z 1.5 -r 0.1" />
+    args="--models_dir=$(arg models_dir) --do_shot 1  --hv_ignore_color 1 --knn_sift 3 -z 1.5 -r 0.1" />
+
+  <node pkg="squirrel_recognition" type="squirrel_recognizer_wizard" name="squirrel_recognizer_wizard" output="screen">
+        <param name="models_dir" value="$(arg models_dir)" />
+
   <node pkg="squirrel_recognition" type="squirrel_recognizer2d" name="squirrel_recognizer2d" output="screen" respawn="true"
-    args="--models_dir=$(arg models_dir) -t 0.4" />
+    args="--models_dir=$(arg models_dir) -c imk_all_models.bin -t 0" />
+
+  </node>
 </launch>
 
