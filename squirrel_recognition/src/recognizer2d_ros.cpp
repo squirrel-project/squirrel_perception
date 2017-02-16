@@ -208,7 +208,7 @@ void Recognizer2dROS::setup(int argc, char **argv)
 int
 main (int argc, char ** argv)
 {
-    ros::init (argc, argv, "squirrel_recognizer2d");
+    ros::init (argc, argv, "squirrel_recognizer");
     v4r::Recognizer2dROS m;
     m.initialize (argc, argv);
     ros::spin ();
