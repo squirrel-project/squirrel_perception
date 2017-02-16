@@ -47,10 +47,10 @@ public:
             ROS_ERROR("Failed to call service");
 
         float max_confidence = 0.;
-        for (int i=0; i < res.confidences.size(); i++)
+        for (int i=0; i < res.confidence.size(); i++)
         {
-            if (res.confidences[i] > max_confidence)
-                max_confidence = res.confidences[i];
+            if (res.confidence[i] > max_confidence)
+                max_confidence = res.confidence[i];
         }
 
         if (!vision_success || max_confidence < confidence_threshold_)
@@ -70,12 +70,12 @@ public:
                     res.ids.push_back(input_id);
                     geometry_msgs::Transform empty_transform;
                     res.transforms.push_back(empty_transform);
-                    res.confidences.push_back(1.0);
+                    res.confidence.push_back(1.0);
                     geometry_msgs::Point32 empty_centroid;
-                    res.centroids.push_back(empty_centroid);
+                    res.centroid.push_back(empty_centroid);
                     squirrel_object_perception_msgs::BBox empty_bbox;
-                    res.bboxes.push_back(empty_bbox);
-                    res.model_clouds.push_back(req.cloud);
+                    res.bbox.push_back(empty_bbox);
+                    res.models_cloud.push_back(req.cloud);
 
                     break;
                 }
