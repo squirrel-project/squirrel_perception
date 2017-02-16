@@ -46,9 +46,9 @@ void SegmentationPopoutNode::initialize(int argc, char ** argv)
     SegmentOnce_ = n_->advertiseService ("/squirrel_segmentation_incremental_once", &SegmentationPopoutNode::returnNextResult, this);
     ROS_INFO("Ready to get service calls...");
 
-    v4r::PCLSegmenter<PointT>::Parameter params;
-    params.seg_type_ = 1;
-    segmenter_ = new v4r::PCLSegmenter<PointT>(params);
+    v4r::DominantPlaneSegmenterParameter params;
+    //params.seg_type_ = 1;
+    segmenter_ = new v4r::DominantPlaneSegmenter<PointT>(params);
 }
 
 bool SegmentationPopoutNode::segment(squirrel_object_perception_msgs::SegmentInit::Request & req, squirrel_object_perception_msgs::SegmentInit::Response & response)
@@ -64,8 +64,10 @@ bool SegmentationPopoutNode::segment(squirrel_object_perception_msgs::SegmentIni
   std::vector<pcl::PointCloud<PointT>::Ptr> clusters;
 
   cloud_ = inCloud->makeShared();
-  segmenter_->set_input_cloud(*cloud_);
-  segmenter_->do_segmentation(cluster_indices);
+  segmenter_->setInputCloud(cloud_);
+  segmenter_->segment();
+  segmenter_->getSegmentIndices(cluster_indices);
+
   for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
   {
     pcl::PointCloud<PointT>::Ptr cloud_cluster (new pcl::PointCloud<PointT>);
