@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<launch>
+<!-- protected region additional custom Launchfile statements in the beginning on begin -->
+<!-- protected region additional custom Launchfile statements in the beginning end -->
+
+
+	<include file="$(find squirrel_sensing_coordinator)/launch/sensor_testing_loop_config.launch" />
+	<node pkg="squirrel_sensing_coordinator" type="sensor_testing_loop" name="sensor_testing_loop" output="screen"/>
+</launch>

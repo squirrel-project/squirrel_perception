@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<notation:Diagram xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:notation="http://www.eclipse.org/gmf/runtime/1.0.2/notation" xmlns:ros="http://ros/1.0" xmi:id="_yAHxkGWkEeSXDJ71BxkJlg" type="RosPackage" name="sensor_node.ros_package_diagram" measurementUnit="Pixel">
+  <children xmi:type="notation:Shape" xmi:id="_0Zs4EGWkEeSXDJ71BxkJlg" type="2001" fontName="Ubuntu">
+    <children xmi:type="notation:DecorationNode" xmi:id="_0ZtfIGWkEeSXDJ71BxkJlg" type="5008"/>
+    <children xmi:type="notation:BasicCompartment" xmi:id="_0ZtfIWWkEeSXDJ71BxkJlg" type="7001">
+      <styles xmi:type="notation:TitleStyle" xmi:id="_0ZtfImWkEeSXDJ71BxkJlg" showTitle="true"/>
+      <styles xmi:type="notation:SortingStyle" xmi:id="_0ZtfI2WkEeSXDJ71BxkJlg"/>
+      <styles xmi:type="notation:FilteringStyle" xmi:id="_0ZtfJGWkEeSXDJ71BxkJlg"/>
+    </children>
+    <children xmi:type="notation:Node" xmi:id="_14cG8GWkEeSXDJ71BxkJlg" type="3004">
+      <children xmi:type="notation:DecorationNode" xmi:id="_14cG9GWkEeSXDJ71BxkJlg" type="5004"/>
+      <styles xmi:type="notation:DescriptionStyle" xmi:id="_14cG8WWkEeSXDJ71BxkJlg"/>
+      <styles xmi:type="notation:FontStyle" xmi:id="_14cG8mWkEeSXDJ71BxkJlg" fontName="Ubuntu"/>
+      <element xmi:type="ros:Publisher" href="sensor_node.ros_package#//@node.0/@publisher.0"/>
+      <layoutConstraint xmi:type="notation:Bounds" xmi:id="_14cG82WkEeSXDJ71BxkJlg"/>
+    </children>
+    <children xmi:type="notation:Node" xmi:id="_3cPcAGWkEeSXDJ71BxkJlg" type="3004">
+      <children xmi:type="notation:DecorationNode" xmi:id="_3cQDEGWkEeSXDJ71BxkJlg" type="5004"/>
+      <styles xmi:type="notation:DescriptionStyle" xmi:id="_3cPcAWWkEeSXDJ71BxkJlg"/>
+      <styles xmi:type="notation:FontStyle" xmi:id="_3cPcAmWkEeSXDJ71BxkJlg" fontName="Ubuntu"/>
+      <element xmi:type="ros:Publisher" href="sensor_node.ros_package#//@node.0/@publisher.1"/>
+      <layoutConstraint xmi:type="notation:Bounds" xmi:id="_3cPcA2WkEeSXDJ71BxkJlg"/>
+    </children>
+    <children xmi:type="notation:Node" xmi:id="_5EhocGWkEeSXDJ71BxkJlg" type="3004">
+      <children xmi:type="notation:DecorationNode" xmi:id="_5EhodGWkEeSXDJ71BxkJlg" type="5004"/>
+      <styles xmi:type="notation:DescriptionStyle" xmi:id="_5EhocWWkEeSXDJ71BxkJlg"/>
+      <styles xmi:type="notation:FontStyle" xmi:id="_5EhocmWkEeSXDJ71BxkJlg" fontName="Ubuntu"/>
+      <element xmi:type="ros:Publisher" href="sensor_node.ros_package#//@node.0/@publisher.2"/>
+      <layoutConstraint xmi:type="notation:Bounds" xmi:id="_5Ehoc2WkEeSXDJ71BxkJlg"/>
+    </children>
+    <children xmi:type="notation:Node" xmi:id="_BIfe4GWlEeSXDJ71BxkJlg" type="3005">
+      <children xmi:type="notation:DecorationNode" xmi:id="_BIfe5WWlEeSXDJ71BxkJlg" type="5005"/>
+      <styles xmi:type="notation:DescriptionStyle" xmi:id="_BIfe4WWlEeSXDJ71BxkJlg"/>
+      <styles xmi:type="notation:FontStyle" xmi:id="_BIfe4mWlEeSXDJ71BxkJlg" fontName="Ubuntu"/>
+      <styles xmi:type="notation:LineStyle" xmi:id="_BIfe42WlEeSXDJ71BxkJlg"/>
+      <element xmi:type="ros:ActionServer" href="sensor_node.ros_package#//@node.0/@actionserver.0"/>
+      <layoutConstraint xmi:type="notation:Bounds" xmi:id="_BIfe5GWlEeSXDJ71BxkJlg" x="239" y="3"/>
+    </children>
+    <element xmi:type="ros:Node" href="sensor_node.ros_package#//@node.0"/>
+    <layoutConstraint xmi:type="notation:Bounds" xmi:id="_0Zs4EWWkEeSXDJ71BxkJlg" x="219" y="152"/>
+  </children>
+  <styles xmi:type="notation:DiagramStyle" xmi:id="_yAHxkWWkEeSXDJ71BxkJlg"/>
+  <element xmi:type="ros:Package" href="sensor_node.ros_package#/"/>
+</notation:Diagram>

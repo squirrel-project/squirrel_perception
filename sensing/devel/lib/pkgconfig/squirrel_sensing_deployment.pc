@@ -1,0 +1,8 @@
+prefix=/home/jelizaveta/catkin_ws/devel
+
+Name: squirrel_sensing_deployment
+Description: Description of squirrel_sensing_deployment
+Version: 0.0.1
+Cflags: 
+Libs: -L/home/jelizaveta/catkin_ws/devel/lib 
+Requires: 

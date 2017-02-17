@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<notation:Diagram xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:notation="http://www.eclipse.org/gmf/runtime/1.0.2/notation" xmlns:ros="http://ros/1.0" xmlns:smach="http://smach/1.0" xmi:id="_ZylSsGWoEeSXDJ71BxkJlg" type="RosCoordinator" name="squirrel_sensing_coordinator.ros_coordinator_diagram" measurementUnit="Pixel">
+  <children xmi:type="notation:Shape" xmi:id="_frQWQGWoEeSXDJ71BxkJlg" type="2001" fontName="Ubuntu">
+    <children xmi:type="notation:DecorationNode" xmi:id="_frRkYGWoEeSXDJ71BxkJlg" type="5003"/>
+    <children xmi:type="notation:BasicCompartment" xmi:id="_frRkYWWoEeSXDJ71BxkJlg" type="7001">
+      <children xmi:type="notation:Shape" xmi:id="_me8QkGWoEeSXDJ71BxkJlg" type="3001" fontName="Ubuntu">
+        <children xmi:type="notation:DecorationNode" xmi:id="_me83oGWoEeSXDJ71BxkJlg" type="5001"/>
+        <element xmi:type="smach:ActionState" href="squirrel_sensing_coordinator.ros_coordinator#//@node.0/@actionclient.0"/>
+        <layoutConstraint xmi:type="notation:Bounds" xmi:id="_me8QkWWoEeSXDJ71BxkJlg" x="145" y="109"/>
+      </children>
+      <children xmi:type="notation:Node" xmi:id="_pHV2MGWoEeSXDJ71BxkJlg" type="3004">
+        <styles xmi:type="notation:DescriptionStyle" xmi:id="_pHV2MWWoEeSXDJ71BxkJlg"/>
+        <styles xmi:type="notation:FontStyle" xmi:id="_pHV2MmWoEeSXDJ71BxkJlg" fontName="Ubuntu"/>
+        <styles xmi:type="notation:FillStyle" xmi:id="_pHV2M2WoEeSXDJ71BxkJlg"/>
+        <element xmi:type="smach:InitActionState" href="squirrel_sensing_coordinator.ros_coordinator#//@node.0/@initialStates.0"/>
+        <layoutConstraint xmi:type="notation:Bounds" xmi:id="_pHV2NGWoEeSXDJ71BxkJlg" x="37" y="133"/>
+      </children>
+      <children xmi:type="notation:Node" xmi:id="_pTmJgGWoEeSXDJ71BxkJlg" type="3003">
+        <styles xmi:type="notation:DescriptionStyle" xmi:id="_pTmJgWWoEeSXDJ71BxkJlg"/>
+        <styles xmi:type="notation:FontStyle" xmi:id="_pTmJgmWoEeSXDJ71BxkJlg" fontName="Ubuntu"/>
+        <element xmi:type="smach:FinalState" href="squirrel_sensing_coordinator.ros_coordinator#//@node.0/@finalStates.0"/>
+        <layoutConstraint xmi:type="notation:Bounds" xmi:id="_pTmJg2WoEeSXDJ71BxkJlg" x="328" y="150"/>
+      </children>
+    </children>
+    <element xmi:type="smach:SMACHStateMachine" href="squirrel_sensing_coordinator.ros_coordinator#//@node.0"/>
+    <layoutConstraint xmi:type="notation:Bounds" xmi:id="_frQWQWWoEeSXDJ71BxkJlg" x="150" y="35" width="431" height="296"/>
+  </children>
+  <styles xmi:type="notation:DiagramStyle" xmi:id="_ZylSsWWoEeSXDJ71BxkJlg"/>
+  <element xmi:type="ros:Package" href="squirrel_sensing_coordinator.ros_coordinator#/"/>
+  <edges xmi:type="notation:Edge" xmi:id="_sKuusGWoEeSXDJ71BxkJlg" type="4001" source="_pHV2MGWoEeSXDJ71BxkJlg" target="_me8QkGWoEeSXDJ71BxkJlg">
+    <children xmi:type="notation:DecorationNode" xmi:id="_sKvVwGWoEeSXDJ71BxkJlg" type="6001">
+      <layoutConstraint xmi:type="notation:Location" xmi:id="_sKvVwWWoEeSXDJ71BxkJlg" y="40"/>
+    </children>
+    <styles xmi:type="notation:RoutingStyle" xmi:id="_sKuusWWoEeSXDJ71BxkJlg"/>
+    <styles xmi:type="notation:FontStyle" xmi:id="_sKuusmWoEeSXDJ71BxkJlg" fontName="Ubuntu"/>
+    <element xmi:type="smach:SMACHTransition" href="squirrel_sensing_coordinator.ros_coordinator#//@node.0/@transitions.0"/>
+    <bendpoints xmi:type="notation:RelativeBendpoints" xmi:id="_sKuus2WoEeSXDJ71BxkJlg" points="[0, -4, -81, 0]$[68, 0, -13, 4]"/>
+    <sourceAnchor xmi:type="notation:IdentityAnchor" xmi:id="_sKzAIGWoEeSXDJ71BxkJlg" id="(1.0,0.925)"/>
+    <targetAnchor xmi:type="notation:IdentityAnchor" xmi:id="_sKzAIWWoEeSXDJ71BxkJlg" id="(0.10833333333333334,0.7125)"/>
+  </edges>
+  <edges xmi:type="notation:Edge" xmi:id="_s5LJEGWoEeSXDJ71BxkJlg" type="4001" source="_me8QkGWoEeSXDJ71BxkJlg" target="_pTmJgGWoEeSXDJ71BxkJlg">
+    <children xmi:type="notation:DecorationNode" xmi:id="_s5LwIGWoEeSXDJ71BxkJlg" type="6001">
+      <layoutConstraint xmi:type="notation:Location" xmi:id="_s5LwIWWoEeSXDJ71BxkJlg" y="40"/>
+    </children>
+    <styles xmi:type="notation:RoutingStyle" xmi:id="_s5LJEWWoEeSXDJ71BxkJlg"/>
+    <styles xmi:type="notation:FontStyle" xmi:id="_s5LJEmWoEeSXDJ71BxkJlg" fontName="Ubuntu"/>
+    <element xmi:type="smach:SMACHTransition" href="squirrel_sensing_coordinator.ros_coordinator#//@node.0/@transitions.1"/>
+    <bendpoints xmi:type="notation:RelativeBendpoints" xmi:id="_s5LJE2WoEeSXDJ71BxkJlg" points="[25, 19, -70, 19]$[95, 0, 0, 0]"/>
+    <sourceAnchor xmi:type="notation:IdentityAnchor" xmi:id="_s5M-QGWoEeSXDJ71BxkJlg" id="(0.7333333333333333,0.7625)"/>
+    <targetAnchor xmi:type="notation:IdentityAnchor" xmi:id="_s5M-QWWoEeSXDJ71BxkJlg" id="(0.0,0.5)"/>
+  </edges>
+</notation:Diagram>

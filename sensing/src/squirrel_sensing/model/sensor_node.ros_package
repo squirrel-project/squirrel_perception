@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ros:Package xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ros="http://ros/1.0" name="squirrel_sensing" author="jelizaveta" author_email="jelizaveta@todo.todo" description="The squirrel_sensing package" license="TODO">
+  <node name="sensor_node" frequency="1000.0">
+    <publisher name="get_tactile" msg="std_msgs::Float64MultiArray"/>
+    <publisher name="get_proximity" msg="std_msgs::Float64MultiArray"/>
+    <publisher name="get_wrist" msg="std_msgs::Float64MultiArray"/>
+    <actionserver name="trigger_proximity" ActionType="bride_tutorials::TriggerPublish"/>
+  </node>
+  <depend>std_msgs</depend>
+  <depend>bride_tutorials</depend>
+</ros:Package>

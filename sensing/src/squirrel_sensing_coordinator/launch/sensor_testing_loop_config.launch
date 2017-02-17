@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<launch>
+<!-- protected region additional custom Launchfile statements in the beginning on begin -->
+<!-- protected region additional custom Launchfile statements in the beginning end -->
+
+	<rosparam command="load" ns="trigger_proximity" file="$(find squirrel_sensing_coordinator)/config/trigger_proximity_goal.yaml"/>
+
+</launch>

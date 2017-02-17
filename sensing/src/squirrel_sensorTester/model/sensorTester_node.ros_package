@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ros:Package xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ros="http://ros/1.0" name="squirrel_sensorTester" author="jelizaveta" author_email="jelizaveta@todo.todo" description="The squirrel_sensorTester package" license="TODO">
+  <node name="sensorTester_node">
+    <subscriber name="test_publish" msg="std_msgs::Float64MultiArray"/>
+    <serviceServer name="testService" msg="std_srvs::Empty"/>
+  </node>
+  <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
+</ros:Package>
