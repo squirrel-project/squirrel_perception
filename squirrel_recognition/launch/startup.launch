@@ -1,6 +1,5 @@
 <launch>
   <arg name="models_dir" value="$(find squirrel_object_perception)/data/models" />
-  
 
   <arg name="hv_config_xml" default="$(find squirrel_recognition)/cfg/hv_config.xml" doc="Filename of Hypotheses Verification XML configuration file"  />
   <arg name="sift_config_xml" default="$(find squirrel_recognition)/cfg/sift_config.xml" doc="Filename of SIFT XML configuration file"/>
