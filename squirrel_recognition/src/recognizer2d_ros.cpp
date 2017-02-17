@@ -174,9 +174,9 @@ Recognizer2dROS::initialize (int argc, char ** argv)
     }
     imkRecognizer_->initModels();
 
-    recognize2d_  = n_->advertiseService ("squirrel_recognize_objects_2d", &Recognizer2dROS::recognize2dROS, this);
+    recognize2d_  = n_->advertiseService ("/squirrel_recognize_objects_2d", &Recognizer2dROS::recognize2dROS, this);
     it_.reset(new image_transport::ImageTransport(*n_));
-    image_pub_ = it_->advertise("recognized_2d_object_instances_img", 1, true);
+    image_pub_ = it_->advertise("/recognized_2d_object_instances_img", 1, true);
     return true;
 }
 
@@ -208,7 +208,7 @@ void Recognizer2dROS::setup(int argc, char **argv)
 int
 main (int argc, char ** argv)
 {
-    ros::init (argc, argv, "squirrel_recognizer");
+    ros::init (argc, argv, "squirrel_recognizer2d");
     v4r::Recognizer2dROS m;
     m.initialize (argc, argv);
     ros::spin ();

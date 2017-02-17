@@ -1,7 +1,7 @@
 <launch>
-  <arg name="recognizer_topic" default="/squirrel_recognizer_wizard/squirrel_wizard_recognize"/> <!--"/squirrel_recognizer/squirrel_recognize_objects"/--> 
+  <arg name="recognizer_topic" default="/squirrel_wizard_recognize"/> <!--"/squirrel_recognize_objects"/--> 
 
-<arg name="recognizer2d_topic" default="/squirrel_recognizer_wizard/squirrel_wizard_recognize2d"/> <!--"/squirrel_recognizer/squirrel_recognize_objects_2d"/--> 
+<arg name="recognizer2d_topic" default="/squirrel_wizard_recognize2d"/> <!--"/squirrel_recognize_objects_2d"/--> 
   
   <node name="squirrel_look_for_objects"
         pkg="squirrel_object_perception"

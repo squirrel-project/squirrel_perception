@@ -114,7 +114,7 @@ public:
         ros::init (argc, argv, "recognizer_wizard");
         n_ = new ros::NodeHandle ( "~" );
 
-        std::string service_name_sv_rec = "/squirrel_recognizer/squirrel_recognize_objects";
+        std::string service_name_sv_rec = "/squirrel_recognize_objects";
 
         if(!n_->getParam ( "confidence_threshold", confidence_threshold_ ))
         {
@@ -132,7 +132,7 @@ public:
         }
 
         sv_rec_client_ = n_->serviceClient<squirrel_object_perception_msgs::Recognize>(service_name_sv_rec);
-        recognize_  = n_->advertiseService ("squirrel_wizard_recognize", &RecognizerWizard::callSvRecognizer, this);
+        recognize_  = n_->advertiseService ("/squirrel_wizard_recognize", &RecognizerWizard::callSvRecognizer, this);
 
         ros::spin();
 
