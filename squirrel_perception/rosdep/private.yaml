@@ -3,3 +3,5 @@ v4r:
   ubuntu: v4r
 classifier_srv_definitions:
   ubuntu: ros-indigo-classifier-srv-definitions
+object_classifier:
+  ubuntu: ros-indigo-object-classifier
