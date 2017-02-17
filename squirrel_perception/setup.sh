@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 FILE="/etc/ros/rosdep/sources.list.d/31-squirrel_perception.list"
 REPO="http://153.97.4.193/building/ubuntu/"
+REPO_STRANDS="http://lcas.lincoln.ac.uk/repos/release"
 APTSOURCES="/etc/apt/sources.list"
 
 generate_path () {
@@ -38,7 +39,9 @@ check_file () {
 
 add_repo () {
   curl -s http://153.97.4.193/building/public.key | sudo apt-key add -
+  curl -s http://lcas.lincoln.ac.uk/repos/public.key | sudo apt-key add -
   sudo apt-add-repository $REPO
+  sudo apt-add-repository $REPO_STRANDS
   sudo apt-get update
 }
 
