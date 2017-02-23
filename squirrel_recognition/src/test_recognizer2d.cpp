@@ -37,11 +37,18 @@ public:
     void callSvRecognizerUsingCam(const sensor_msgs::Image::ConstPtr& msg)
     {
         std::cout << "Received camera image.\n" << std::endl;
-        squirrel_object_perception_msgs::Recognize2d srv;
-        srv.request.image = *msg;
+        squirrel_object_perception_msgs::Recognize2d srv_rec;
+        srv_rec.request.image = *msg;
 
-        if (sv_rec_client_.call(srv))
+        if (sv_rec_client_.call(srv_rec)) {
             std::cout << "Call done..." << std::endl;
+            std::cout << "found " << srv_rec.response.ids.size() << " objects:\n";
+            for(size_t i = 0; i < srv_rec.response.ids.size(); i++)
+            {
+              std::cout << " ID: " << srv_rec.response.ids[i] <<
+                " position: " << srv_rec.response.transforms[i].translation << std::endl;
+            }
+        }
         else
             ROS_ERROR("Failed to call service");
 
@@ -54,6 +61,7 @@ public:
         for(size_t i=0; i < test_image.size(); i++)
         {
             cv::Mat image = cv::imread(directory_ + "/" + test_image[i], 1);
+            std::cout<< "Opening file " << test_image[i] << std::endl;
 
             cv_bridge::CvImage out_msg;
             out_msg.header.frame_id = "/kinect_rgb_optical_frame";
@@ -90,7 +98,7 @@ public:
         std::cout <<  "You can either select a topic param 'topic' or "
           " test pcd files from a directory by specifying param 'directory'." << std::endl;
 
-        std::string service_name_sv_rec = "/squirrel_recognizer2d/squirrel_recognize_objects_2d";
+        std::string service_name_sv_rec = "/squirrel_recognizer_wizard/squirrel_wizard_recognize2d";
         sv_rec_client_ = n_->serviceClient<squirrel_object_perception_msgs::Recognize2d>(service_name_sv_rec);
 
         if(n_->getParam ( "directory", directory_ ) && !directory_.empty())

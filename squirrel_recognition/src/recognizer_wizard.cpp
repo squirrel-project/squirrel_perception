@@ -183,11 +183,11 @@ public:
         {
             if (mode_ == "2d")
             {
-                service_name_sv_rec = "/squirrel_recognizer/squirrel_recognize_objects_2d";
+                service_name_sv_rec = "/squirrel_recognize_objects_2d";
             }
             else
             {
-                service_name_sv_rec = "/squirrel_recognizer/squirrel_recognize_objects";
+                service_name_sv_rec = "/squirrel_recognize_objects";
             }
         }
 
@@ -209,12 +209,12 @@ public:
         if (mode_ == "2d")
         {
             sv_rec_client_ = n_->serviceClient<squirrel_object_perception_msgs::Recognize2d>(service_name_sv_rec);
-            recognize_  = n_->advertiseService ("squirrel_wizard_recognize2d", &RecognizerWizard::callSv2dRecognizer, this);
+            recognize_  = n_->advertiseService ("/squirrel_wizard_recognize2d", &RecognizerWizard::callSv2dRecognizer, this);
         }
         else if (mode_ == "3d")
         {
             sv_rec_client_ = n_->serviceClient<squirrel_object_perception_msgs::Recognize>(service_name_sv_rec);
-            recognize_  = n_->advertiseService ("squirrel_wizard_recognize", &RecognizerWizard::callSvRecognizer, this);
+            recognize_  = n_->advertiseService ("/squirrel_wizard_recognize", &RecognizerWizard::callSvRecognizer, this);
         }
         else
         {
