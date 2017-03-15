@@ -199,7 +199,7 @@ void AttentionMotion::imageCallback(const sensor_msgs::ImageConstPtr& msg)
     // HACK: Here I assume fixed camera parameters for a Kinect/Asus
     lookSrv.request.x = cx*subsample_ - 320.;
     lookSrv.request.y = cy*subsample_ - 240.;
-    lookSrv.request.why = "motion";
+    lookSrv.request.reason = "motion";
     //ROS_INFO("look at image position %.f %.f", lookSrv.request.x, lookSrv.request.y);
     controllerSrv_.call(lookSrv);
   }
