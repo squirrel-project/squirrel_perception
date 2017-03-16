@@ -2,13 +2,17 @@
 #include <actionlib/server/simple_action_server.h>
 #include <squirrel_object_perception_msgs/LookForObjectsAction.h>
 #include <sensor_msgs/Image.h>
-#include <std_msgs/Float32.h>
+#include <std_msgs/Float64.h>
+#include <std_srvs/Empty.h>
 #include <squirrel_object_perception_msgs/Recognize2d.h>
 #include <squirrel_object_perception_msgs/SceneObject.h>
 #include <sstream>
 #include <vector>
-#include <squirrel_view_controller_msgs/FixateOnPoseAction.h>
+#include <squirrel_view_controller_msgs/LookAtPosition.h>
 #include <actionlib/client/simple_action_client.h>
+#include <tf/transform_listener.h>
+#include <Eigen/Dense>
+#include <visualization_msgs/Marker.h>
 
 #define DEFAULT_RECOGNIZER_TOPIC_ "/squirrel_recognizer/squirrel_recognize_objects"
 
@@ -19,7 +23,7 @@ public:
     squirrel_object_perception_msgs::SceneObject sceneObject;
 };
 
-class LookForObjectsAction
+class LookForObjectsInHandAction
 {
 protected:
 
@@ -34,6 +38,10 @@ protected:
     // create needed variables
     sensor_msgs::Image scene;
     bool success;
+    tf::TransformListener tf_listener;
+    ros::Publisher marker_pub;
+    int id_cnt_;
+    bool called_cam_service;
 
     squirrel_object_perception_msgs::SceneObject sceneObject;
 
@@ -46,6 +54,14 @@ protected:
         this->feedback_.percent_completed = percent;
         this->as_.publishFeedback(this->feedback_);
         return;
+    }
+
+    std::string get_unique_object_id() {
+        std::stringstream ss;
+        ss << id_cnt_;
+        std::string str = ss.str();
+        id_cnt_++;
+        return str;
     }
 
 
@@ -64,12 +80,23 @@ protected:
             ROS_INFO("Called service %s: ", recognizer_topic_.c_str());
             if (srv.response.ids.size() >0)
             {
-                int ind = most_confident_class(srv.response.confidences);
-                sceneObject.category = srv.response.ids.at(ind).data;
-                std::cout << "Category: " << sceneObject.category << std::endl;
-                result_.objects_updated.push_back(sceneObject);
+               // for (int i = 0; i < srv.response.ids.size(); i++) {
+               //     check_pose(srv.response.transforms.at(i));
+               // }
 
-                return true;
+                  int ind = most_confident_class(srv.response.confidences);
+                  if (srv.response.confidences.at(ind) > 0.4) {
+                      sceneObject.category = srv.response.ids.at(ind).data;
+                      //sceneObject.pose = srv.response.transforms.at(ind);
+                      std::cout << "Category: " << sceneObject.category << std::endl;
+                      result_.objects_added.push_back(sceneObject);
+
+                      return true;
+                  }
+                  else {
+                      std::cout << "Confidence value was too small (" << srv.response.confidences.at(ind) << ")" << std::endl;
+                      return true;
+                  }
             } else {
                 std::cout << "could not recognize an object!" << std::endl;
                 return true;
@@ -81,6 +108,62 @@ protected:
         }
     }
 
+    bool check_pose(geometry_msgs::Transform pose) {
+        ROS_INFO("Check pose");
+        geometry_msgs::PoseStamped before, after;
+
+        Eigen::Quaternionf q_eigen(pose.rotation.w, pose.rotation.x, pose.rotation.y, pose.rotation.z);
+        Eigen::Matrix3f R = q_eigen.toRotationMatrix();
+        Eigen::Vector3f t(pose.translation.x, pose.translation.y, pose.translation.z);
+
+        Eigen::Vector3f pt0 = R * Eigen::Vector3f(0,0,0) + t;
+	std::cout << "X: " << pt0[0] << "Y: " << pt0[1] << "Z: " << pt0[2] << std::endl;
+
+        before.pose.position.x = pt0[0];
+        before.pose.position.y = pt0[1];
+        before.pose.position.z = pt0[2];
+        before.pose.orientation.x = 0;
+        before.pose.orientation.y = 0;
+        before.pose.orientation.z = 0;
+        before.pose.orientation.w = 1;
+        before.header.frame_id = "/kinect_rgb_optical_frame";
+
+        visualization_msgs::Marker zyl_marker;
+
+        zyl_marker.header.frame_id = before.header.frame_id;
+        zyl_marker.header.stamp = ros::Time();
+        zyl_marker.ns = "marker";
+        zyl_marker.id = std::atoi(get_unique_object_id().c_str());
+        zyl_marker.lifetime = ros::Duration();
+        zyl_marker.type = visualization_msgs::Marker::CYLINDER;
+        zyl_marker.action = visualization_msgs::Marker::ADD;
+        zyl_marker.pose.position.x = before.pose.position.x;
+        zyl_marker.pose.position.y = before.pose.position.y;
+        zyl_marker.pose.position.z = before.pose.position.z;
+        zyl_marker.pose.orientation.x = 0.0;
+        zyl_marker.pose.orientation.y = 0.0;
+        zyl_marker.pose.orientation.z = 0.0;
+        zyl_marker.pose.orientation.w = 1.0;
+        zyl_marker.scale.x = 0.1;
+        zyl_marker.scale.y = 0.1;
+        zyl_marker.scale.z = 0.1/2;
+        zyl_marker.color.r = 0.0;
+        zyl_marker.color.g = 0.0;
+        zyl_marker.color.b = 0.0;
+        zyl_marker.color.a = 0.6;
+
+        marker_pub.publish(zyl_marker);
+        try
+        {
+            tf_listener.waitForTransform("/hand_base_link", "/kinect_depth_optical_frame", ros::Time::now(), ros::Duration(1.0));
+            tf_listener.transformPose("/hand_base_link", before, after);
+	    //TODO do the actual check here
+        }
+        catch (tf::TransformException& ex)
+        {
+            ROS_ERROR("%s: %s", ros::this_node::getName().c_str(), ex.what());
+        }
+    }
 
     int most_confident_class(std::vector<float> r)
     {
@@ -97,50 +180,49 @@ protected:
     }
 
     void move_camera_to_hand() {
-        //call action server
-        actionlib::SimpleActionClient<squirrel_view_controller_msgs::FixateOnPoseAction> ac("squirrel_view_controller", true);
-        ROS_INFO("Waiting for view controller action server to start.");
-        ac.waitForServer();
-        ROS_INFO("View controller action server started, sending goal.");
+        //call view controller service
+        ros::ServiceClient client = nh_.serviceClient<squirrel_view_controller_msgs::LookAtPosition>("/squirrel_view_controller/look_at_position");
 
-        squirrel_view_controller_msgs::FixateOnPoseGoal goal;
-        goal.pose.header.frame_id= "/hand_base_link";
-        goal.pose.pose.position.x = 0.0;
-        goal.pose.pose.position.y = 0.0;
-        goal.pose.pose.position.z = 0.0;
-        goal.pose.pose.orientation.w = 0.0;
-        goal.pose.pose.orientation.w = 0.0;
-        goal.pose.pose.orientation.w = 0.0;
-        goal.pose.pose.orientation.w = 1.0;
+        squirrel_view_controller_msgs::LookAtPosition srv;
 
-        goal.enable =true;
+        srv.request.target.header.frame_id= "/hand_base_link";
+        srv.request.target.pose.position.x = 0.0;
+        srv.request.target.pose.position.y = 0.1;
+        srv.request.target.pose.position.z = 0.0;
+        srv.request.target.pose.orientation.w = 0.0;
+        srv.request.target.pose.orientation.w = 0.0;
+        srv.request.target.pose.orientation.w = 0.0;
+        srv.request.target.pose.orientation.w = 1.0;
 
-        ac.sendGoal(goal);
+        if(client.call(srv)) {
+            ROS_INFO("Moved camera to hand");
+	    success = true;
+        } else {
+            ROS_ERROR("Could not move camera to hand");
+	    success = false;
+        }
     }
 
-    void stop_camera_fixation() {
-        //call action server
-        actionlib::SimpleActionClient<squirrel_view_controller_msgs::FixateOnPoseAction> ac("squirrel_view_controller", true);
-        ROS_INFO("Waiting for view controller action server to start.");
-        ac.waitForServer();
-        ROS_INFO("View controller action server started, sending goal.");
-        squirrel_view_controller_msgs::FixateOnPoseGoal goal;
-        goal.enable =false;
-
-        ac.sendGoal(goal);
+    void getImage(const sensor_msgs::Image::ConstPtr& msg)
+    {
+        scene = *msg;
+        called_cam_service = true;
     }
 
 
 public:
 
-    LookForObjectsAction(ros::NodeHandle &nh, std::string name) :
-        as_(nh_, name, boost::bind(&LookForObjectsAction::executeCB, this, _1), false),
+    LookForObjectsInHandAction(ros::NodeHandle &nh, std::string name) :
+        as_(nh_, name, boost::bind(&LookForObjectsInHandAction::executeCB, this, _1), false),
         action_name_(name)
     {
         nh_ = nh;
         as_.start();
         success = false;
+        called_cam_service = false;
         recognizer_topic_ = DEFAULT_RECOGNIZER_TOPIC_;
+
+        marker_pub = nh_.advertise<visualization_msgs::Marker>("vis_marker_test", 1, true);
 
         if(nh_.getParam ( "recognizer_topic", recognizer_topic_ ))
             ROS_INFO("Listening to recognizer topic on %s", recognizer_topic_.c_str());
@@ -148,7 +230,7 @@ public:
             ROS_WARN("Recognizer topic not specified!");
     }
 
-    ~LookForObjectsAction(void)
+    ~LookForObjectsInHandAction(void)
     {
     }
 
@@ -169,25 +251,50 @@ public:
             as_.setPreempted(result_);
         }
 
-        // get data from depth camera
-        sceneConst = ros::topic::waitForMessage<sensor_msgs::Image>("/kinect/rgb/image_rect_color", nh_, ros::Duration(20));
-
-        if (sceneConst != NULL)
-        {
-            scene = *sceneConst;
-            sceneConst.reset();
-            ROS_INFO("%s: Received data", action_name_.c_str());
-        }
-
         //the camera has to look at the hand
         move_camera_to_hand();
+        move_camera_to_hand();
+
+	if(!success)
+	{
+	    result_.result_status = "Could not move the camera to the hand";
+	    as_.setAborted(result_);
+	    return;
+	}
+
+        ros::Subscriber sub_pc = nh_.subscribe ("/kinect/rgb/image_rect_color", 1, &LookForObjectsInHandAction::getImage, this);
+        ros::Rate loop_rate (1);
+        // poll until we did receive a point cloud
+        sleep(3);
+        while(!called_cam_service)
+        {
+            ros::spinOnce ();
+            loop_rate.sleep ();
+        }
+        sub_pc.shutdown();
 
         //recognize
         success = do_recognition();
 
-        //stop fixation at hand
-        stop_camera_fixation();
+        //move back to default position
+        ros::ServiceClient tilt_client = nh_.serviceClient<std_srvs::Empty>("/tilt_controller/resetPosition");
 
+        std_srvs::Empty e;
+        if (!tilt_client.call(e))
+        {
+            ROS_ERROR("Failed to move camera back to default tilt position");
+            success = false;
+        }
+
+        ros::ServiceClient pan_client = nh_.serviceClient<std_srvs::Empty>("/pan_controller/resetPosition");
+        if(!pan_client.call(e))
+        {
+            ROS_ERROR("Failed to move camera back to default pan position");
+            success = false;
+        }
+
+
+        std::cout << "SUCCESS of action: " << success << std::endl;
         if(success)
         {
             //result_.sequence = feedback_.sequence;
@@ -211,7 +318,7 @@ int main(int argc, char** argv)
     ros::NodeHandle n("~");
     ROS_INFO("%s: started node", ros::this_node::getName().c_str());
 
-    LookForObjectsAction lookforobjects(n, ros::this_node::getName());
+    LookForObjectsInHandAction lookforobjects(n, ros::this_node::getName());
     ROS_INFO("%s: ready...", ros::this_node::getName().c_str());
     ros::spin();
 
