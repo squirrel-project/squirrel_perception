@@ -10,10 +10,9 @@ env:
     - ROS_DISTRO="indigo"
     - UPSTREAM_WORKSPACE=file
     - ROSINSTALL_FILENAME=.travis.rosinstall
+    - BEFORE_SCRIPT="./.travis.install.sh"
   matrix:
     - ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu
-before_install:
-  - bash .travis.install.sh
 install:
   - git clone https://github.com/ros-industrial/industrial_ci.git .ci_config
 script: .ci_config/travis.sh
