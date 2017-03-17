@@ -11,7 +11,7 @@ wget http://lcas.lincoln.ac.uk/repos/public.key -O - | apt-key add -
 apt-get update
 
 mkdir -p /etc/ros/rosdep/mapping/
-cp private.yaml /etc/ros/rosdep/mapping/private_perception.yaml
-cp 31-squirrel_perception.list /etc/ros/rosdep/sources.list.d/31-squirrel_perception.list
+cp squirrel_perception/rosdep/private.yaml /etc/ros/rosdep/mapping/private_perception.yaml
+cp squirrel_perception/rosdep/31-squirrel_perception.list /etc/ros/rosdep/sources.list.d/31-squirrel_perception.list
 rosdep update
 
