@@ -1,7 +1,7 @@
 squirrel_perception
 ===================
 
-[![Build Status](https://travis-ci.com/squirrel-project/squirrel_perception.svg?token=ZW4zPsKpxxD4UyghzW3C&branch=indigo_dev)](https://travis-ci.com/squirrel-project/squirrel_perception)
+Travis-CI: [![Build Status](https://travis-ci.org/squirrel-project/squirrel_perception.svg?branch=indigo_dev)](https://travis-ci.org/squirrel-project/squirrel_perception)
 
 Technical Maintainer: bajo (Markus "Bajo" Bajones, TU Wien)
 
