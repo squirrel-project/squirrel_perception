@@ -11,6 +11,7 @@ env:
     - UPSTREAM_WORKSPACE=file
     - ROSINSTALL_FILENAME=.travis.rosinstall
     - BEFORE_SCRIPT="./.travis.install.sh"
+    - ROS_PARALLEL_TEST_JOBS=-j1
   matrix:
     - ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu
 install:
