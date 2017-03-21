@@ -37,14 +37,38 @@ public:
         called_service_ = false;
     }
 
-    void callSvRecognizerUsingCam(const sensor_msgs::PointCloud2::ConstPtr& msg)
+    void callSvRecognizerUsingCam(const sensor_msgs::PointCloud2::ConstPtr& msg_const)
     {
         std::cout << "Received point cloud.\n" << std::endl;
+
+        pcl::PointCloud<PointT>::Ptr scene (new pcl::PointCloud<PointT>);
+        pcl::fromROSMsg (*msg_const, *scene);
+
+        // HACK: The gezebo simulated kinect seems to output a non-orgnized point cloud. Just fix that here.
+        if(scene->height == 1)
+        {
+          if(scene->points.size() == 640*480)
+          {
+            scene->height = 480;
+            scene->width = 640;
+            scene->is_dense = true;
+            ROS_INFO("Gazebo Hack");
+          }
+        }
+
+        sensor_msgs::PointCloud2::Ptr msg (new sensor_msgs::PointCloud2);
+        pcl::toROSMsg(*scene, *msg);
+
         squirrel_object_perception_msgs::Recognize srv;
         srv.request.cloud = *msg;
 
-        if (sv_rec_client_.call(srv))
+        if (sv_rec_client_.call(srv)) {
             std::cout << "Call done..." << std::endl;
+            std::cout << "found " << srv.response.ids.size() << " objects\n";
+            for (int i = 0; i < srv.response.ids.size(); i++) {
+                ROS_INFO("Recognized object %s", srv.response.ids.at(i).data.c_str());
+            }
+        }
         else
             ROS_ERROR("Failed to call service");
 
@@ -89,7 +113,7 @@ public:
         std::cout <<  "You can either select a topic param 'topic' or "
           " test pcd files from a directory by specifying param 'directory'." << std::endl;
 
-        std::string service_name_sv_rec = "/squirrel_recognizer/squirrel_recognize_objects";
+        std::string service_name_sv_rec = "/squirrel_recognize_objects";
         sv_rec_client_ = n_->serviceClient<squirrel_object_perception_msgs::Recognize>(service_name_sv_rec);
 
         if(n_->getParam ( "directory", directory_ ) && !directory_.empty())
