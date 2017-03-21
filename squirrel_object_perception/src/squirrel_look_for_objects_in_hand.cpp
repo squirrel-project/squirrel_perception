@@ -190,8 +190,9 @@ protected:
             zyl_marker.color.a = 0.6;
             marker_pub.publish(zyl_marker);
 
-            //TODO add 10 cm in y direction to hand_base_link
-            double obj_dist = sqrt(after.pose.position.x * after.pose.position.x + after.pose.position.y * after.pose.position.y +
+            //add 10 cm in y direction to hand_base_link
+            double obj_dist = sqrt(after.pose.position.x * after.pose.position.x +
+                                   (after.pose.position.y - 0.1) * (after.pose.position.y - 0.1) +
                                    after.pose.position.z * after.pose.position.z);
             ROS_INFO("Distance between object and hand: %f", obj_dist);
             if (obj_dist > dist_to_hand_thresh) {
