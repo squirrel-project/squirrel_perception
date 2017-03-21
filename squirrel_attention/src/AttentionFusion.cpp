@@ -90,8 +90,8 @@ void AttentionFusion::observeTimerCallback(const ros::TimerEvent&)
      return;
     
     robotino_msgs::LookAtPosition srv;
-    srv.request.target = next_.point;
-    srv.request.why = reason_;
+    srv.request.target.pose.position = next_.point;
+    srv.request.reason = reason_;
     
     if (controllerSrv_.call(srv))
     {
