@@ -163,8 +163,8 @@ protected:
 
         try
         {
-            tf_listener.waitForTransform("/hand_palm_link", "/kinect_rgb_optical_frame", ros::Time::now(), ros::Duration(1.0));
-            tf_listener.transformPose("/hand_palm_link", before, after);
+            tf_listener.waitForTransform("/hand_base_link", "/kinect_rgb_optical_frame", ros::Time::now(), ros::Duration(1.0));
+            tf_listener.transformPose("/hand_base_link", before, after);
 
             visualization_msgs::Marker zyl_marker;
             zyl_marker.header.frame_id = after.header.frame_id;
@@ -190,6 +190,7 @@ protected:
             zyl_marker.color.a = 0.6;
             marker_pub.publish(zyl_marker);
 
+            //TODO add 10 cm in y direction to hand_base_link
             double obj_dist = sqrt(after.pose.position.x * after.pose.position.x + after.pose.position.y * after.pose.position.y +
                                    after.pose.position.z * after.pose.position.z);
             ROS_INFO("Distance between object and hand: %f", obj_dist);
@@ -224,7 +225,7 @@ protected:
         ros::ServiceClient client = nh_.serviceClient<squirrel_view_controller_msgs::LookAtPosition>("/squirrel_view_controller/look_at_position");
 
         squirrel_view_controller_msgs::LookAtPosition srv;
-        srv.request.target.header.frame_id= "/hand_palm_link";
+        srv.request.target.header.frame_id= "/hand_base_link";
         srv.request.target.pose.position.x = 0.0;
         srv.request.target.pose.position.y = 0.1;
         srv.request.target.pose.position.z = 0.0;
