@@ -303,6 +303,9 @@ public:
     void executeCB(const squirrel_object_perception_msgs::LookForObjectsGoalConstPtr &goal)
     {
         called_cam_service = false;
+        success = false;
+        result_.objects_added.clear();
+        result_.objects_updated.clear();
         sceneObject.id = goal->id;
 
         sensor_msgs::ImageConstPtr sceneConst;
