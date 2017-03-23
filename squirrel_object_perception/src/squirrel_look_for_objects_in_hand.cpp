@@ -359,7 +359,9 @@ public:
         }
 
         //move hand
-        mode_pub.publish(10);
+        std_msgs::Int32 switch_mode;
+        switch_mode.data = 10;
+        mode_pub.publish(switch_mode);
         sensor_msgs::JointStateConstPtr joint_state_original = ros::topic::waitForMessage<sensor_msgs::JointState>("/real/robotino/joint_control/get_state", nh_, ros::Duration(30));
         float degree_rad = 60.0 * M_PI /180.0;
         for (float f = degree_rad; f >= -degree_rad; f -= degree_rad/2)
