@@ -114,7 +114,7 @@ protected:
                     helper_pose.header.frame_id = "/kinect_rgb_optical_frame";
                     try
                     {
-                        tf_listener.waitForTransform("/map", "/kinect_rgb_optical_frame", ros::Time::now(), ros::Duration(1.0));
+                        tf_listener.waitForTransform("/map", "/kinect_rgb_optical_frame", ros::Time(0), ros::Duration(1.0));
                         tf_listener.transformPose("/map", helper_pose, helper_pose);
                         sceneObject.pose = helper_pose.pose;
                         sceneObject.header.frame_id = helper_pose.header.frame_id;
@@ -234,9 +234,9 @@ protected:
         srv.request.target.pose.position.x = 0.0;
         srv.request.target.pose.position.y = 0.1;
         srv.request.target.pose.position.z = 0.0;
-        srv.request.target.pose.orientation.w = 0.0;
-        srv.request.target.pose.orientation.w = 0.0;
-        srv.request.target.pose.orientation.w = 0.0;
+        srv.request.target.pose.orientation.x = 0.0;
+        srv.request.target.pose.orientation.y = 0.0;
+        srv.request.target.pose.orientation.z = 0.0;
         srv.request.target.pose.orientation.w = 1.0;
 
         if(client.call(srv)) {
@@ -281,13 +281,15 @@ protected:
 
     bool move_hand(float degree_rad, const sensor_msgs::JointStateConstPtr joint_state_original) {
         int hand_joint = 7;
-        sensor_msgs::JointState joint_state = *joint_state_original;
-        float tmp = joint_state_original->position[hand_joint];
+        float f = 0.02;
+        sensor_msgs::JointStateConstPtr joint_state_const = ros::topic::waitForMessage<sensor_msgs::JointState>("/real/robotino/joint_control/get_state", nh_, ros::Duration(30));
+        sensor_msgs::JointState joint_state = *joint_state_const;
+        float tmp = joint_state.position[hand_joint];
         for (int i = 0; i < joint_state.name.size(); i++) {
             joint_state.position[i] = std::numeric_limits<float>::quiet_NaN();
         }
-        joint_state.position[hand_joint] = tmp + degree_rad;
-        ROS_INFO("Hand movement: %f", tmp+degree_rad);
+        joint_state.position[hand_joint] = tmp + f;
+        ROS_INFO("Hand movement: %f", tmp+f);
 
         std_msgs::Float64MultiArray joint_array;
         joint_array.data = joint_state.position;
@@ -312,7 +314,7 @@ public:
         success = false;
         called_cam_service = false;
         recognizer_topic_ = DEFAULT_RECOGNIZER_TOPIC_;
-        dist_to_hand_thresh = 0.25;
+        dist_to_hand_thresh = 0.20;
 
         mode_pub = nh_.advertise<std_msgs::Int32>("/real/robotino/settings/switch_mode",1);
         joint_pub = nh_.advertise<std_msgs::Float64MultiArray>("/real/robotino/joint_control/move", 1);
@@ -351,7 +353,6 @@ public:
         }
 
         //the camera has to look at the hand
-        move_camera_to_hand();
         success = move_camera_to_hand();
         if (!success) {
             result_.result_status = "unable to move camera to the hand";
@@ -364,7 +365,7 @@ public:
         switch_mode.data = 10;
         mode_pub.publish(switch_mode);
         sensor_msgs::JointStateConstPtr joint_state_original = ros::topic::waitForMessage<sensor_msgs::JointState>("/real/robotino/joint_control/get_state", nh_, ros::Duration(30));
-        float degree_rad = 60.0 * M_PI /180.0;
+        float degree_rad = 6.0 * M_PI /180.0;
         for (float f = degree_rad; f >= -degree_rad; f -= degree_rad/2)
         {
             move_hand(f, joint_state_original);

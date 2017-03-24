@@ -1,12 +1,14 @@
 #include <ros/ros.h>
 #include <actionlib/server/simple_action_server.h>
-#include <squirrel_object_perception_msgs/LookForObjectsAction.h>
+#include <squirrel_object_perception_msgs/RecognizeObjectsAction.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/Image.h>
+#include <std_srvs/Empty.h>
 #include <squirrel_object_perception_msgs/Recognize.h>
 #include <squirrel_planning_knowledge_msgs/UpdateObjectService.h>
 #include <squirrel_planning_knowledge_msgs/AddObjectService.h>
 #include <squirrel_object_perception_msgs/SceneObject.h>
+#include <squirrel_view_controller_msgs/LookAtPosition.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <std_msgs/Int32MultiArray.h>
 #include <sstream>
@@ -41,11 +43,11 @@ protected:
     ros::NodeHandle nh_;
     tf::TransformListener tf_listener;
     // NodeHandle instance must be created before this line. Otherwise strange error may occur.
-    actionlib::SimpleActionServer<squirrel_object_perception_msgs::LookForObjectsAction> as_;
+    actionlib::SimpleActionServer<squirrel_object_perception_msgs::RecognizeObjectsAction> as_;
     std::string action_name_;
     // create messages that are used to published feedback/result
-    squirrel_object_perception_msgs::LookForObjectsFeedback feedback_;
-    squirrel_object_perception_msgs::LookForObjectsResult result_;
+    squirrel_object_perception_msgs::RecognizeObjectsFeedback feedback_;
+    squirrel_object_perception_msgs::RecognizeObjectsResult result_;
     // create needed variables
     sensor_msgs::PointCloud2 scene;
     bool success;
@@ -216,6 +218,48 @@ protected:
         }
     }
 
+    bool moveCameraToPose(geometry_msgs::PoseStamped pose) {
+        ros::ServiceClient client = nh_.serviceClient<squirrel_view_controller_msgs::LookAtPosition>("/squirrel_view_controller/look_at_position");
+
+        squirrel_view_controller_msgs::LookAtPosition srv;
+        srv.request.target.header.frame_id= pose.header.frame_id;
+        srv.request.target.pose.position.x = pose.pose.position.x;
+        srv.request.target.pose.position.y = pose.pose.position.y;
+        srv.request.target.pose.position.z = pose.pose.position.z;
+        srv.request.target.pose.orientation.x = 0.0;
+        srv.request.target.pose.orientation.y = 0.0;
+        srv.request.target.pose.orientation.z = 0.0;
+        srv.request.target.pose.orientation.w = 1.0;
+
+        if(client.call(srv)) {
+            ROS_INFO("Moved camera to hand");
+            return true;
+        } else {
+            ROS_INFO("Did NOT move camera to hand");
+            return false;
+        }
+    }
+
+    bool moveCameraToDefault() {
+        //move back to default position
+        ros::ServiceClient tilt_client = nh_.serviceClient<std_srvs::Empty>("/tilt_controller/resetPosition");
+
+        std_srvs::Empty e;
+        if (!tilt_client.call(e))
+        {
+            ROS_ERROR("Failed to move camera back to default tilt position");
+            return false;
+        }
+
+        ros::ServiceClient pan_client = nh_.serviceClient<std_srvs::Empty>("/pan_controller/resetPosition");
+        if(!pan_client.call(e))
+        {
+            ROS_ERROR("Failed to move camera back to default pan position");
+            return false;
+        }
+        return true;
+    }
+
 public:
 
     RecognizeObjectsAction(ros::NodeHandle &nh, std::string name) :
@@ -238,7 +282,7 @@ public:
     {
     }
 
-    void executeCB(const squirrel_object_perception_msgs::LookForObjectsGoalConstPtr &goal)
+    void executeCB(const squirrel_object_perception_msgs::RecognizeObjectsGoalConstPtr &goal)
     {
         called_cam_service = false;
         result_.objects_added.clear();
@@ -251,6 +295,13 @@ public:
         {
             ROS_INFO("%s: Preempted", action_name_.c_str());
             as_.setPreempted(result_);
+        }
+
+        success = moveCameraToPose(goal->look_at_pose);
+        if (!success) {
+            result_.result_status = "Could not move camera to default position";
+            as_.setAborted(result_);
+            return;
         }
 
         // get data from depth camera
@@ -268,7 +319,7 @@ public:
 
 
         ROS_INFO("%s: Received data", action_name_.c_str());
-        if (goal->look_for_object == squirrel_object_perception_msgs::LookForObjectsGoal::CHECK) {
+        if (goal->look_for_object == squirrel_object_perception_msgs::RecognizeObjectsGoal::CHECK) {
             //get lump size from DB and filter cloud for segmentation to cut off unnecessary parts
             ROS_INFO("Checking out a lump");
 
@@ -343,6 +394,7 @@ public:
         }
 
         success = do_recognition();
+        moveCameraToDefault();
 
         if(success)
         {
