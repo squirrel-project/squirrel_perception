@@ -27,6 +27,8 @@ private:
     std::string directory_;
     std::string topic_;
     bool called_service_;
+    sensor_msgs::Image::ConstPtr scene;
+
 
 public:
     Recognizer2dDemo()
@@ -45,8 +47,8 @@ public:
             std::cout << "found " << srv_rec.response.ids.size() << " objects:\n";
             for(size_t i = 0; i < srv_rec.response.ids.size(); i++)
             {
-              std::cout << " ID: " << srv_rec.response.ids[i] <<
-                " position: " << srv_rec.response.transforms[i].translation << std::endl;
+              std::cout << " ID: " << srv_rec.response.ids[i] << " with confidence " << srv_rec.response.confidences[i] <<
+                "\n position: " << srv_rec.response.transforms[i].translation << std::endl;
             }
         }
         else
@@ -66,7 +68,7 @@ public:
             cv_bridge::CvImage out_msg;
             out_msg.header.frame_id = "/kinect_rgb_optical_frame";
             out_msg.header.stamp = ros::Time::now();
-            out_msg.encoding = sensor_msgs::image_encodings::RGB8;
+            out_msg.encoding = sensor_msgs::image_encodings::BGR8;
             out_msg.image = image;
 
             squirrel_object_perception_msgs::Recognize2d srv_rec;
@@ -77,8 +79,8 @@ public:
                 std::cout << "found " << srv_rec.response.ids.size() << " objects:\n";
                 for(size_t i = 0; i < srv_rec.response.ids.size(); i++)
                 {
-                  std::cout << " ID: " << srv_rec.response.ids[i] << 
-                    " position: " << srv_rec.response.transforms[i].translation << std::endl;
+                  std::cout << " ID: " << srv_rec.response.ids[i] << " with confidence " << srv_rec.response.confidences[i] <<
+                    "\n position: " << srv_rec.response.transforms[i].translation << std::endl;
                 }
             }
             else
@@ -98,7 +100,7 @@ public:
         std::cout <<  "You can either select a topic param 'topic' or "
           " test pcd files from a directory by specifying param 'directory'." << std::endl;
 
-        std::string service_name_sv_rec = "/squirrel_recognizer_wizard/squirrel_wizard_recognize2d";
+        std::string service_name_sv_rec = "/squirrel_recognize_objects_2d";
         sv_rec_client_ = n_->serviceClient<squirrel_object_perception_msgs::Recognize2d>(service_name_sv_rec);
 
         if(n_->getParam ( "directory", directory_ ) && !directory_.empty())
@@ -115,10 +117,15 @@ public:
             }
 
             std::cout << "Connecting to camera on topic " << topic_ << std::endl;
+            //for (int i = 0; i < 10; i++) {
+//                scene = ros::topic::waitForMessage<sensor_msgs::Image>(topic_, *n_, ros::Duration(20));
+//            //}
+//            callSvRecognizerUsingCam(scene);
 
             ros::Subscriber sub_pc = n_->subscribe (topic_, 1, &Recognizer2dDemo::callSvRecognizerUsingCam, this);
             ros::Rate loop_rate (1);
             // poll until we did receive a point cloud
+            sleep(2);
             while(!called_service_)
             {
                 ros::spinOnce ();
