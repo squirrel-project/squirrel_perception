@@ -224,14 +224,20 @@ protected:
         squirrel_view_controller_msgs::LookAtPosition srv;
         srv.request.target.header.frame_id= pose.header.frame_id;
         srv.request.target.pose.position.x = pose.pose.position.x;
-        srv.request.target.pose.position.y = pose.pose.position.x;
-        srv.request.target.pose.position.z = pose.pose.position.x;
-        srv.request.target.pose.orientation.w = 0.0;
-        srv.request.target.pose.orientation.w = 0.0;
-        srv.request.target.pose.orientation.w = 0.0;
+        srv.request.target.pose.position.y = pose.pose.position.y;
+        srv.request.target.pose.position.z = pose.pose.position.z;
+        srv.request.target.pose.orientation.x = 0.0;
+        srv.request.target.pose.orientation.y = 0.0;
+        srv.request.target.pose.orientation.z = 0.0;
         srv.request.target.pose.orientation.w = 1.0;
 
-
+        if(client.call(srv)) {
+            ROS_INFO("Moved camera to hand");
+            return true;
+        } else {
+            ROS_INFO("Did NOT move camera to hand");
+            return false;
+        }
     }
 
 public:
