@@ -240,6 +240,26 @@ protected:
         }
     }
 
+    bool moveCameraToDefault() {
+        //move back to default position
+        ros::ServiceClient tilt_client = nh_.serviceClient<std_srvs::Empty>("/tilt_controller/resetPosition");
+
+        std_srvs::Empty e;
+        if (!tilt_client.call(e))
+        {
+            ROS_ERROR("Failed to move camera back to default tilt position");
+            return false;
+        }
+
+        ros::ServiceClient pan_client = nh_.serviceClient<std_srvs::Empty>("/pan_controller/resetPosition");
+        if(!pan_client.call(e))
+        {
+            ROS_ERROR("Failed to move camera back to default pan position");
+            return false;
+        }
+        return true;
+    }
+
 public:
 
     RecognizeObjectsAction(ros::NodeHandle &nh, std::string name) :
@@ -374,6 +394,7 @@ public:
         }
 
         success = do_recognition();
+        moveCameraToDefault();
 
         if(success)
         {
