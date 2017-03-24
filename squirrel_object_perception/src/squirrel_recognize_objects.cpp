@@ -209,7 +209,7 @@ protected:
     {
         if (!called_cam_service) { //this is a little hack
             std::cout << "Waiting for point cloud." << std::endl;
-            sceneConst = ros::topic::waitForMessage<sensor_msgs::PointCloud2>("/kinect/depth_registered/points", nh_, ros::Duration(20));
+            sceneConst = ros::topic::waitForMessage<sensor_msgs::PointCloud2>("/kinect/depth_registered/points", nh_);
             std::cout << "Received point cloud." << std::endl;
             scene = *sceneConst;
             called_cam_service = true;
