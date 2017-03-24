@@ -15,7 +15,7 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <tf/transform_listener.h>
 #include <tf/transform_broadcaster.h>
-#include <v4r/segmentation/pcl_segmentation_methods.h>
+#include <v4r/segmentation/dominant_plane_segmenter.h>
 #include <squirrel_object_perception_msgs/SegmentInit.h>
 #include <squirrel_object_perception_msgs/SegmentOnce.h>
 
@@ -93,7 +93,7 @@ private:
   std::list<PersistentObject> knownObjects;
   // point index vectors of current segmentation call
   std::vector<SegmentationResult> results;
-  v4r::PCLSegmenter<PointT> *segmenter_;
+  v4r::DominantPlaneSegmenter<PointT> *segmenter_;
 
   geometry_msgs::PoseStamped kinect2base_link(double x, double y, double z);
   geometry_msgs::PoseStamped base_link2kinect(double x, double y, double z);

@@ -5,7 +5,7 @@ project(squirrel_recognition)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 
-find_package(catkin REQUIRED COMPONENTS roscpp rospy squirrel_object_perception_msgs genmsg cv_bridge sensor_msgs image_transport)
+find_package(catkin REQUIRED COMPONENTS roscpp rospy squirrel_object_perception_msgs genmsg cv_bridge sensor_msgs image_transport tf tf2)
 
 find_package( PCL 1.7 REQUIRED )
 find_package( OpenCV 2.4 REQUIRED )
@@ -21,7 +21,7 @@ find_package( V4R REQUIRED )
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
    INCLUDE_DIRS include
-   CATKIN_DEPENDS roscpp rospy squirrel_object_perception_msgs
+   CATKIN_DEPENDS roscpp rospy squirrel_object_perception_msgs tf tf2
 )
 
 ###########
@@ -43,12 +43,19 @@ include_directories(include
 add_executable(squirrel_recognizer src/recognizer_ros.cpp ${incs})
 add_dependencies(squirrel_recognizer squirrel_object_perception_msgs_generate_messages_cpp)
 add_executable(test_squirrel_recognizer src/test_recognizer.cpp ${incs})
+add_dependencies(test_squirrel_recognizer squirrel_object_perception_msgs_generate_messages_cpp)
+
+add_executable(squirrel_recognizer2d src/recognizer2d_ros.cpp ${incs})
+add_dependencies(squirrel_recognizer2d squirrel_object_perception_msgs_generate_messages_cpp)
+add_executable(test_squirrel_recognizer2d src/test_recognizer2d.cpp ${incs})
+add_dependencies(test_squirrel_recognizer2d squirrel_object_perception_msgs_generate_messages_cpp)
+
 add_executable(squirrel_recognizer_wizard src/recognizer_wizard.cpp ${incs})
 add_dependencies(squirrel_recognizer_wizard squirrel_object_perception_msgs_generate_messages_cpp)
 add_executable(test_squirrel_recognizer_wizard src/test_recognizer_wizard.cpp ${incs})
 add_dependencies(test_squirrel_recognizer_wizard squirrel_object_perception_msgs_generate_messages_cpp)
 
-add_dependencies(test_squirrel_recognizer squirrel_object_perception_msgs_generate_messages_cpp)
+
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
@@ -61,6 +68,20 @@ target_link_libraries(squirrel_recognizer
 )
 
 target_link_libraries(test_squirrel_recognizer
+   ${catkin_LIBRARIES}
+   ${PCL_LIBRARIES}
+   ${OpenCV_LIBS}
+   ${V4R_LIBS}
+)
+
+target_link_libraries(squirrel_recognizer2d
+   ${catkin_LIBRARIES}
+   ${PCL_LIBRARIES}
+   ${OpenCV_LIBS}
+   ${V4R_LIBS}
+)
+
+target_link_libraries(test_squirrel_recognizer2d
    ${catkin_LIBRARIES}
    ${PCL_LIBRARIES}
    ${OpenCV_LIBS}

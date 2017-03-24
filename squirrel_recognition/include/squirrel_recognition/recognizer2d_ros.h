@@ -1,7 +1,6 @@
 #include <squirrel_object_perception_msgs/Recognize2d.h>
 #include <image_transport/image_transport.h>
 #include <v4r/recognition/IMKRecognizer.h>
-#include <squirrel_object_perception_msgs/Recognize2d.h>
 
 namespace v4r
 {
@@ -22,7 +21,7 @@ private:
     boost::shared_ptr<image_transport::ImageTransport> it_;
 
     double thr_conf = 0.4;
-    std::string filenames, base_dir;
+    std::string base_dir, codebook_filename;
     std::vector<std::string> object_names;
 
     void setup(int argc, char **argv);
@@ -31,6 +30,7 @@ private:
 
 public:
     Recognizer2dROS() {
+        codebook_filename="";
     }
 
     bool recognize2dROS (squirrel_object_perception_msgs::Recognize2d::Request & req,
