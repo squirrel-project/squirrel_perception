@@ -386,7 +386,7 @@ public:
                 as_.setAborted(result_);
                 return;
             }
-            if (max_conf = 1.0) {
+            if (max_conf == 1.0) {
                 break;
             }
         }
