@@ -282,11 +282,12 @@ protected:
     bool move_hand(float degree_rad, const sensor_msgs::JointStateConstPtr joint_state_original) {
         int hand_joint = 7;
         sensor_msgs::JointState joint_state = *joint_state_original;
-        float tmp = joint_state.position[hand_joint];
+        float tmp = joint_state_original->position[hand_joint];
         for (int i = 0; i < joint_state.name.size(); i++) {
             joint_state.position[i] = std::numeric_limits<float>::quiet_NaN();
         }
         joint_state.position[hand_joint] = tmp + degree_rad;
+        ROS_INFO("Hand movement: %f", tmp+degree_rad);
 
         std_msgs::Float64MultiArray joint_array;
         joint_array.data = joint_state.position;
@@ -385,6 +386,9 @@ public:
                 as_.setAborted(result_);
                 return;
             }
+            if (max_conf = 1.0) {
+                break;
+            }
         }
         //move camera back to default position
         success = moveCameraToDefault();
@@ -396,7 +400,7 @@ public:
 
         if (max_conf == std::numeric_limits<float>::max()) {
             ROS_INFO("No object was recognized close to the hand");
-            success = false;
+            success = true;
         } else {
             std::cout << "Category: " << sceneObject.category << std::endl;
             result_.objects_added.push_back(sceneObject);
