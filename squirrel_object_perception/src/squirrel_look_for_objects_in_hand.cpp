@@ -114,7 +114,7 @@ protected:
                     helper_pose.header.frame_id = "/kinect_rgb_optical_frame";
                     try
                     {
-                        tf_listener.waitForTransform("/map", "/kinect_rgb_optical_frame", ros::Time::now(), ros::Duration(1.0));
+                        tf_listener.waitForTransform("/map", "/kinect_rgb_optical_frame", ros::Time(0), ros::Duration(1.0));
                         tf_listener.transformPose("/map", helper_pose, helper_pose);
                         sceneObject.pose = helper_pose.pose;
                         sceneObject.header.frame_id = helper_pose.header.frame_id;
@@ -234,9 +234,9 @@ protected:
         srv.request.target.pose.position.x = 0.0;
         srv.request.target.pose.position.y = 0.1;
         srv.request.target.pose.position.z = 0.0;
-        srv.request.target.pose.orientation.w = 0.0;
-        srv.request.target.pose.orientation.w = 0.0;
-        srv.request.target.pose.orientation.w = 0.0;
+        srv.request.target.pose.orientation.x = 0.0;
+        srv.request.target.pose.orientation.y = 0.0;
+        srv.request.target.pose.orientation.z = 0.0;
         srv.request.target.pose.orientation.w = 1.0;
 
         if(client.call(srv)) {
@@ -314,7 +314,7 @@ public:
         success = false;
         called_cam_service = false;
         recognizer_topic_ = DEFAULT_RECOGNIZER_TOPIC_;
-        dist_to_hand_thresh = 0.25;
+        dist_to_hand_thresh = 0.20;
 
         mode_pub = nh_.advertise<std_msgs::Int32>("/real/robotino/settings/switch_mode",1);
         joint_pub = nh_.advertise<std_msgs::Float64MultiArray>("/real/robotino/joint_control/move", 1);
