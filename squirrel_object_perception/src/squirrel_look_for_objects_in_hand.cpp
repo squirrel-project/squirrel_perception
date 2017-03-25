@@ -20,12 +20,6 @@
 
 #define DEFAULT_RECOGNIZER_TOPIC_ "/squirrel_recognizer/squirrel_recognize_objects"
 
-class Object
-{
-
-public:
-    squirrel_object_perception_msgs::SceneObject sceneObject;
-};
 
 class LookForObjectsInHandAction
 {
@@ -46,12 +40,15 @@ protected:
     ros::Publisher marker_pub;
     int id_cnt_;
     bool called_cam_service;
-    squirrel_object_perception_msgs::SceneObject sceneObject;
+    //squirrel_object_perception_msgs::SceneObject sceneObject;
     float max_conf;
     ros::Publisher mode_pub;
     ros::Publisher joint_pub;
+    ros::ServiceClient client;
 
     float dist_to_hand_thresh;
+    int hand_joint;
+    int DOF;
 
     // Recognition topic
     std::string recognizer_topic_;
@@ -73,15 +70,12 @@ protected:
     }
 
 
-    bool do_recognition()
+    bool do_recognition(squirrel_object_perception_msgs::SceneObject &sceneObject)
     {
         if (!ros::service::waitForService(recognizer_topic_, ros::Duration(5.0))) {
             ROS_ERROR("Recognizer not available");
             return false;
         }
-        ros::ServiceClient client = nh_.serviceClient<squirrel_object_perception_msgs::Recognize2d>(recognizer_topic_);
-        std::cout << "Recognizer topic: " << recognizer_topic_ << std::endl;
-
 
         squirrel_object_perception_msgs::Recognize2d srv;
         srv.request.image = scene;
@@ -93,11 +87,11 @@ protected:
             {
                 for (int i = 0; i < srv.response.ids.size(); i++) {
                     if (srv.response.confidences.at(i) > 0.45) {
-                        if (check_pose(srv.response.transforms.at(i))) {
-                            ROS_INFO("Accepted pose");
-                            if (max_conf > srv.response.confidences.at(i)) {
+                        if (max_conf < srv.response.confidences.at(i)) {
+                            if (check_pose(srv.response.transforms.at(i))) {
                                 max_conf = srv.response.confidences.at(i);
                                 obj_ind = i;
+                                std::cout << "Recognized object as " << srv.response.ids.at(i).data << std::endl;
                             }
                         }
                     }
@@ -159,7 +153,6 @@ protected:
     }
 
     bool check_pose(geometry_msgs::Transform transf) {
-        ROS_INFO("Check pose");
         geometry_msgs::PoseStamped before, after;
 
         before.pose = transformToPose(transf);
@@ -170,35 +163,9 @@ protected:
             tf_listener.waitForTransform("/hand_palm_link", "/kinect_rgb_optical_frame", ros::Time::now(), ros::Duration(1.0));
             tf_listener.transformPose("/hand_palm_link", before, after);
 
-            visualization_msgs::Marker zyl_marker;
-            zyl_marker.header.frame_id = after.header.frame_id;
-            zyl_marker.header.stamp = ros::Time();
-            zyl_marker.ns = "marker";
-            zyl_marker.id = std::atoi(get_unique_object_id().c_str());
-            zyl_marker.lifetime = ros::Duration();
-            zyl_marker.type = visualization_msgs::Marker::CYLINDER;
-            zyl_marker.action = visualization_msgs::Marker::ADD;
-            zyl_marker.pose.position.x = after.pose.position.x;
-            zyl_marker.pose.position.y = after.pose.position.y;
-            zyl_marker.pose.position.z = after.pose.position.z;
-            zyl_marker.pose.orientation.x = 0.0;
-            zyl_marker.pose.orientation.y = 0.0;
-            zyl_marker.pose.orientation.z = 0.0;
-            zyl_marker.pose.orientation.w = 1.0;
-            zyl_marker.scale.x = 0.1;
-            zyl_marker.scale.y = 0.1;
-            zyl_marker.scale.z = 0.1/2;
-            zyl_marker.color.r = 0.0;
-            zyl_marker.color.g = 0.0;
-            zyl_marker.color.b = 0.0;
-            zyl_marker.color.a = 0.6;
-            marker_pub.publish(zyl_marker);
-
-            //add 10 cm in z direction to hand_palm_link
             double obj_dist = sqrt(after.pose.position.x * after.pose.position.x +
                                    after.pose.position.y * (after.pose.position.y) +
-                                   (after.pose.position.z - 0.1) * (after.pose.position.z - 0.1));
-            ROS_INFO("Distance between object and hand: %f", obj_dist);
+                                   (after.pose.position.z-0.1) * (after.pose.position.z-0.1));
             if (obj_dist > dist_to_hand_thresh) {
                 return false;
             } else {
@@ -252,8 +219,9 @@ protected:
     void getImage(const sensor_msgs::Image::ConstPtr& msg)
     {
         if (!called_cam_service) { //this is a little hack
+            sleep(1);
             sensor_msgs::ImageConstPtr sceneConst = ros::topic::waitForMessage<sensor_msgs::Image>("/kinect/rgb/image_rect_color", nh_);
-            std::cout << "Received camera image.\n" << std::endl;
+            std::cout << "Received camera image." << std::endl;
             scene = *sceneConst;
             called_cam_service = true;
         }
@@ -279,23 +247,35 @@ protected:
         return true;
     }
 
-    bool move_hand(float degree_rad, const sensor_msgs::JointStateConstPtr joint_state_original) {
-        int hand_joint = 7;
-        float f = 0.02;
-        sensor_msgs::JointStateConstPtr joint_state_const = ros::topic::waitForMessage<sensor_msgs::JointState>("/real/robotino/joint_control/get_state", nh_, ros::Duration(30));
-        sensor_msgs::JointState joint_state = *joint_state_const;
-        float tmp = joint_state.position[hand_joint];
-        for (int i = 0; i < joint_state.name.size(); i++) {
-            joint_state.position[i] = std::numeric_limits<float>::quiet_NaN();
+    bool move_hand(float desired_angle) {
+        sensor_msgs::JointStateConstPtr current_state = ros::topic::waitForMessage<sensor_msgs::JointState>("/real/robotino/joint_control/get_state", nh_, ros::Duration(3));
+        float step_size = 0.0f;
+        if (current_state->position[hand_joint] > desired_angle) {
+            step_size = -0.02;
+        } else {
+            step_size = 0.02;
         }
-        joint_state.position[hand_joint] = tmp + f;
-        ROS_INFO("Hand movement: %f", tmp+f);
 
         std_msgs::Float64MultiArray joint_array;
-        joint_array.data = joint_state.position;
+        for (int i = 0; i < DOF; i++) {
+            joint_array.data.push_back(std::numeric_limits<double>::quiet_NaN());
+        }
 
-        joint_pub.publish(joint_array);
-
+        float dist = std::numeric_limits<float>::max();
+        while (dist > 0.02) {
+            sensor_msgs::JointStateConstPtr current_state = ros::topic::waitForMessage<sensor_msgs::JointState>("/real/robotino/joint_control/get_state", nh_, ros::Duration(3));
+            if (current_state == NULL) {
+                return false;
+            }
+            if (dist == std::fabs(desired_angle - current_state->position[hand_joint])) {
+                ROS_INFO("Hand reached its limit");
+                return false;
+            }
+            dist = std::fabs(desired_angle - current_state->position[hand_joint]);
+            joint_array.data[hand_joint] = current_state->position[hand_joint] + step_size;
+            joint_pub.publish(joint_array);
+        }
+        ROS_INFO("Moved hand");
 
         return true;
 
@@ -314,7 +294,9 @@ public:
         success = false;
         called_cam_service = false;
         recognizer_topic_ = DEFAULT_RECOGNIZER_TOPIC_;
-        dist_to_hand_thresh = 0.20;
+        dist_to_hand_thresh = 0.15;
+        hand_joint = 7;
+        DOF = 8;
 
         mode_pub = nh_.advertise<std_msgs::Int32>("/real/robotino/settings/switch_mode",1);
         joint_pub = nh_.advertise<std_msgs::Float64MultiArray>("/real/robotino/joint_control/move", 1);
@@ -325,6 +307,10 @@ public:
             ROS_INFO("Listening to recognizer topic on %s", recognizer_topic_.c_str());
         else
             ROS_WARN("Recognizer topic not specified!");
+
+        client = nh_.serviceClient<squirrel_object_perception_msgs::Recognize2d>(recognizer_topic_);
+        std::cout << "Recognizer topic: " << recognizer_topic_ << std::endl;
+
     }
 
     ~LookForObjectsInHandAction(void)
@@ -333,18 +319,16 @@ public:
 
     void executeCB(const squirrel_object_perception_msgs::LookForObjectsGoalConstPtr &goal)
     {
+        squirrel_object_perception_msgs::SceneObject sceneObject;
         called_cam_service = false;
         success = true;
         result_.objects_added.clear();
         result_.objects_updated.clear();
-        max_conf = std::numeric_limits<float>::max();
+        max_conf = std::numeric_limits<float>::min();
         sceneObject.id = goal->id;
 
-        sensor_msgs::ImageConstPtr sceneConst;
-        ROS_INFO("%s: executeCB started", action_name_.c_str());
-
+        ROS_INFO("%s: executeCB from recognition in hand is started", action_name_.c_str());
         sleep(2); // HACK: Michael Zillich
-
 
         if (as_.isPreemptRequested())
         {
@@ -365,10 +349,10 @@ public:
         switch_mode.data = 10;
         mode_pub.publish(switch_mode);
         sensor_msgs::JointStateConstPtr joint_state_original = ros::topic::waitForMessage<sensor_msgs::JointState>("/real/robotino/joint_control/get_state", nh_, ros::Duration(30));
-        float degree_rad = 6.0 * M_PI /180.0;
+        float degree_rad = 60.0 * M_PI /180.0;
         for (float f = degree_rad; f >= -degree_rad; f -= degree_rad/2)
         {
-            move_hand(f, joint_state_original);
+            move_hand(joint_state_original->position[hand_joint] + f);
             ros::Subscriber sub_pc = nh_.subscribe ("/kinect/rgb/image_rect_color", 1, &LookForObjectsInHandAction::getImage, this);
             ros::Rate loop_rate (1);
             // poll until we did receive a point cloud
@@ -379,9 +363,10 @@ public:
                 loop_rate.sleep ();
             }
             sub_pc.shutdown();
+            called_cam_service = false;
 
             //recognize
-            success = do_recognition();
+            success = do_recognition(sceneObject);
             if (!success) {
                 result_.result_status = "unable to recognize";
                 as_.setAborted(result_);
@@ -399,8 +384,13 @@ public:
             return;
         }
 
-        if (max_conf == std::numeric_limits<float>::max()) {
+        if (max_conf == std::numeric_limits<float>::min()) {
             ROS_INFO("No object was recognized close to the hand");
+            //Call the wizard
+            squirrel_object_perception_msgs::Recognize2d srv;
+            if (client.call(srv)) {
+                std::cout << srv.response.ids.at(0) << std::endl;
+            }
             success = true;
         } else {
             std::cout << "Category: " << sceneObject.category << std::endl;
