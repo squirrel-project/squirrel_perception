@@ -20,12 +20,6 @@
 
 #define DEFAULT_RECOGNIZER_TOPIC_ "/squirrel_recognizer/squirrel_recognize_objects"
 
-class Object
-{
-
-public:
-    squirrel_object_perception_msgs::SceneObject sceneObject;
-};
 
 class LookForObjectsInHandAction
 {
@@ -46,7 +40,7 @@ protected:
     ros::Publisher marker_pub;
     int id_cnt_;
     bool called_cam_service;
-    squirrel_object_perception_msgs::SceneObject sceneObject;
+    //squirrel_object_perception_msgs::SceneObject sceneObject;
     float max_conf;
     ros::Publisher mode_pub;
     ros::Publisher joint_pub;
@@ -75,7 +69,7 @@ protected:
     }
 
 
-    bool do_recognition()
+    bool do_recognition(squirrel_object_perception_msgs::SceneObject &sceneObject)
     {
         if (!ros::service::waitForService(recognizer_topic_, ros::Duration(5.0))) {
             ROS_ERROR("Recognizer not available");
@@ -99,6 +93,7 @@ protected:
                             if (check_pose(srv.response.transforms.at(i))) {
                                 max_conf = srv.response.confidences.at(i);
                                 obj_ind = i;
+                                std::cout << "Recognized object as " << srv.response.ids.at(i) << std::endl;
                             }
                         }
                     }
@@ -160,7 +155,6 @@ protected:
     }
 
     bool check_pose(geometry_msgs::Transform transf) {
-        ROS_INFO("Check pose");
         geometry_msgs::PoseStamped before, after;
 
         before.pose = transformToPose(transf);
@@ -324,6 +318,7 @@ public:
 
     void executeCB(const squirrel_object_perception_msgs::LookForObjectsGoalConstPtr &goal)
     {
+        squirrel_object_perception_msgs::SceneObject sceneObject;
         called_cam_service = false;
         success = true;
         result_.objects_added.clear();
@@ -370,7 +365,7 @@ public:
             called_cam_service = false;
 
             //recognize
-            success = do_recognition();
+            success = do_recognition(sceneObject);
             if (!success) {
                 result_.result_status = "unable to recognize";
                 as_.setAborted(result_);
