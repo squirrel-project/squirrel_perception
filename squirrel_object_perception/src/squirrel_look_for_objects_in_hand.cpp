@@ -227,6 +227,7 @@ protected:
     void getImage(const sensor_msgs::Image::ConstPtr& msg)
     {
         if (!called_cam_service) { //this is a little hack
+            sleep(1);
             sensor_msgs::ImageConstPtr sceneConst = ros::topic::waitForMessage<sensor_msgs::Image>("/kinect/rgb/image_rect_color", nh_);
             std::cout << "Received camera image." << std::endl;
             scene = *sceneConst;
