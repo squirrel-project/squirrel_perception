@@ -20,12 +20,6 @@
 
 #define DEFAULT_RECOGNIZER_TOPIC_ "/squirrel_recognizer/squirrel_recognize_objects"
 
-class Object
-{
-
-public:
-    squirrel_object_perception_msgs::SceneObject sceneObject;
-};
 
 class LookForObjectsInHandAction
 {
@@ -46,10 +40,11 @@ protected:
     ros::Publisher marker_pub;
     int id_cnt_;
     bool called_cam_service;
-    squirrel_object_perception_msgs::SceneObject sceneObject;
+    //squirrel_object_perception_msgs::SceneObject sceneObject;
     float max_conf;
     ros::Publisher mode_pub;
     ros::Publisher joint_pub;
+    ros::ServiceClient client;
 
     float dist_to_hand_thresh;
     int hand_joint;
@@ -75,15 +70,12 @@ protected:
     }
 
 
-    bool do_recognition()
+    bool do_recognition(squirrel_object_perception_msgs::SceneObject &sceneObject)
     {
         if (!ros::service::waitForService(recognizer_topic_, ros::Duration(5.0))) {
             ROS_ERROR("Recognizer not available");
             return false;
         }
-        ros::ServiceClient client = nh_.serviceClient<squirrel_object_perception_msgs::Recognize2d>(recognizer_topic_);
-        std::cout << "Recognizer topic: " << recognizer_topic_ << std::endl;
-
 
         squirrel_object_perception_msgs::Recognize2d srv;
         srv.request.image = scene;
@@ -99,6 +91,7 @@ protected:
                             if (check_pose(srv.response.transforms.at(i))) {
                                 max_conf = srv.response.confidences.at(i);
                                 obj_ind = i;
+                                std::cout << "Recognized object as " << srv.response.ids.at(i).data << std::endl;
                             }
                         }
                     }
@@ -160,7 +153,6 @@ protected:
     }
 
     bool check_pose(geometry_msgs::Transform transf) {
-        ROS_INFO("Check pose");
         geometry_msgs::PoseStamped before, after;
 
         before.pose = transformToPose(transf);
@@ -227,6 +219,7 @@ protected:
     void getImage(const sensor_msgs::Image::ConstPtr& msg)
     {
         if (!called_cam_service) { //this is a little hack
+            sleep(1);
             sensor_msgs::ImageConstPtr sceneConst = ros::topic::waitForMessage<sensor_msgs::Image>("/kinect/rgb/image_rect_color", nh_);
             std::cout << "Received camera image." << std::endl;
             scene = *sceneConst;
@@ -282,7 +275,6 @@ protected:
             joint_array.data[hand_joint] = current_state->position[hand_joint] + step_size;
             joint_pub.publish(joint_array);
         }
-
         ROS_INFO("Moved hand");
 
         return true;
@@ -302,7 +294,7 @@ public:
         success = false;
         called_cam_service = false;
         recognizer_topic_ = DEFAULT_RECOGNIZER_TOPIC_;
-        dist_to_hand_thresh = 0.20;
+        dist_to_hand_thresh = 0.15;
         hand_joint = 7;
         DOF = 8;
 
@@ -315,6 +307,10 @@ public:
             ROS_INFO("Listening to recognizer topic on %s", recognizer_topic_.c_str());
         else
             ROS_WARN("Recognizer topic not specified!");
+
+        client = nh_.serviceClient<squirrel_object_perception_msgs::Recognize2d>(recognizer_topic_);
+        std::cout << "Recognizer topic: " << recognizer_topic_ << std::endl;
+
     }
 
     ~LookForObjectsInHandAction(void)
@@ -323,6 +319,7 @@ public:
 
     void executeCB(const squirrel_object_perception_msgs::LookForObjectsGoalConstPtr &goal)
     {
+        squirrel_object_perception_msgs::SceneObject sceneObject;
         called_cam_service = false;
         success = true;
         result_.objects_added.clear();
@@ -369,7 +366,7 @@ public:
             called_cam_service = false;
 
             //recognize
-            success = do_recognition();
+            success = do_recognition(sceneObject);
             if (!success) {
                 result_.result_status = "unable to recognize";
                 as_.setAborted(result_);
@@ -387,8 +384,13 @@ public:
             return;
         }
 
-        if (max_conf == std::numeric_limits<float>::max()) {
+        if (max_conf == std::numeric_limits<float>::min()) {
             ROS_INFO("No object was recognized close to the hand");
+            //Call the wizard
+            squirrel_object_perception_msgs::Recognize2d srv;
+            if (client.call(srv)) {
+                std::cout << srv.response.ids.at(0) << std::endl;
+            }
             success = true;
         } else {
             std::cout << "Category: " << sceneObject.category << std::endl;
