@@ -22,6 +22,8 @@
 #include <pcl/filters/passthrough.h>
 #include <pcl_ros/transforms.h>
 #include "mongodb_store/message_store.h"
+#include <squirrel_object_perception_msgs/SegmentInit.h>
+#include <squirrel_object_perception_msgs/SegmentOnce.h>
 
 #define DEFAULT_RECOGNIZER_TOPIC_ "/squirrel_recognizer/squirrel_recognize_objects"
 
@@ -52,9 +54,11 @@ protected:
     sensor_msgs::PointCloud2 scene;
     bool success;
     bool called_cam_service;
-    // just for now
+    int unique_id;
     sensor_msgs::PointCloud2ConstPtr sceneConst;
-
+    ros::Publisher markerPublisher;
+    ros::ServiceClient segm_init_client;
+    ros::ServiceClient segm_once_client;
     mongodb_store::MessageStoreProxy message_store;
 
 
@@ -89,12 +93,73 @@ protected:
                     object.cloud.header.frame_id = srv.request.cloud.header.frame_id;
                     transformPointCloud(object.cloud, object.cloud.header.frame_id, "/map");
                     std::cout << "Category: " << object.category << std::endl;
-                    object.pose = transform(srv.response.centroid.at(i).x, srv.response.centroid.at(i).y, srv.response.centroid.at(i).z,
-                                            srv.request.cloud.header.frame_id, "/map").pose;
+                    //object.pose = transform(srv.response.centroid.at(i).x, srv.response.centroid.at(i).y, srv.response.centroid.at(i).z,
+                    //                        srv.request.cloud.header.frame_id, "/map").pose;
                     //TODO: transform BBox from Recognizer to BCylinder for SceneObject
                     //std::cout << "Position from Recognizer in map-frame (" << object.pose.position.x << "; "
                     //             << object.pose.position.y << "; " << object.pose.position.z << "; " << std::endl;
                     //compareToDB(sceneObject);
+                    if (srv.response.confidence.size() !=0 &&srv.response.confidence.at(i) == 1.0) {
+                        squirrel_object_perception_msgs::SegmentOnce::Response segm_result;
+                        bool seg_ok = do_segmentation(scene, segm_result);
+                        if (!seg_ok) {
+                            result_.used_wizard = true;
+                        } else {
+                            object.pose = segm_result.poses[0].pose;
+                            pcl::PointCloud<PointT>::Ptr cloud_segm(new pcl::PointCloud<PointT>);
+                            pcl::fromROSMsg(segm_result.points[0], *cloud_segm);
+                            transformPointCloud(cloud_segm, cloud_segm->header.frame_id, "/base_link");
+                            PointT min_p, max_p;
+                            pcl::getMinMax3D(*cloud_segm, min_p, max_p);
+                            object.bounding_cylinder.height = max_p.z - min_p.z;
+                            object.bounding_cylinder.diameter = std::max((max_p.x - min_p.x), (max_p.y - min_p.y));
+                        }
+                    }
+                    else {
+                        //transform bounding box into bounding cylinder
+                        squirrel_object_perception_msgs::BBox bbox = srv.response.bbox.at(i);
+                        transform_bbox(bbox, "/kinect_depth_optical_frame", "/map");
+                        double max_x = std::numeric_limits<float>::min();
+                        double max_y = std::numeric_limits<float>::min();
+                        double max_z = std::numeric_limits<float>::min();
+                        double min_x = std::numeric_limits<float>::max();
+                        double min_y = std::numeric_limits<float>::max();
+                        for (int i = 0; i < bbox.point.size(); i++) {
+                            if (bbox.point.at(i).x > max_x) {
+                                max_x = bbox.point.at(i).x;
+                            }
+                            if (bbox.point.at(i).y > max_y) {
+                                max_y = bbox.point.at(i).y;
+                            }
+                            if (bbox.point.at(i).z > max_z) {
+                                max_z = bbox.point.at(i).z;
+                            }
+                            if (bbox.point.at(i).x < min_x) {
+                                min_x = bbox.point.at(i).x;
+                            }
+                            if (bbox.point.at(i).y < min_y) {
+                                min_y = bbox.point.at(i).y;
+                            }
+                        }
+                        object.bounding_cylinder.height = max_z;
+
+                        float max_dist = std::numeric_limits<float>::min();
+                        for (int p1 = 0; p1 < bbox.point.size(); p1++) {
+                            for (int p2 = 0; p2 < bbox.point.size(); p2++) {
+                                geometry_msgs::Point32 point1 = bbox.point.at(p1);
+                                geometry_msgs::Point32 point2 = bbox.point.at(p2);
+                                float dist = (point1.x - point2.x) * (point1.x - point2.x) + (point1.y - point2.y) * (point1.y - point2.y);
+                                dist = std::sqrt(dist);
+                                if (max_dist < dist) {
+                                    max_dist = dist;
+                                }
+                            }
+                        }
+                        object.bounding_cylinder.diameter = max_dist;
+                        object.pose.position.x = (max_x + min_x)/2;
+                        object.pose.position.y = (max_y - min_y)/2;
+                        visualizeBCylinder(object);
+                    }
                     result_.objects_added.push_back(object);
                 }
                 return true;
@@ -107,6 +172,84 @@ protected:
         {
             return false;
         }
+    }
+
+    bool transform_bbox(squirrel_object_perception_msgs::BBox &bbox, const std::string &from, const std::string &to) {
+        geometry_msgs::PoseStamped before, after;
+
+        for (int i = 0; i < bbox.point.size(); i++) {
+            before.pose.position.x = bbox.point[i].x;
+            before.pose.position.y = bbox.point[i].y;
+            before.pose.position.z = bbox.point[i].z;
+            before.pose.orientation.x = 0;
+            before.pose.orientation.y = 0;
+            before.pose.orientation.z = 0;
+            before.pose.orientation.w = 1;
+            before.header.frame_id = from;
+            try
+            {
+                tf_listener.waitForTransform(from, to, ros::Time(0), ros::Duration(0.2));
+                tf_listener.transformPose(to, before, after);
+                bbox.point[i].x = after.pose.position.x;
+                bbox.point[i].y = after.pose.position.y;
+                bbox.point[i].z = after.pose.position.z;
+            }
+            catch (tf::TransformException& ex)
+            {
+                ROS_ERROR("%s: %s", ros::this_node::getName().c_str(), ex.what());
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool do_segmentation(const sensor_msgs::PointCloud2 &cloud, squirrel_object_perception_msgs::SegmentOnce::Response &segm_result) {
+        squirrel_object_perception_msgs::SegmentInit srv_init;
+        srv_init.request.cloud = cloud;
+        if (segm_init_client.call(srv_init)) {
+            ROS_INFO("Called segmentation init");
+        }
+        else {
+            ROS_ERROR("Failed to call segmentation init!");
+        }
+        squirrel_object_perception_msgs::SegmentOnce srv_once;
+        if (segm_once_client.call(srv_once)) {
+            ROS_INFO("Called segmentation once");
+            segm_result = srv_once.response;
+            return true;
+        }
+        else {
+            ROS_ERROR("Failed to call segmentation once!");
+        }
+        return false;
+    }
+
+    void visualizeBCylinder(squirrel_object_perception_msgs::SceneObject obj) {
+        visualization_msgs::Marker zyl_marker;
+        zyl_marker.header.frame_id = obj.header.frame_id;
+        zyl_marker.header.stamp = ros::Time();
+        zyl_marker.ns = "zylinder_marker";
+        zyl_marker.id = unique_id;
+        unique_id += 1;
+        zyl_marker.lifetime = ros::Duration();
+        zyl_marker.type = visualization_msgs::Marker::CYLINDER;
+        zyl_marker.action = visualization_msgs::Marker::ADD;
+        zyl_marker.pose.position.x = obj.pose.position.x;
+        zyl_marker.pose.position.y = obj.pose.position.y;
+        zyl_marker.pose.position.z = obj.pose.position.z;
+        zyl_marker.pose.orientation.x = 0.0;
+        zyl_marker.pose.orientation.y = 0.0;
+        zyl_marker.pose.orientation.z = 0.0;
+        zyl_marker.pose.orientation.w = 1.0;
+        zyl_marker.scale.x = obj.bounding_cylinder.diameter;
+        zyl_marker.scale.y = obj.bounding_cylinder.diameter;
+        zyl_marker.scale.z = obj.bounding_cylinder.height;
+        zyl_marker.color.r = 1.0;
+        zyl_marker.color.g = 0.9;
+        zyl_marker.color.b = 0.1;
+        zyl_marker.color.a = 0.4;
+
+        markerPublisher.publish(zyl_marker);
     }
 
     geometry_msgs::PoseStamped transform(double x, double y, double z, const std::string &from, const std::string &to)
@@ -271,7 +414,11 @@ public:
         nh_ = nh;
         as_.start();
         success = false;
-
+        unique_id = 0;
+        result_.used_wizard = false;
+        segm_init_client = nh_.serviceClient<squirrel_object_perception_msgs::SegmentInit>("/squirrel_segmentation_incremental_init");
+        segm_once_client = nh_.serviceClient<squirrel_object_perception_msgs::SegmentOnce>("/squirrel_segmentation_incremental_once");
+        markerPublisher = nh_.advertise<visualization_msgs::Marker>("rec_box_marker", 0);
         recognizer_topic_ = DEFAULT_RECOGNIZER_TOPIC_;
         if(nh_.getParam ( "recognizer_topic", recognizer_topic_ ))
             ROS_INFO("Listening to recognizer topic on %s", recognizer_topic_.c_str());
