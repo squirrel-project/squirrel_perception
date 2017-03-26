@@ -118,11 +118,12 @@ protected:
 
                             pcl::PointCloud<PointT>::Ptr cloud_segm(new pcl::PointCloud<PointT>);
                             pcl::fromROSMsg(segm_result.points[0], *cloud_segm);
-                            transformPointCloud(cloud_segm, cloud_segm->header.frame_id, "/base_link");
+                            transformPointCloud(cloud_segm, cloud_segm->header.frame_id, "/map");
                             PointT min_p, max_p;
                             pcl::getMinMax3D(*cloud_segm, min_p, max_p);
-                            object.bounding_cylinder.height = max_p.z - min_p.z;
-                            object.bounding_cylinder.diameter = std::max((max_p.x - min_p.x), (max_p.y - min_p.y));
+                            object.bounding_cylinder.height = max_p.z;
+                            object.bounding_cylinder.diameter = std::sqrt((max_p.x - min_p.x)* (max_p.x - min_p.x) +
+                                    (max_p.y - min_p.y) * (max_p.y - min_p.y));
                         }
                     }
                     else {
