@@ -93,8 +93,8 @@ protected:
                     object.cloud.header.frame_id = srv.request.cloud.header.frame_id;
                     transformPointCloud(object.cloud, object.cloud.header.frame_id, "/map");
                     std::cout << "Category: " << object.category << std::endl;
-                    //object.pose = transform(srv.response.centroid.at(i).x, srv.response.centroid.at(i).y, srv.response.centroid.at(i).z,
-                    //                        srv.request.cloud.header.frame_id, "/map").pose;
+                    object.pose = transform(srv.response.centroid.at(i).x, srv.response.centroid.at(i).y, srv.response.centroid.at(i).z,
+                                            srv.request.cloud.header.frame_id, "/map").pose;
                     //TODO: transform BBox from Recognizer to BCylinder for SceneObject
                     //std::cout << "Position from Recognizer in map-frame (" << object.pose.position.x << "; "
                     //             << object.pose.position.y << "; " << object.pose.position.z << "; " << std::endl;
@@ -105,7 +105,17 @@ protected:
                         if (!seg_ok) {
                             result_.used_wizard = true;
                         } else {
+                            try
+                            {
+                                tf_listener.waitForTransform(object.header.frame_id, "/map", ros::Time::now(), ros::Duration(1.0));
+                                tf_listener.transformPose("/map", segm_result.poses[0], segm_result.poses[0]);
+                            }
+                            catch (tf::TransformException& ex)
+                            {
+                                ROS_ERROR("%s: %s", ros::this_node::getName().c_str(), ex.what());
+                            }
                             object.pose = segm_result.poses[0].pose;
+
                             pcl::PointCloud<PointT>::Ptr cloud_segm(new pcl::PointCloud<PointT>);
                             pcl::fromROSMsg(segm_result.points[0], *cloud_segm);
                             transformPointCloud(cloud_segm, cloud_segm->header.frame_id, "/base_link");
@@ -119,36 +129,21 @@ protected:
                         //transform bounding box into bounding cylinder
                         squirrel_object_perception_msgs::BBox bbox = srv.response.bbox.at(i);
                         transform_bbox(bbox, "/kinect_depth_optical_frame", "/map");
-                        double max_x = std::numeric_limits<float>::min();
-                        double max_y = std::numeric_limits<float>::min();
                         double max_z = std::numeric_limits<float>::min();
-                        double min_x = std::numeric_limits<float>::max();
-                        double min_y = std::numeric_limits<float>::max();
                         for (int i = 0; i < bbox.point.size(); i++) {
-                            if (bbox.point.at(i).x > max_x) {
-                                max_x = bbox.point.at(i).x;
-                            }
-                            if (bbox.point.at(i).y > max_y) {
-                                max_y = bbox.point.at(i).y;
-                            }
                             if (bbox.point.at(i).z > max_z) {
                                 max_z = bbox.point.at(i).z;
-                            }
-                            if (bbox.point.at(i).x < min_x) {
-                                min_x = bbox.point.at(i).x;
-                            }
-                            if (bbox.point.at(i).y < min_y) {
-                                min_y = bbox.point.at(i).y;
                             }
                         }
                         object.bounding_cylinder.height = max_z;
 
                         float max_dist = std::numeric_limits<float>::min();
                         for (int p1 = 0; p1 < bbox.point.size(); p1++) {
+                            geometry_msgs::Point32 point1 = bbox.point.at(p1);
                             for (int p2 = 0; p2 < bbox.point.size(); p2++) {
-                                geometry_msgs::Point32 point1 = bbox.point.at(p1);
                                 geometry_msgs::Point32 point2 = bbox.point.at(p2);
-                                float dist = (point1.x - point2.x) * (point1.x - point2.x) + (point1.y - point2.y) * (point1.y - point2.y);
+                                float dist = (point1.x - point2.x) * (point1.x - point2.x) +
+                                        (point1.y - point2.y) * (point1.y - point2.y);
                                 dist = std::sqrt(dist);
                                 if (max_dist < dist) {
                                     max_dist = dist;
@@ -156,8 +151,6 @@ protected:
                             }
                         }
                         object.bounding_cylinder.diameter = max_dist;
-                        object.pose.position.x = (max_x + min_x)/2;
-                        object.pose.position.y = (max_y - min_y)/2;
                         visualizeBCylinder(object);
                     }
                     result_.objects_added.push_back(object);
@@ -532,6 +525,8 @@ public:
                     pass.setFilterLimits(min_p.z-0.05, max_p.z+0.05);
                     pass.setInputCloud(cloud);
                     pass.filter(*cloud);
+
+                    //TODO check if cloud should be transformed back in kinect_frame
 
                     pcl::toROSMsg(*cloud, scene);
                 }
