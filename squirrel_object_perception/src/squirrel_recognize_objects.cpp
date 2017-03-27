@@ -88,6 +88,8 @@ protected:
             ROS_INFO("Called service %s: ", recognizer_topic_.c_str());
             if (srv.response.ids.size() > 0) {
                 for (int i= 0; i < srv.response.ids.size(); i++) {
+                    object.header.frame_id = "/map";
+                    object.header.stamp = ros::Time::now();
                     object.category = srv.response.ids.at(i).data;
                     object.cloud = srv.response.models_cloud.at(i);
                     object.cloud.header.frame_id = srv.request.cloud.header.frame_id;
