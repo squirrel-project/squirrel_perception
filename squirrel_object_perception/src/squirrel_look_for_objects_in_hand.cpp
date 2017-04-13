@@ -248,6 +248,7 @@ protected:
     }
 
     bool move_hand(float desired_angle) {
+	int count_not_moved = 0;
         sensor_msgs::JointStateConstPtr current_state = ros::topic::waitForMessage<sensor_msgs::JointState>("/real/robotino/joint_control/get_state", nh_, ros::Duration(3));
         float step_size = 0.0f;
         if (current_state->position[hand_joint] > desired_angle) {
@@ -262,19 +263,29 @@ protected:
         }
 
         float dist = std::numeric_limits<float>::max();
-        while (dist > 0.02) {
+        while (dist > 0.02 && count_not_moved < 10) {
             sensor_msgs::JointStateConstPtr current_state = ros::topic::waitForMessage<sensor_msgs::JointState>("/real/robotino/joint_control/get_state", nh_, ros::Duration(3));
             if (current_state == NULL) {
                 return false;
             }
-            if (dist == std::fabs(desired_angle - current_state->position[hand_joint])) {
+            if (current_state->position[hand_joint] > 2.9-step_size || current_state->position[hand_joint] < -2.9+step_size) {
                 ROS_INFO("Hand reached its limit");
                 return false;
             }
+            else if (std::fabs(dist - std::fabs(desired_angle - current_state->position[hand_joint])) < 0.001) {
+                count_not_moved += 1;
+            }
+
             dist = std::fabs(desired_angle - current_state->position[hand_joint]);
             joint_array.data[hand_joint] = current_state->position[hand_joint] + step_size;
             joint_pub.publish(joint_array);
         }
+
+        if (count_not_moved == 10) {
+            ROS_INFO("Hand is in the same position for ten tries");
+            return false;
+        }
+
         ROS_INFO("Moved hand");
 
         return true;
@@ -349,7 +360,7 @@ public:
         switch_mode.data = 10;
         mode_pub.publish(switch_mode);
         sensor_msgs::JointStateConstPtr joint_state_original = ros::topic::waitForMessage<sensor_msgs::JointState>("/real/robotino/joint_control/get_state", nh_, ros::Duration(30));
-        float degree_rad = 60.0 * M_PI /180.0;
+        float degree_rad = 50.0 * M_PI /180.0;
         for (float f = degree_rad; f >= -degree_rad; f -= degree_rad/2)
         {
             move_hand(joint_state_original->position[hand_joint] + f);
@@ -376,6 +387,12 @@ public:
                 break;
             }
         }
+
+	//move hand back to original position
+        sensor_msgs::JointStateConstPtr joint_state_current = ros::topic::waitForMessage<sensor_msgs::JointState>("/real/robotino/joint_control/get_state", nh_, ros::Duration(30));
+        if (joint_state_current->position[hand_joint] > 2.9 || joint_state_current->position[hand_joint] < -2.9) {
+            move_hand(joint_state_original->position[hand_joint]);
+        }
         //move camera back to default position
         success = moveCameraToDefault();
         if (!success) {
@@ -389,14 +406,30 @@ public:
             //Call the wizard
             squirrel_object_perception_msgs::Recognize2d srv;
             if (client.call(srv)) {
-                std::cout << srv.response.ids.at(0) << std::endl;
-            }
-            success = true;
-        } else {
-            std::cout << "Category: " << sceneObject.category << std::endl;
-            result_.objects_added.push_back(sceneObject);
-        }
+                sceneObject.category = srv.response.ids.at(0).data;
 
+                geometry_msgs::Transform obj_transform = srv.response.transforms.at(0);
+                sceneObject.pose = transformToPose(obj_transform);
+
+                geometry_msgs::PoseStamped helper_pose;
+                helper_pose.pose = sceneObject.pose;
+                helper_pose.header.frame_id = "/kinect_rgb_optical_frame";
+                try
+                {
+                    tf_listener.waitForTransform("/map", "/kinect_rgb_optical_frame", ros::Time(0), ros::Duration(1.0));
+                    tf_listener.transformPose("/map", helper_pose, helper_pose);
+                    sceneObject.pose = helper_pose.pose;
+                    sceneObject.header.frame_id = helper_pose.header.frame_id;
+                }
+           	catch (tf::TransformException& ex)
+                {
+                    ROS_ERROR("%s: %s", ros::this_node::getName().c_str(), ex.what());
+                }
+	     }
+            
+        } 
+        std::cout << "Category: " << sceneObject.category << std::endl;
+        result_.objects_added.push_back(sceneObject);
         std::cout << "SUCCESS of action: " << success << std::endl;
         if(success)
         {
