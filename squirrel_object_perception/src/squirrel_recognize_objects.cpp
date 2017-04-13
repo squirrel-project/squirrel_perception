@@ -109,7 +109,7 @@ protected:
                         } else {
                             try
                             {
-                                tf_listener.waitForTransform(object.header.frame_id, "/map", ros::Time::now(), ros::Duration(1.0));
+                                tf_listener.waitForTransform("/kinect_depth_optical_frame", "/map", ros::Time::now(), ros::Duration(1.0));
                                 tf_listener.transformPose("/map", segm_result.poses[0], segm_result.poses[0]);
                             }
                             catch (tf::TransformException& ex)
