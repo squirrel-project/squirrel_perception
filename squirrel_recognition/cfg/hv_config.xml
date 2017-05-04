@@ -3,8 +3,8 @@
 <boost_serialization signature="serialization::archive" version="10">
 <paramHV class_id="0" tracking_level="0" version="0">
 	<resolution_mm_>5</resolution_mm_>
-	<inliers_threshold_>0.0099999998</inliers_threshold_>
-	<inliers_surface_angle_thres_>0.19634955</inliers_surface_angle_thres_>
+	<inliers_threshold_>1.0</inliers_threshold_>
+	<inliers_surface_angle_thres_>10.0</inliers_surface_angle_thres_>
 	<occlusion_thres_>0.0099999998</occlusion_thres_>
 	<smoothing_radius_>2</smoothing_radius_>
 	<do_smoothing_>1</do_smoothing_>
@@ -15,7 +15,7 @@
 	<w_color_>0.33000001</w_color_>
 	<w_3D_>0.33000001</w_3D_>
 	<color_sigma_l_>3</color_sigma_l_>
-	<color_sigma_ab_>0.1</color_sigma_ab_>
+	<color_sigma_ab_>15.0</color_sigma_ab_>
 	<sigma_normals_deg_>30</sigma_normals_deg_>
 	<regularizer_>3</regularizer_>
 	<normal_method_>2</normal_method_>

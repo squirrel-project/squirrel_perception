@@ -39,10 +39,12 @@ public:
 
     void callSvRecognizerUsingCam(const sensor_msgs::PointCloud2::ConstPtr& msg_const)
     {
-        std::cout << "Received point cloud.\n" << std::endl;
+        sleep(1);
+        sensor_msgs::PointCloud2ConstPtr sceneConst = ros::topic::waitForMessage<sensor_msgs::PointCloud2>("/kinect/depth_registered/points", *n_);
+        std::cout << "Received point cloud." << std::endl;
 
         pcl::PointCloud<PointT>::Ptr scene (new pcl::PointCloud<PointT>);
-        pcl::fromROSMsg (*msg_const, *scene);
+        pcl::fromROSMsg (*sceneConst, *scene);
 
         // HACK: The gezebo simulated kinect seems to output a non-orgnized point cloud. Just fix that here.
         if(scene->height == 1)
