@@ -97,10 +97,8 @@ protected:
                     std::cout << "Category: " << object.category << std::endl;
                     object.pose = transform(srv.response.centroid.at(i).x, srv.response.centroid.at(i).y, srv.response.centroid.at(i).z,
                                             srv.request.cloud.header.frame_id, "/map").pose;
-                    //TODO: transform BBox from Recognizer to BCylinder for SceneObject
-                    //std::cout << "Position from Recognizer in map-frame (" << object.pose.position.x << "; "
-                    //             << object.pose.position.y << "; " << object.pose.position.z << "; " << std::endl;
-                    //compareToDB(sceneObject);
+
+                    //the wizard was called
                     if (srv.response.confidence.size() !=0 &&srv.response.confidence.at(i) == 1.0) {
                         squirrel_object_perception_msgs::SegmentOnce::Response segm_result;
                         bool seg_ok = do_segmentation(scene, segm_result);
@@ -109,7 +107,7 @@ protected:
                         } else {
                             try
                             {
-                                tf_listener.waitForTransform(object.header.frame_id, "/map", ros::Time::now(), ros::Duration(1.0));
+                                tf_listener.waitForTransform(segm_result.poses[0].header.frame_id, "/map", ros::Time::now(), ros::Duration(1.0));
                                 tf_listener.transformPose("/map", segm_result.poses[0], segm_result.poses[0]);
                             }
                             catch (tf::TransformException& ex)
