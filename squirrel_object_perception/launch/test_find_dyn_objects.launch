@@ -1,0 +1,27 @@
+<launch> 
+  <arg name="map_file" default="$(find squirrel_navigation)/maps/default-map.yaml" />
+<param name="use_sim_time" value="true" />
+
+<!-- scene database (MongoDB) - start that in a separate terminal because of timing issues-->
+<!--include file="$(find squirrel_planning_launch)/launch/squirrel_planning_db.launch" /-->
+
+  <!--- Run mapserver -->
+
+  <include file="$(find squirrel_navigation)/launch/map_server.launch">
+    <arg name="map_file" value="$(arg map_file)" />
+  </include>
+
+  <node name="squirrel_find_dynamic_objects"
+        pkg="squirrel_object_perception"
+        type="squirrel_find_dynamic_objects"
+        required="true" output="screen">
+	<param name="static_octomap_path" value="/home/edith/SQUIRREL/Experiments/Simulator/ipa_room_dilated.bt" />
+  </node>
+
+<!--include file="$(find squirrel_perception_waypoint)/launch/startup.launch" /-->
+
+<!--include file="$(find squirrel_segmentation)/launch/startup.launch" /-->
+
+<!--include file="$(find squirrel_object_perception)/launch/startup.launch" /-->
+
+</launch>

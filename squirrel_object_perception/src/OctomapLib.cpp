@@ -32,7 +32,8 @@ bool OctomapLib::readOctoMapFromFile(std::string filename, OcTree *&ocTree, bool
     }
 }
 
-void OctomapLib::tranformCloud2Map(pcl::PointCloud<PointT>::Ptr &cloud) {
+//NOT related to octomap
+/*void OctomapLib::tranformCloud2Map(pcl::PointCloud<PointT>::Ptr &cloud) {
     try
     {
         ros::Duration(1.0).sleep();
@@ -56,7 +57,7 @@ void OctomapLib::tranformCloud2Map(pcl::PointCloud<PointT>::Ptr &cloud) {
         std::cout << "Transformation error: " << ex.what() << std::endl;
         return;
     }
-}
+}*/
 
 void OctomapLib::checkCloudAgainstOctomap(const pcl::PointCloud<PointT>::Ptr &cloud, OcTree *ocTree) {
     pcl::PointCloud<PointT>::Ptr cloud_copy(new pcl::PointCloud<PointT>);
@@ -157,6 +158,70 @@ OcTree OctomapLib::subtractOctomap(const OcTree *minuendMap, OcTree subtrahendMa
     return subtrahendMap;
 }
 
+OcTree OctomapLib::compareOctomapToStatic(const OcTree *staticMap, OcTree currentOctomap) {
+    for (OcTree::leaf_iterator it = currentOctomap.begin_leafs(), end=currentOctomap.end_leafs(); it!=end; ++it) {
+        if(currentOctomap.isNodeOccupied(*it)) {
+            KeySet::iterator key_it = static_keys.find(it.getKey());
+            if (key_it != static_keys.end()) { //voxel is occupied in static map as well
+                it->setLogOdds(logodds(currentOctomap.getClampingThresMin()));
+            } else { //check if node is unknown in the static map. this case should not happen too often as most of the occupied voxels are in the static map.
+                OcTreeNode* node = staticMap->search(it.getCoordinate());
+                if(!node) {
+                    it->setLogOdds(logodds(currentOctomap.getClampingThresMin()));
+                }
+            }
+
+
+        }
+    }
+    currentOctomap.updateInnerOccupancy();
+    return currentOctomap;
+}
+
+void OctomapLib::initStaticKeys(OcTree *staticMap) {
+
+    for (OcTree::leaf_iterator it = staticMap->begin_leafs(), end=staticMap->end_leafs(); it!=end; ++it) {
+        if(staticMap->isNodeOccupied(*it)) {
+            expandNodeRecurs(&(*it), it.getDepth(), tree_depth);
+        }
+    }
+
+    for (OcTree::leaf_iterator it = staticMap->begin_leafs(), end=staticMap->end_leafs(); it!=end; ++it) {
+        if(staticMap->isNodeOccupied(*it)) {
+            static_keys.insert(it.getKey());
+        }
+    }
+}
+
+void OctomapLib::expandOccupiedNodes(octomap::OcTree *octomap) {
+    for (OcTree::leaf_iterator it = octomap->begin_leafs(), end=octomap->end_leafs(); it!=end; ++it) {
+        if(octomap->isNodeOccupied(*it)) {
+            expandNodeRecurs(&(*it), it.getDepth(), tree_depth);
+        }
+    }
+    //writeOctomap(*octomap, "current.bt", true);
+}
+
+//Copied from Octomap Framework
+void OctomapLib::expandNodeRecurs(OcTreeNode* node, unsigned int depth, unsigned int max_depth) {
+  if (depth >= max_depth)
+    return;
+
+  assert(node);
+
+  // current node has no children => can be expanded
+  if (!node->hasChildren()) {
+    node->expandNode();
+  }
+
+  // recursively expand children
+  for (unsigned int i=0; i<8; i++) {
+    if (node->childExists(i)) {
+        expandNodeRecurs(node->getChild(i), depth+1, tree_depth);
+    }
+  }
+}
+
 
 void OctomapLib::octomapToPointcloud(OcTree *octomap, pcl::PointCloud<PointT>::Ptr &cloud) {
     //leaf_iterator skips inner nodes (takes the children)
@@ -211,6 +276,19 @@ void OctomapLib::octomapToPointcloud(OcTree *octomap, pcl::PointCloud<PointT>::P
 
 //}
 
+void OctomapLib::fillFloor(OcTree *octomap, octomap::point3d min, octomap::point3d max) {
+    for (double ix =min.x(); ix < max.x(); ix += this->leaf_size) {
+        for (double iy =min.y(); iy < max.y(); iy += this->leaf_size) {
+            //ROS_INFO("x: %f, y: %f", ix, iy);
+            octomap::OcTreeNode* node = octomap->search(ix, iy, 0);
+            if (node==NULL) {
+                octomap->setNodeValue(ix,iy,0,logodds(octomap->getClampingThresMax()));
+            } else if (!octomap->isNodeOccupied(node)) {
+                node->setLogOdds(logodds(octomap->getClampingThresMax()));
+            }
+        }
+    }
+}
 
 void OctomapLib::getOctomapDimension(OcTree *octomap, unsigned int &width, unsigned int &height, unsigned int &depth) {
     double minX, minY, minZ, maxX, maxY, maxZ;
@@ -257,13 +335,13 @@ void OctomapLib::printMapInfo(OcTree *ocTree) {
     }
 }
 
-void OctomapLib::writeOctomap(OcTree *ocTree, std::string path, bool binary) {
+void OctomapLib::writeOctomap(OcTree ocTree, std::string path, bool binary) {
     if (binary) {
-        ocTree->writeBinary(path);
+        ocTree.writeBinary(path);
     } else {
-        ocTree->write(path);
+        ocTree.write(path);
     }
-    ocTree->expand();
+
 }
 
 OctomapLib::~OctomapLib() {

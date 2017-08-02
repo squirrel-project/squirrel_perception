@@ -9,213 +9,258 @@ RemoveBackground::RemoveBackground() : n_(new ros::NodeHandle("~")), message_sto
 RemoveBackground::~RemoveBackground() {
     if (n_)
         delete n_;
+    statistics_file.close();
 }
 
 bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDynamicObjects::Request & request, squirrel_object_perception_msgs::FindDynamicObjects::Response & response) {
 
-    //read the input
-    octomap_msgs::OctomapConstPtr current_octomap_msg = ros::topic::waitForMessage<octomap_msgs::Octomap>("/octomap_binary", *n_, ros::Duration(10));
-    setCurrentOctomap(dynamic_cast<octomap::OcTree*>(octomap_msgs::msgToMap(*current_octomap_msg)));
-    //std::string currentOctomapPath = "/home/edith/SQUIRREL/workspace/test5.bt";
-    //n_->getParam("current_octomap_path", currentOctomapPath);
-    //octomap_lib.readOctoMapFromFile(currentOctomapPath, currentMap , true);
+    {pcl::ScopeTime overallTime("Service call");
+        t_differencing = 0, t_comp2D = 0, t_cluster = 0;
 
-    ROS_INFO("TUW: Current octomap read");
+        //read the input
+        octomap_msgs::OctomapConstPtr current_octomap_msg = ros::topic::waitForMessage<octomap_msgs::Octomap>("/octomap_binary", *n_, ros::Duration(10));
+        setCurrentOctomap(dynamic_cast<octomap::OcTree*>(octomap_msgs::msgToMap(*current_octomap_msg)));
+        //std::string currentOctomapPath = "/home/edith/SQUIRREL/workspace/test5.bt";
+        //n_->getParam("current_octomap_path", currentOctomapPath);
+        //octomap_lib.readOctoMapFromFile(currentOctomapPath, currentMap , true);
 
-    //delete all visualization markers from previous calls
-    for (std::vector<int>::iterator it = vis_marker_ids.begin() ; it != vis_marker_ids.end(); ++it) {
-        zyl_marker.id = *it;
-        zyl_marker.ns = "cluster_marker";
-        zyl_marker.action = visualization_msgs::Marker::DELETE;
-        markerPublisher.publish(zyl_marker);
-    }
-//    zyl_marker.action = 3; //DELETEALL
-//    markerPublisher.publish(zyl_marker);
+        ROS_INFO("TUW: Current octomap read");
 
-    octomap::OcTree subtractedMapVar = subtractOctomaps();
-    if (octomap_lib.getNumberOccupiedLeafNodes(&subtractedMapVar) == 0) {
-        ROS_INFO("TUW: Static and current octomap are the same");
-        return false;
-    }
+        //delete all visualization markers from previous calls
+        for (std::vector<int>::iterator it = vis_marker_ids.begin() ; it != vis_marker_ids.end(); ++it) {
+            zyl_marker.id = *it;
+            zyl_marker.ns = "cluster_marker";
+            zyl_marker.action = visualization_msgs::Marker::DELETE;
+            markerPublisher.publish(zyl_marker);
+        }
+        //    zyl_marker.action = 3; //DELETEALL
+        //    markerPublisher.publish(zyl_marker);
+        vis_marker_ids.clear();
 
-
-    octomap::OcTree* subtractedMap = &subtractedMapVar;
-
-    octomap_lib.writeOctomap(subtractedMap, "subtracted.bt", true);
-
-    //remove voxels close to indicated obstacles in the map
-    nav_msgs::OccupancyGridConstPtr grid_map = ros::topic::waitForMessage<nav_msgs::OccupancyGrid>("/map", *n_, ros::Duration(10));
-
-    pcl::PointCloud<PointT>::Ptr filtered_cloud = compareOctomapToGrid(subtractedMap, grid_map);
-    if (filtered_cloud->size() == 0) {
-        ROS_INFO("TUW: Current octomap and occupancy grid are very similar - no lump to detect");
-        return false;
-    }
-    pcl::io::savePCDFileASCII ("cloud_after_map_comp.pcd", *filtered_cloud);
+        octomap::OcTree subtractedMapVar = subtractOctomaps();
+        if (octomap_lib.getNumberOccupiedLeafNodes(&subtractedMapVar) == 0) {
+            ROS_INFO("TUW: Static and current octomap are the same");
+            return true;
+        }
 
 
-    //pcl::PointCloud<PointT>::Ptr filtered_cloud(new pcl::PointCloud<PointT>);
-    //octomap_lib.octomapToPointcloud(subtractedMap, filtered_cloud);
-    //clustering, remove noise and cluster which are not connected to the floor
-    std::vector<pcl::PointCloud<PointT>::Ptr> clusters = removeClusters(filtered_cloud);
-    //pcl::io::savePCDFileASCII ("cloud_final.pcd", *filtered_cloud);
+        octomap::OcTree* subtractedMap = &subtractedMapVar;
 
-    //Response added, updated and removed objects
-    int cnt = 0;
-    squirrel_object_perception_msgs::SceneObject lump;
+        octomap_lib.writeOctomap(*subtractedMap, "subtracted.bt", true);
 
-    std::vector< boost::shared_ptr<squirrel_object_perception_msgs::SceneObject> > sceneObjects_results;
-    message_store.query<squirrel_object_perception_msgs::SceneObject>(sceneObjects_results);
+        //remove voxels close to indicated obstacles in the map
+        nav_msgs::OccupancyGridConstPtr grid_map = ros::topic::waitForMessage<nav_msgs::OccupancyGrid>("/map", *n_, ros::Duration(10));
 
-    //    std::vector< boost::shared_ptr<squirrel_object_perception_msgs::SceneObject> > objects_remove (sceneObjects_results.size());
-    //    for (std::size_t i = 0; i < sceneObjects_results.size(); ++i)
-    //           objects_remove[i] = boost::make_shared<squirrel_object_perception_msgs::SceneObject>(*sceneObjects_results[i]);
+        pcl::PointCloud<PointT>::Ptr filtered_cloud = compareOctomapToGrid(subtractedMap, grid_map);
+        if (filtered_cloud->size() == 0) {
+            ROS_INFO("TUW: Current octomap and occupancy grid are very similar - no lump to detect");
+            statistics_file << t_differencing << ";" << t_comp2D << ";" << ";;;\n";
+            statistics_file.flush();
+            return true;
+        }
+        if (filtered_cloud->size() > 0) {
+            pcl::io::savePCDFileASCII ("cloud_after_map_comp.pcd", *filtered_cloud);
+        }
 
-    for (std::size_t i = 0; i < sceneObjects_results.size(); ++i) {
-        response.dynamic_objects_removed.push_back(*sceneObjects_results[i]);
-    }
 
-    ROS_INFO("Number of objects already in DB: %zu", sceneObjects_results.size());
+        //pcl::PointCloud<PointT>::Ptr filtered_cloud(new pcl::PointCloud<PointT>);
+        //octomap_lib.octomapToPointcloud(subtractedMap, filtered_cloud);
+        //clustering, remove noise and cluster which are not connected to the floor
+        std::vector<pcl::PointCloud<PointT>::Ptr> clusters = removeClusters(filtered_cloud);
+        if (filtered_cloud->size() > 0) {
+            pcl::io::savePCDFileASCII ("cloud_final.pcd", *filtered_cloud);
+        }
 
-    ROS_INFO("TUW: Number of lumps identified: %zu", clusters.size());
-    for (std::vector<pcl::PointCloud<PointT>::Ptr>::iterator it = clusters.begin (); it != clusters.end (); ++it)
-    {
-        PointT min_p, max_p;
-        pcl::getMinMax3D(*(*it), min_p, max_p);
+        //Response added, updated and removed objects
+        int cnt = 0;
+        squirrel_object_perception_msgs::SceneObject lump;
 
-        double pose_x = min_p.x + (max_p.x - min_p.x)/2;
-        double pose_y = min_p.y + (max_p.y - min_p.y)/2;
-        double pose_z = min_p.z + (max_p.z - min_p.z)/2;
+        std::vector< boost::shared_ptr<squirrel_object_perception_msgs::SceneObject> > sceneObjects_results;
+        message_store.query<squirrel_object_perception_msgs::SceneObject>(sceneObjects_results);
 
-        double x_diam = double(max_p.x - min_p.x + octomap_lib.leaf_size);
-        double y_diam = double(max_p.y - min_p.y + octomap_lib.leaf_size);
-        double diam = std::sqrt(std::pow(x_diam,2) + std::pow(y_diam,2));
-//        double x_diam =  double(max_p.x - min_p.x + octomap_lib.leaf_size);
-//        double y_diam =  double(max_p.y - min_p.y + octomap_lib.leaf_size);
-//        double diam = std::max(x_diam, y_diam);
-        double z_diam = double(max_p.z - min_p.z + octomap_lib.leaf_size);
+        //    std::vector< boost::shared_ptr<squirrel_object_perception_msgs::SceneObject> > objects_remove (sceneObjects_results.size());
+        //    for (std::size_t i = 0; i < sceneObjects_results.size(); ++i)
+        //           objects_remove[i] = boost::make_shared<squirrel_object_perception_msgs::SceneObject>(*sceneObjects_results[i]);
 
-        //double diam = std::max((float)x_diam, (float)y_diam);
+        for (std::size_t i = 0; i < sceneObjects_results.size(); ++i) {
+            response.dynamic_objects_removed.push_back(*sceneObjects_results[i]);
+        }
 
-        geometry_msgs::Pose pose_db;
-        bool is_lump_in_db = false;
-        bool is_classified =false;
-        BOOST_FOREACH(boost::shared_ptr<squirrel_object_perception_msgs::SceneObject> sceneObject_db, sceneObjects_results) {
-            pose_db = (*sceneObject_db).pose;
+        ROS_INFO("Number of objects already in DB: %zu", sceneObjects_results.size());
 
-            //object at the same position
-            if((std::abs(pose_db.position.x - pose_x) < POSE_THRESH) && (std::abs(pose_db.position.y - pose_y) < POSE_THRESH)
-                    && (std::abs(pose_db.position.z - pose_z) < POSE_THRESH) ) {
-                if ((*sceneObject_db).category != "unknown") {
-                    response.dynamic_objects_removed.erase(response.dynamic_objects_removed.begin() + cnt);
-                    is_lump_in_db = true;
-                    is_classified = true;
-                    ROS_INFO("TUW: Lump at pose (x,y,z) = (%f, %f, %f) is a classified object", pose_x, pose_y, pose_z);
-                }
-                //check if the size differs and update it if necessary
-                else {
-                    squirrel_object_perception_msgs::BCylinder bCylinder = (*sceneObject_db).bounding_cylinder;
-                    if ((std::abs(bCylinder.diameter - diam) < 0.0001) && (std::abs(bCylinder.height == z_diam) < 0.0001)) {
-                        lump=(*sceneObject_db);
+        ROS_INFO("TUW: Number of lumps identified: %zu", clusters.size());
+        for (std::vector<pcl::PointCloud<PointT>::Ptr>::iterator it = clusters.begin (); it != clusters.end (); ++it)
+        {
+            PointT min_p, max_p;
+            pcl::getMinMax3D(*(*it), min_p, max_p);
+
+            double pose_x = min_p.x + (max_p.x - min_p.x)/2;
+            double pose_y = min_p.y + (max_p.y - min_p.y)/2;
+            double pose_z = min_p.z + (max_p.z - min_p.z)/2;
+
+            double x_diam = double(max_p.x - min_p.x + octomap_lib.leaf_size);
+            double y_diam = double(max_p.y - min_p.y + octomap_lib.leaf_size);
+            double diam = std::sqrt(std::pow(x_diam,2) + std::pow(y_diam,2));
+            //        double x_diam =  double(max_p.x - min_p.x + octomap_lib.leaf_size);
+            //        double y_diam =  double(max_p.y - min_p.y + octomap_lib.leaf_size);
+            //        double diam = std::max(x_diam, y_diam);
+            double z_diam = double(max_p.z - min_p.z + octomap_lib.leaf_size);
+
+            //double diam = std::max((float)x_diam, (float)y_diam);
+
+            geometry_msgs::Pose pose_db;
+            bool is_lump_in_db = false;
+            bool is_classified =false;
+            BOOST_FOREACH(boost::shared_ptr<squirrel_object_perception_msgs::SceneObject> sceneObject_db, sceneObjects_results) {
+                pose_db = (*sceneObject_db).pose;
+
+                //object at the same position
+                if((std::abs(pose_db.position.x - pose_x) < POSE_THRESH) && (std::abs(pose_db.position.y - pose_y) < POSE_THRESH)
+                        && (std::abs(pose_db.position.z - pose_z) < POSE_THRESH) ) {
+                    if ((*sceneObject_db).category != "unknown") {
+
+                        for (int i = 0; i < response.dynamic_objects_removed.size(); ++i)
+                        {
+                            if (response.dynamic_objects_removed[i].id == sceneObject_db->id)
+                            {
+                                response.dynamic_objects_removed.erase(response.dynamic_objects_removed.begin() + i);
+                                break;
+                            }
+                        }
+                        //                    response.dynamic_objects_removed.erase(response.dynamic_objects_removed.begin() + cnt);
                         is_lump_in_db = true;
-                        response.dynamic_objects_removed.erase(response.dynamic_objects_removed.begin() + cnt);
-                        ROS_INFO("TUW: Lump at pose (x,y,z) = (%f, %f, %f) is already as unknown object in DB", pose_x, pose_y, pose_z);
+                        is_classified = true;
+                        ROS_INFO("TUW: Lump at pose (x,y,z) = (%f, %f, %f) is a classified object", pose_x, pose_y, pose_z);
                     }
+                    //check if the size differs and update it if necessary
                     else {
-                        lump.header.frame_id = "map";
-                        lump.header.stamp = ros::Time();
-                        lump.pose.position.x = pose_x;
-                        lump.pose.position.y = pose_y;
-                        lump.pose.position.z = pose_z;
-                        lump.pose.orientation.x = 0.0;
-                        lump.pose.orientation.y = 0.0;
-                        lump.pose.orientation.z = 0.0;
-                        lump.pose.orientation.w = 1.0;
-                        lump.bounding_cylinder.diameter = diam;
-                        //lump.bounding_cylinder.diameter = y_diam;
-                        lump.bounding_cylinder.height = z_diam;
-                        lump.category="unknown";
-                        lump.id= (*sceneObject_db).id;
+                        squirrel_object_perception_msgs::BCylinder bCylinder = (*sceneObject_db).bounding_cylinder;
+                        if ((std::abs(bCylinder.diameter - diam) < 0.0001) && (std::abs(bCylinder.height == z_diam) < 0.0001)) {
+                            lump=(*sceneObject_db);
+                            is_lump_in_db = true;
+                            for (int i = 0; i < response.dynamic_objects_removed.size(); ++i)
+                            {
+                                if (response.dynamic_objects_removed[i].id == sceneObject_db->id)
+                                {
+                                    response.dynamic_objects_removed.erase(response.dynamic_objects_removed.begin() + i);
+                                    break;
+                                }
+                            }
+                            //response.dynamic_objects_removed.erase(response.dynamic_objects_removed.begin() + cnt);
+                            ROS_INFO("TUW: Lump at pose (x,y,z) = (%f, %f, %f) is already as unknown object in DB", pose_x, pose_y, pose_z);
+                        }
+                        else {
+                            lump.header.frame_id = "map";
+                            lump.header.stamp = ros::Time();
+                            lump.pose.position.x = pose_x;
+                            lump.pose.position.y = pose_y;
+                            lump.pose.position.z = pose_z;
+                            lump.pose.orientation.x = 0.0;
+                            lump.pose.orientation.y = 0.0;
+                            lump.pose.orientation.z = 0.0;
+                            lump.pose.orientation.w = 1.0;
+                            lump.bounding_cylinder.diameter = diam;
+                            //lump.bounding_cylinder.diameter = y_diam;
+                            lump.bounding_cylinder.height = z_diam;
+                            lump.category="unknown";
+                            lump.id= (*sceneObject_db).id;
 
-                        is_lump_in_db = true;
-                        response.dynamic_objects_updated.push_back(lump);
-                        response.dynamic_objects_removed.erase(response.dynamic_objects_removed.begin() + cnt);
+                            is_lump_in_db = true;
+                            response.dynamic_objects_updated.push_back(lump);
+                            for (int i = 0; i < response.dynamic_objects_removed.size(); ++i)
+                            {
+                                if (response.dynamic_objects_removed[i].id == sceneObject_db->id)
+                                {
+                                    response.dynamic_objects_removed.erase(response.dynamic_objects_removed.begin() + i);
+                                    break;
+                                }
+                            }
+                            //response.dynamic_objects_removed.erase(response.dynamic_objects_removed.begin() + cnt);
 
-                        ROS_INFO("TUW: Lump at pose (x,y,z) = (%f, %f, %f) got updated in DB", pose_x, pose_y, pose_z);
+                            ROS_INFO("TUW: Lump at pose (x,y,z) = (%f, %f, %f) got updated in DB", pose_x, pose_y, pose_z);
+                        }
                     }
                 }
             }
+
+            if (!is_lump_in_db) {   //nothing at the position
+                lump.header.frame_id = "map";
+                lump.header.stamp = ros::Time();
+                lump.pose.position.x = pose_x;
+                lump.pose.position.y = pose_y;
+                lump.pose.position.z = pose_z;
+                lump.pose.orientation.x = 0.0;
+                lump.pose.orientation.y = 0.0;
+                lump.pose.orientation.z = 0.0;
+                lump.pose.orientation.w = 1.0;
+                lump.bounding_cylinder.diameter = diam;
+                //lump.bounding_cylinder.diameter = y_diam;
+                lump.bounding_cylinder.height = z_diam;
+                lump.category="unknown";
+                lump.id=get_unique_object_id();
+                response.dynamic_objects_added.push_back(lump);
+
+                //message_store.insert(lump);
+
+                cnt += 1;
+
+                ROS_INFO("TUW: Lump at pose (x,y,z) = (%f, %f, %f) got inserted in DB", pose_x, pose_y, pose_z);
+            }
+
+
+            //creates a marker that can be visualized in rviz
+            if (!is_classified) {
+                zyl_marker.header.frame_id = "map";
+                zyl_marker.header.stamp = ros::Time();
+                zyl_marker.ns = "cluster_marker";
+                zyl_marker.id = std::atoi(lump.id.substr(4, string::npos).c_str());
+                zyl_marker.lifetime = ros::Duration();
+                zyl_marker.type = visualization_msgs::Marker::CYLINDER;
+                zyl_marker.action = visualization_msgs::Marker::ADD;
+                zyl_marker.pose.position.x = pose_x;
+                zyl_marker.pose.position.y = pose_y;
+                zyl_marker.pose.position.z = pose_z;
+                zyl_marker.pose.orientation.x = 0.0;
+                zyl_marker.pose.orientation.y = 0.0;
+                zyl_marker.pose.orientation.z = 0.0;
+                zyl_marker.pose.orientation.w = 1.0;
+                zyl_marker.scale.x = diam;
+                zyl_marker.scale.y = diam;
+                zyl_marker.scale.z = z_diam;
+                zyl_marker.color.r = 1.0;
+                zyl_marker.color.g = 1.0;
+                zyl_marker.color.b = 1.0;
+                zyl_marker.color.a = 0.6;
+
+                markerPublisher.publish(zyl_marker);
+
+                vis_marker_ids.push_back(zyl_marker.id);
+
+            }
+
         }
 
-        if (!is_lump_in_db) {   //nothing at the position
-            lump.header.frame_id = "map";
-            lump.header.stamp = ros::Time();
-            lump.pose.position.x = pose_x;
-            lump.pose.position.y = pose_y;
-            lump.pose.position.z = pose_z;
-            lump.pose.orientation.x = 0.0;
-            lump.pose.orientation.y = 0.0;
-            lump.pose.orientation.z = 0.0;
-            lump.pose.orientation.w = 1.0;
-            lump.bounding_cylinder.diameter = diam;
-            //lump.bounding_cylinder.diameter = y_diam;
-            lump.bounding_cylinder.height = z_diam;
-            lump.category="unknown";
-            lump.id=get_unique_object_id();
-            response.dynamic_objects_added.push_back(lump);
+        ROS_INFO("TUW: Added %zu lumps", response.dynamic_objects_added.size());
+        ROS_INFO("TUW: Updated %zu lumps", response.dynamic_objects_updated.size());
+        ROS_INFO("TUW: Removed %zu lumps", response.dynamic_objects_removed.size());
 
-            //message_store.insert(lump);
+        statistics_file << t_differencing << ";" << t_comp2D << ";" << t_cluster << ";" << overallTime.getTime() << ";" << currentMap->size() << ";" << clusters.size() << "\n"; //nr nodes
+        statistics_file.flush();
 
-            cnt += 1;
-
-            ROS_INFO("TUW: Lump at pose (x,y,z) = (%f, %f, %f) got inserted in DB", pose_x, pose_y, pose_z);
-        }
-
-
-        //creates a marker that can be visualized in rviz
-        if (!is_classified) {
-            zyl_marker.header.frame_id = "map";
-            zyl_marker.header.stamp = ros::Time();
-            zyl_marker.ns = "cluster_marker";
-            zyl_marker.id = std::atoi(lump.id.substr(4, string::npos).c_str());
-            zyl_marker.lifetime = ros::Duration();
-            zyl_marker.type = visualization_msgs::Marker::CYLINDER;
-            zyl_marker.action = visualization_msgs::Marker::ADD;
-            zyl_marker.pose.position.x = pose_x;
-            zyl_marker.pose.position.y = pose_y;
-            zyl_marker.pose.position.z = pose_z;
-            zyl_marker.pose.orientation.x = 0.0;
-            zyl_marker.pose.orientation.y = 0.0;
-            zyl_marker.pose.orientation.z = 0.0;
-            zyl_marker.pose.orientation.w = 1.0;
-            zyl_marker.scale.x = diam;
-            zyl_marker.scale.y = diam;
-            zyl_marker.scale.z = z_diam;
-            zyl_marker.color.r = 1.0;
-            zyl_marker.color.g = 0.9;
-            zyl_marker.color.b = 0.1;
-            zyl_marker.color.a = 0.4;
-
-            markerPublisher.publish(zyl_marker);
-
-            vis_marker_ids.push_back(zyl_marker.id);
-
-        }
-
+        return true;
     }
-
-    ROS_INFO("TUW: Added %zu lumps", response.dynamic_objects_added.size());
-    ROS_INFO("TUW: Updated %zu lumps", response.dynamic_objects_updated.size());
-    ROS_INFO("TUW: Removed %zu lumps", response.dynamic_objects_removed.size());
-    return true;
 }
 
 void RemoveBackground::initialize(int argc, char **argv) {
 
     n_->getParam("static_octomap_path", staticOctomapPath_);
     markerPublisher = n_->advertise<visualization_msgs::Marker>("vis_marker_dynamic_objects", 0);
+    marker_pub = this->n_->advertise<visualization_msgs::Marker>("bb_triangle", 1);
 
     setStaticOctomap(staticOctomapPath_);
+    {pcl::ScopeTime time("Expand only nodes");
+        octomap_lib.initStaticKeys(staticMap);
+    }
 
     if (staticMap->getNumLeafNodes() == 0) {
         ROS_WARN("The static octomap is empty! You probably try to use the default octomap.");
@@ -256,8 +301,12 @@ void RemoveBackground::initialize(int argc, char **argv) {
 
     //    message_store.insert(test_lump);
 
-
+    statistics_file.open("find_objects_statistic.txt", std::ofstream::out | std::ofstream::trunc);
+    statistics_file << "Time for subtraction; Time for comparing cloud against 2D grid; Time to cluster and filter; overall time; number of nodes in current octomap; Number of clusters\n";
+    statistics_file.flush();
     Remover_ = n_->advertiseService ("/squirrel_find_dynamic_objects", &RemoveBackground::removeBackground, this);
+    checkWaypointServer = n_->advertiseService ("/squirrel_check_viewcone", &RemoveBackground::checkWaypoint, this);
+
 
     ROS_INFO ("TUW: /squirrel_find_dynamic_objects ready to get service calls...");
     ros::spin ();
@@ -275,7 +324,9 @@ int main (int argc, char ** argv)
 
 void RemoveBackground::setStaticOctomap(std::string staticPath) {
     octomap_lib.readOctoMapFromFile(staticPath, this->staticMap, ends_with(staticPath, "bt"));
-    staticMap->expand();
+//    {pcl::ScopeTime time("Expand all");
+//    staticMap->expand();
+//    }
     octomap_lib.leaf_size = staticMap->getNodeSize(octomap_lib.tree_depth);
 }
 
@@ -284,16 +335,20 @@ void RemoveBackground::setCurrentOctomap(octomap::OcTree *currentMap) {
     if (!currentMap) {
         ROS_INFO("TUW: no current octomap");
     }
-    currentMap->expand();
+    //currentMap->expand();
+    octomap_lib.expandOccupiedNodes(currentMap);
     this->currentMap = currentMap;
 }
 
 octomap::OcTree RemoveBackground::subtractOctomaps() {
     cout << "Start subtracting..." << endl;
     {pcl::ScopeTime time("Subtracting ");
-        return octomap_lib.subtractOctomap(staticMap, *currentMap);
+        //octomap::OcTree result = octomap_lib.subtractOctomap(staticMap, *currentMap);
+        octomap::OcTree result = octomap_lib.compareOctomapToStatic(staticMap, *currentMap);
+        t_differencing = time.getTime();
+        cout << "Finished subtracting" << endl;
+        return result;
     }
-    cout << "Finished subtracting" << endl;
 }
 
 pcl::PointCloud<PointT>::Ptr RemoveBackground::compareOctomapToGrid(octomap::OcTree *octomap, const nav_msgs::OccupancyGridConstPtr& grid_map) {
@@ -303,6 +358,7 @@ pcl::PointCloud<PointT>::Ptr RemoveBackground::compareOctomapToGrid(octomap::OcT
         octomap_lib.octomapToPointcloud(octomap, cloud);
         this->compareCloudToMap(cloud, grid_map);
         cout << "Finished comparing octomap to gridmap" << endl;
+        t_comp2D = time.getTime();
         return cloud;
     }
 }
@@ -369,6 +425,12 @@ void RemoveBackground::compareCloudToMap(pcl::PointCloud<PointT>::Ptr &cloud, co
                                                 cv::Point( dilation_size, dilation_size ) );
     /// Apply the dilation operation
     cv::dilate( grid_mat, grid_mat, element );
+
+    cv::imwrite("2d_grid.png", grid_mat);
+
+    cv::Mat scaledMat;
+    grid_mat.convertTo(scaledMat,CV_8U,255.0/(100));
+    cv::imwrite("2d_grid_scaled.png", scaledMat);
 
     //    cv::Mat scaledMat;
     //    grid_mat.convertTo(scaledMat,CV_8U,255.0/(100));
@@ -441,11 +503,11 @@ std::vector<pcl::PointCloud<PointT>::Ptr> RemoveBackground::removeClusters(pcl::
             PointT min_p, max_p;
 
             pcl::getMinMax3D(*cloud_cluster, min_p, max_p);
-            //cout << "Min point: " << min_p.z << endl;
-            //cout << "Max point: " << max_p.z << endl;
+            cout << "Min point: " << min_p.z << endl;
+            cout << "Max point: " << max_p.z << endl;
 
             //check if bounding box is above floor or is too tall
-            if (min_p.z > octomap_lib.leaf_size + octomap_lib.leaf_size/2 + 0.0001|| max_p.z >= 0.5 || max_p.z <= 2* octomap_lib.leaf_size) { //max_p.z <= 0.05 should not be needed when camera is calibrated well
+            if (min_p.z > octomap_lib.leaf_size + octomap_lib.leaf_size/2 + 0.0001|| max_p.z >= 0.5) {// || max_p.z <= 2* octomap_lib.leaf_size) { //max_p.z <= 0.05 should not be needed when camera is calibrated well
                 //cout << "bad cluster" << endl;
             } else {
                 *cloud_filtered += *cloud_cluster;
@@ -454,6 +516,7 @@ std::vector<pcl::PointCloud<PointT>::Ptr> RemoveBackground::removeClusters(pcl::
         }
         cloud = cloud_filtered;
         cout << "Finished clustering and removing..." << endl;
+        t_cluster = time.getTime();
         return clusters;
     }
 }
@@ -466,3 +529,144 @@ std::string RemoveBackground::get_unique_object_id() {
     return (std::string("lump") + str);
 }
 
+bool RemoveBackground::checkWaypoint (squirrel_object_perception_msgs::CheckWaypoint::Request & request, squirrel_object_perception_msgs::CheckWaypoint::Response & response) {
+    {pcl::ScopeTime overallTime("Check waypoint call");
+
+        //read the input
+        octomap_msgs::OctomapConstPtr current_octomap_msg = ros::topic::waitForMessage<octomap_msgs::Octomap>("/octomap_binary", *n_, ros::Duration(10));
+        setCurrentOctomap(dynamic_cast<octomap::OcTree*>(octomap_msgs::msgToMap(*current_octomap_msg)));
+        ROS_INFO("TUW: Current octomap read");
+
+        geometry_msgs::Pose pose = request.waypoint;
+        geometry_msgs::Quaternion q_msg = pose.orientation;
+        tf::Quaternion q;
+        q.setX(q_msg.x);
+        q.setY(q_msg.y);
+        q.setZ(q_msg.z);
+        q.setW(q_msg.w);
+
+        double yaw = tf::getYaw(q);
+
+        // Calculate the triangle points encompasses the area that is viewed.
+        tf::Vector3 view_point(pose.position.x, pose.position.y, pose.position.z);
+
+        tf::Vector3 v0(request.viewing_distance, 0.0f, 0.0f);
+        v0 = v0.rotate(tf::Vector3(0.0f, 0.0f, 1.0f), yaw);
+
+        tf::Vector3 v0_normalised = v0.normalized();
+
+        tf::Vector3 v1 = v0;
+        v1 = v1.rotate(tf::Vector3(0.0f, 0.0f, 1.0f), request.fov / 2.0f);
+        v1 = v1.normalize();
+
+        float length = v0.length() / v0_normalised.dot(v1);
+        v1 *= length;
+        v1 += view_point;
+
+        tf::Vector3 v2 = v0;
+        v2 = v2.rotate(tf::Vector3(0.0f, 0.0f, 1.0f), -request.fov / 2.0f);
+        v2 = v2.normalize();
+        length = v0.length() / v0_normalised.dot(v2);
+        v2 *= length;
+        v2 += view_point;
+
+        ROS_INFO("Triangle with following points (%f,%f), (%f,%f), (%f,%f)", pose.position.x, pose.position.y,
+                 v1.x(), v1.y(), v2.x(), v2.y());
+
+        octomap::point3d min, max;
+        min.x() = std::min(std::min(v1.x(), pose.position.x), v2.x());
+        min.y() = std::min(std::min(v1.y(), v2.y()), pose.position.y);
+        min.z() = -octomap_lib.leaf_size + 0.00001;
+        max.x() = std::max(std::max(v1.x(), pose.position.x), v2.x());
+        max.y() = std::max(std::max(v1.y(), v2.y()), pose.position.y);
+        max.z() = 0-0.00001;
+
+
+        visualization_msgs::Marker marker;
+        marker.header.frame_id = "/map";
+        marker.header.stamp = ros::Time::now();
+        marker.ns = "bb";
+        marker.id = 0;
+        marker.type = visualization_msgs::Marker::CUBE;
+        marker.action = visualization_msgs::Marker::ADD;
+        marker.pose.position.x = min.x() + (max.x()-min.x())/2;
+        marker.pose.position.y = min.y() + (max.y()-min.y())/2;;
+        marker.pose.position.z = 0;
+        marker.pose.orientation.x = 0.0;
+        marker.pose.orientation.y = 0.0;
+        marker.pose.orientation.z = 0.0;
+        marker.pose.orientation.w = 1.0;
+        marker.scale.x = max.x()-min.x();
+        marker.scale.y = max.y()-min.y();
+        marker.scale.z = 0.5;
+        marker.color.r = 1.0f;
+        marker.color.g = 0.0f;
+        marker.color.b = 0.0f;
+        marker.color.a = 0.5f;
+        marker_pub.publish(marker);
+
+        int countMissingNodes = 0;
+        int countTriangleNodes = 0;
+        int countBB =0;
+        //currentMap->expand();
+        for (double ix =min.x(); ix < max.x(); ix += octomap_lib.leaf_size) {
+            for (double iy =min.y(); iy < max.y(); iy += octomap_lib.leaf_size) {
+                countBB += 1;
+                octomap::point3d node_coordinates(ix, iy, max.z());
+                int nvert = 3; //number of vertices
+                std::vector<float> triangle_x, triangle_y;
+                triangle_x.push_back(v1.x());
+                triangle_x.push_back(v2.x());
+                triangle_x.push_back(pose.position.x);
+                triangle_x.push_back(v1.x());
+                triangle_y.push_back(v1.y());
+                triangle_y.push_back(v2.y());
+                triangle_y.push_back(pose.position.y);
+                triangle_y.push_back(v1.y());
+
+                int i, j, is_in_viewcone = 0;
+                for (i = 0, j = nvert-1; i < nvert; j = i++) {
+                    if ( ((triangle_y[i]>= node_coordinates.y()) != (triangle_y[j]>node_coordinates.y())) &&
+                         (node_coordinates.x() < (triangle_x[j]-triangle_x[i]) * (node_coordinates.y()-triangle_y[i]) / (triangle_y[j]-triangle_y[i]) + triangle_x[i]) )
+                        is_in_viewcone = !is_in_viewcone;
+                }
+                if (is_in_viewcone) {
+                    octomap::OcTreeNode* node = currentMap->search(ix, iy, max.z());
+                    if (node == NULL) {
+                        countMissingNodes+=1;
+                        //ROS_INFO ("Unknown node in bounding box");
+                    }
+                   /* else if(!currentMap->isNodeOccupied(node)) { //this case should not occure
+                        std::cout << "Node is not occupied" << std::endl;
+                        //                    std::cout << "Waypoint should be used. It is not fully covered by the octomap! Position: ("
+                        //                              << node_coordinates.x() << "," << node_coordinates.y() << "," << node_coordinates.z() << ")" << std::endl;
+                        countMissingNodes+=1;
+                    }*/ else {
+                        //                    std::cout << "Node is occupied and in view cone: ("
+                        //                              << node_coordinates.x() << "," << node_coordinates.y() << "," << node_coordinates.z() << ")" << std::endl;
+                        countTriangleNodes+=1;
+                    }
+                }
+            }
+        }
+        ROS_INFO("Number of elements in BB: %d", countBB);
+
+        ROS_INFO("Number of missing nodes %d, number of filled nodes %d", countMissingNodes, countTriangleNodes);
+        if (countMissingNodes == 0) {
+            response.explore_waypoint.data = false;
+            ROS_INFO("View cone is fully covered!");
+            return true;
+        }
+        float f = countMissingNodes/(float)(countTriangleNodes+countMissingNodes);
+        ROS_INFO("Overlapping measurement: %f", 1-f);
+        if (countMissingNodes/(float)(countTriangleNodes+countMissingNodes) > 0.1) {   //more than 10 percent of the nodes are missing
+            ROS_INFO("More than 10 percent of the view cone are not covered");
+            response.explore_waypoint.data = true;
+            return true;
+        }
+
+        ROS_INFO("Almost everything of the view cone is covered");
+        response.explore_waypoint.data = false;
+        return true;
+    }
+}

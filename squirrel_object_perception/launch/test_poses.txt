@@ -1,0 +1,29 @@
+roslaunch squirrel_scenarios robot_year1.launch 
+roslaunch squirrel_object_perception test_find_dyn_objects.launch
+rosrun octomap_server octomap_server_node corridor_test_edited.bt 
+rosservice call /squirrel_find_dynamic_objects
+
+
+x: 11.1375y: 5.1625z: 0.125
+x: 12.5y: 4.5625z: 0.1375
+x: 12.125y: 4.825z: 0.125
+x: 1.825y: 4.5z: 0.1375
+x: 11.025y: 2.725z: 0.175
+x: 11.4625y: 4.4z: 0.075
+x: 10.3125y: 3.2125z: 0.075
+x: 1.5y: 4.625z: 0.1125
+x: 1.65y: 4.5875z: 0.0875
+x: 1.3125y: 4.7125z: 0.0625
+x: 2.05y: 4.425z: 0.075
+x: 10.2y: 3.2875z: 0.0625
+x: 12.925y: 4.4z: 0.0625
+x: 12.6625y: 4.475z: 0.075
+x: 12.025y: 5.025z: 0.1375
+x: 12.8125y: 4.4375z: 0.075
+x: 13.075y: 4.3375z: 0.05
+x: 10.625y: 2.375z: 0.0625
+x: 10.45y: 2.425z: 0.0375
+x: 10.675y: 2.325z: 0.0625
+x: 12.7375y: 4.4625z: 0.075
+x: 9.9625y: 2.575z: 0.05
+
