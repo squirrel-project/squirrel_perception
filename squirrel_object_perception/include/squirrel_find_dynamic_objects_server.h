@@ -32,8 +32,13 @@
 #include "OctomapLib.h"
 #include "squirrel_object_perception_msgs/SceneObject.h"
 #include "squirrel_object_perception_msgs/FindDynamicObjects.h"
+#include "squirrel_object_perception_msgs/CheckWaypoint.h"
 #include <boost/foreach.hpp>
 #include "mongodb_store/message_store.h"
+#include <iostream>
+#include <fstream>
+#include <algorithm>
+#include <math.h>
 
 typedef pcl::PointXYZRGB PointT;
 const double POSE_THRESH = 0.10; //5 cm
@@ -42,8 +47,10 @@ class RemoveBackground {
 private:
 
     ros::ServiceServer Remover_;
+    ros::ServiceServer checkWaypointServer;
     ros::NodeHandle *n_;
     ros::Publisher markerPublisher;
+    ros::Publisher marker_pub;
 
     octomap::OcTree *staticMap;
     octomap::OcTree *currentMap;
@@ -53,6 +60,7 @@ private:
     std::string staticOctomapPath_;
 
     bool removeBackground (squirrel_object_perception_msgs::FindDynamicObjects::Request &req, squirrel_object_perception_msgs::FindDynamicObjects::Response & response);
+    bool checkWaypoint (squirrel_object_perception_msgs::CheckWaypoint::Request & request, squirrel_object_perception_msgs::CheckWaypoint::Response & response);
 
     mongodb_store::MessageStoreProxy message_store;
 
@@ -61,6 +69,11 @@ private:
     int id_cnt_;
 
     std::vector<int32_t> vis_marker_ids;
+
+    std::ofstream statistics_file;
+    //Time for subtraction; Time for comparing cloud against 2D grid; Time to cluster and filter; overall time; number of nodes in current octomap; Number of clusters
+    int t_differencing, t_comp2D, t_cluster;
+
 
     inline bool ends_with(std::string const & value, std::string const & ending)
     {

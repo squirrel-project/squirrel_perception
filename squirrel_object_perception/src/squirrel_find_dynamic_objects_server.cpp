@@ -101,12 +101,7 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
             double x_diam = double(max_p.x - min_p.x + octomap_lib.leaf_size);
             double y_diam = double(max_p.y - min_p.y + octomap_lib.leaf_size);
             double diam = std::sqrt(std::pow(x_diam,2) + std::pow(y_diam,2));
-            //        double x_diam =  double(max_p.x - min_p.x + octomap_lib.leaf_size);
-            //        double y_diam =  double(max_p.y - min_p.y + octomap_lib.leaf_size);
-            //        double diam = std::max(x_diam, y_diam);
             double z_diam = double(max_p.z - min_p.z + octomap_lib.leaf_size);
-
-            //double diam = std::max((float)x_diam, (float)y_diam);
 
             geometry_msgs::Pose pose_db;
             bool is_lump_in_db = false;
@@ -127,7 +122,6 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
                                 break;
                             }
                         }
-                        //                    response.dynamic_objects_removed.erase(response.dynamic_objects_removed.begin() + cnt);
                         is_lump_in_db = true;
                         is_classified = true;
                         ROS_INFO("TUW: Lump at pose (x,y,z) = (%f, %f, %f) is a classified object", pose_x, pose_y, pose_z);
@@ -146,7 +140,6 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
                                     break;
                                 }
                             }
-                            //response.dynamic_objects_removed.erase(response.dynamic_objects_removed.begin() + cnt);
                             ROS_INFO("TUW: Lump at pose (x,y,z) = (%f, %f, %f) is already as unknown object in DB", pose_x, pose_y, pose_z);
                         }
                         else {
@@ -167,6 +160,7 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
 
                             is_lump_in_db = true;
                             response.dynamic_objects_updated.push_back(lump);
+
                             for (int i = 0; i < response.dynamic_objects_removed.size(); ++i)
                             {
                                 if (response.dynamic_objects_removed[i].id == sceneObject_db->id)
@@ -175,8 +169,6 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
                                     break;
                                 }
                             }
-                            //response.dynamic_objects_removed.erase(response.dynamic_objects_removed.begin() + cnt);
-
                             ROS_INFO("TUW: Lump at pose (x,y,z) = (%f, %f, %f) got updated in DB", pose_x, pose_y, pose_z);
                         }
                     }
@@ -201,8 +193,6 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
                 response.dynamic_objects_added.push_back(lump);
 
                 //message_store.insert(lump);
-
-                cnt += 1;
 
                 ROS_INFO("TUW: Lump at pose (x,y,z) = (%f, %f, %f) got inserted in DB", pose_x, pose_y, pose_z);
             }
@@ -244,12 +234,13 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
         ROS_INFO("TUW: Updated %zu lumps", response.dynamic_objects_updated.size());
         ROS_INFO("TUW: Removed %zu lumps", response.dynamic_objects_removed.size());
 
-        statistics_file << t_differencing << ";" << t_comp2D << ";" << t_cluster << ";" << overallTime.getTime() << ";" << currentMap->size() << ";" << clusters.size() << "\n"; //nr nodes
+        statistics_file << t_differencing << ";" << t_comp2D << ";" << t_cluster << ";" << overallTime.getTime() << ";" << currentMap->size() << ";" << clusters.size() << "\n"; 
         statistics_file.flush();
 
         return true;
     }
 }
+
 
 void RemoveBackground::initialize(int argc, char **argv) {
 
@@ -258,9 +249,7 @@ void RemoveBackground::initialize(int argc, char **argv) {
     marker_pub = this->n_->advertise<visualization_msgs::Marker>("bb_triangle", 1);
 
     setStaticOctomap(staticOctomapPath_);
-    {pcl::ScopeTime time("Expand only nodes");
-        octomap_lib.initStaticKeys(staticMap);
-    }
+    octomap_lib.initStaticKeys(staticMap);
 
     if (staticMap->getNumLeafNodes() == 0) {
         ROS_WARN("The static octomap is empty! You probably try to use the default octomap.");
@@ -324,9 +313,6 @@ int main (int argc, char ** argv)
 
 void RemoveBackground::setStaticOctomap(std::string staticPath) {
     octomap_lib.readOctoMapFromFile(staticPath, this->staticMap, ends_with(staticPath, "bt"));
-//    {pcl::ScopeTime time("Expand all");
-//    staticMap->expand();
-//    }
     octomap_lib.leaf_size = staticMap->getNodeSize(octomap_lib.tree_depth);
 }
 
@@ -335,7 +321,6 @@ void RemoveBackground::setCurrentOctomap(octomap::OcTree *currentMap) {
     if (!currentMap) {
         ROS_INFO("TUW: no current octomap");
     }
-    //currentMap->expand();
     octomap_lib.expandOccupiedNodes(currentMap);
     this->currentMap = currentMap;
 }
@@ -343,7 +328,6 @@ void RemoveBackground::setCurrentOctomap(octomap::OcTree *currentMap) {
 octomap::OcTree RemoveBackground::subtractOctomaps() {
     cout << "Start subtracting..." << endl;
     {pcl::ScopeTime time("Subtracting ");
-        //octomap::OcTree result = octomap_lib.subtractOctomap(staticMap, *currentMap);
         octomap::OcTree result = octomap_lib.compareOctomapToStatic(staticMap, *currentMap);
         t_differencing = time.getTime();
         cout << "Finished subtracting" << endl;
@@ -582,28 +566,28 @@ bool RemoveBackground::checkWaypoint (squirrel_object_perception_msgs::CheckWayp
         max.z() = 0-0.00001;
 
 
-        visualization_msgs::Marker marker;
-        marker.header.frame_id = "/map";
-        marker.header.stamp = ros::Time::now();
-        marker.ns = "bb";
-        marker.id = 0;
-        marker.type = visualization_msgs::Marker::CUBE;
-        marker.action = visualization_msgs::Marker::ADD;
-        marker.pose.position.x = min.x() + (max.x()-min.x())/2;
-        marker.pose.position.y = min.y() + (max.y()-min.y())/2;;
-        marker.pose.position.z = 0;
-        marker.pose.orientation.x = 0.0;
-        marker.pose.orientation.y = 0.0;
-        marker.pose.orientation.z = 0.0;
-        marker.pose.orientation.w = 1.0;
-        marker.scale.x = max.x()-min.x();
-        marker.scale.y = max.y()-min.y();
-        marker.scale.z = 0.5;
-        marker.color.r = 1.0f;
-        marker.color.g = 0.0f;
-        marker.color.b = 0.0f;
-        marker.color.a = 0.5f;
-        marker_pub.publish(marker);
+//        visualization_msgs::Marker marker;
+//        marker.header.frame_id = "/map";
+//        marker.header.stamp = ros::Time::now();
+//        marker.ns = "bb";
+//        marker.id = 0;
+//        marker.type = visualization_msgs::Marker::CUBE;
+//        marker.action = visualization_msgs::Marker::ADD;
+//        marker.pose.position.x = min.x() + (max.x()-min.x())/2;
+//        marker.pose.position.y = min.y() + (max.y()-min.y())/2;;
+//        marker.pose.position.z = 0;
+//        marker.pose.orientation.x = 0.0;
+//        marker.pose.orientation.y = 0.0;
+//        marker.pose.orientation.z = 0.0;
+//        marker.pose.orientation.w = 1.0;
+//        marker.scale.x = max.x()-min.x();
+//        marker.scale.y = max.y()-min.y();
+//        marker.scale.z = 0.5;
+//        marker.color.r = 1.0f;
+//        marker.color.g = 0.0f;
+//        marker.color.b = 0.0f;
+//        marker.color.a = 0.5f;
+//        marker_pub.publish(marker);
 
         int countMissingNodes = 0;
         int countTriangleNodes = 0;

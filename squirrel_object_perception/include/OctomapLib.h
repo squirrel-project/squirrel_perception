@@ -18,7 +18,6 @@
 #include <tf/transform_listener.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <fstream>
-#include <boost/unordered_set.hpp>
 
 class OctomapLib {
 public:
