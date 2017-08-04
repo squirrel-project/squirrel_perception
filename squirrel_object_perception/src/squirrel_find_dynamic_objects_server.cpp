@@ -241,6 +241,38 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
     }
 }
 
+//returns the amount of intersection in percent (x% of the area of c1 is covered by c2)
+//http://mathworld.wolfram.com/Circle-CircleIntersection.html
+float RemoveBackground::doIntersect(double c1_posx, double c1_posy, double c1_rad, double c2_posx, double c2_posy, double c2_rad) {
+    float intersectionPerc = 0.0;
+
+    double distance, distance2;
+    distance2  =(c1_posx-c2_posx)*(c1_posx-c2_posx) + (c1_posy-c2_posy)*(c1_posy - c2_posy);
+    distance = std::sqrt(distance2);
+
+    //not intersecting
+    if (distance >= c1_rad+c2_rad) {
+        intersectionPerc = 0.0;
+        return intersectionPerc;
+    }
+
+    //c1 is completely covered by c2
+    if (distance + c1_rad <= c2_rad) {
+        intersectionPerc = 1.0;
+        return intersectionPerc;
+    }
+
+    double overlappingArea;
+    overlappingArea = c1_rad*c1_rad * acos((c1_rad*c1_rad - c2_rad*c2_rad + distance2) / (2*distance*c1_rad)) +
+                      c2_rad*c2_rad * acos((c2_rad*c2_rad - c1_rad*c1_rad + distance2) / (2*distance*c2_rad)) -
+                      0.5 * std::sqrt((-distance+c1_rad+c2_rad) * (distance + c1_rad-c2_rad) * (distance-c1_rad+c2_rad) * (distance+c1_rad+c2_rad));
+
+    double areaC1 = c1_rad*c1_rad * M_PI;
+    intersectionPerc = overlappingArea / areaC1;
+
+    return intersectionPerc;
+
+}
 
 void RemoveBackground::initialize(int argc, char **argv) {
 

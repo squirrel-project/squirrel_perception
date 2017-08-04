@@ -61,6 +61,7 @@ private:
 
     bool removeBackground (squirrel_object_perception_msgs::FindDynamicObjects::Request &req, squirrel_object_perception_msgs::FindDynamicObjects::Response & response);
     bool checkWaypoint (squirrel_object_perception_msgs::CheckWaypoint::Request & request, squirrel_object_perception_msgs::CheckWaypoint::Response & response);
+    float doIntersect(double c1_posx, double c1_posy, double c1_rad, double c2_posx, double c2_posy, double c2_rad);
 
     mongodb_store::MessageStoreProxy message_store;
 
