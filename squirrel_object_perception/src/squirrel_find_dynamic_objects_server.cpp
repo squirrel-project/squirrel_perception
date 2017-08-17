@@ -108,12 +108,15 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
             bool is_classified =false;
             BOOST_FOREACH(boost::shared_ptr<squirrel_object_perception_msgs::SceneObject> sceneObject_db, sceneObjects_results) {
                 pose_db = (*sceneObject_db).pose;
-
-                //object at the same position
-                if((std::abs(pose_db.position.x - pose_x) < POSE_THRESH) && (std::abs(pose_db.position.y - pose_y) < POSE_THRESH)
-                        && (std::abs(pose_db.position.z - pose_z) < POSE_THRESH) ) {
-                    if ((*sceneObject_db).category != "unknown") {
-
+                //get instersection of the two circles (returns the biggest overlapping area, if the overlap is big enough, the lump gets updated with the newst values)
+                double overlap = doIntersect(pose_db.position.x, pose_db.position.y, (*sceneObject_db).bounding_cylinder.diameter, pose_x, pose_y, diam);
+                std::cout << "Overlap: " << overlap << std::endl;
+                if (overlap == 1.0) {
+                    //check if they have the same size
+                    squirrel_object_perception_msgs::BCylinder bCylinder = (*sceneObject_db).bounding_cylinder;
+                    if ((std::abs(bCylinder.diameter - diam) < 0.0001) && (std::abs(bCylinder.height - z_diam) < 0.0001)) {
+                        lump=(*sceneObject_db);
+                        is_lump_in_db = true;
                         for (int i = 0; i < response.dynamic_objects_removed.size(); ++i)
                         {
                             if (response.dynamic_objects_removed[i].id == sceneObject_db->id)
@@ -122,56 +125,44 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
                                 break;
                             }
                         }
-                        is_lump_in_db = true;
-                        is_classified = true;
-                        ROS_INFO("TUW: Lump at pose (x,y,z) = (%f, %f, %f) is a classified object", pose_x, pose_y, pose_z);
-                    }
-                    //check if the size differs and update it if necessary
-                    else {
-                        squirrel_object_perception_msgs::BCylinder bCylinder = (*sceneObject_db).bounding_cylinder;
-                        if ((std::abs(bCylinder.diameter - diam) < 0.0001) && (std::abs(bCylinder.height == z_diam) < 0.0001)) {
-                            lump=(*sceneObject_db);
-                            is_lump_in_db = true;
-                            for (int i = 0; i < response.dynamic_objects_removed.size(); ++i)
-                            {
-                                if (response.dynamic_objects_removed[i].id == sceneObject_db->id)
-                                {
-                                    response.dynamic_objects_removed.erase(response.dynamic_objects_removed.begin() + i);
-                                    break;
-                                }
-                            }
-                            ROS_INFO("TUW: Lump at pose (x,y,z) = (%f, %f, %f) is already as unknown object in DB", pose_x, pose_y, pose_z);
-                        }
-                        else {
-                            lump.header.frame_id = "map";
-                            lump.header.stamp = ros::Time();
-                            lump.pose.position.x = pose_x;
-                            lump.pose.position.y = pose_y;
-                            lump.pose.position.z = pose_z;
-                            lump.pose.orientation.x = 0.0;
-                            lump.pose.orientation.y = 0.0;
-                            lump.pose.orientation.z = 0.0;
-                            lump.pose.orientation.w = 1.0;
-                            lump.bounding_cylinder.diameter = diam;
-                            //lump.bounding_cylinder.diameter = y_diam;
-                            lump.bounding_cylinder.height = z_diam;
-                            lump.category="unknown";
-                            lump.id= (*sceneObject_db).id;
-
-                            is_lump_in_db = true;
-                            response.dynamic_objects_updated.push_back(lump);
-
-                            for (int i = 0; i < response.dynamic_objects_removed.size(); ++i)
-                            {
-                                if (response.dynamic_objects_removed[i].id == sceneObject_db->id)
-                                {
-                                    response.dynamic_objects_removed.erase(response.dynamic_objects_removed.begin() + i);
-                                    break;
-                                }
-                            }
-                            ROS_INFO("TUW: Lump at pose (x,y,z) = (%f, %f, %f) got updated in DB", pose_x, pose_y, pose_z);
+                        if ((*sceneObject_db).category != "unknown") {
+                            ROS_INFO("TUW: Lump at pose (x,y,z) = (%f, %f, %f) is already classified in DB", pose_x, pose_y, pose_z);
+                            is_classified = true;
+                            break;
+                        } else {
+                            ROS_INFO("TUW: Lump at pose (x,y,z) = (%f, %f, %f) is already in DB", pose_x, pose_y, pose_z);
                         }
                     }
+                }
+
+                if (overlap >= 0.85 && !is_lump_in_db) {
+                    lump.header.frame_id = "map";
+                    lump.header.stamp = ros::Time();
+                    lump.pose.position.x = pose_x;
+                    lump.pose.position.y = pose_y;
+                    lump.pose.position.z = pose_z;
+                    lump.pose.orientation.x = 0.0;
+                    lump.pose.orientation.y = 0.0;
+                    lump.pose.orientation.z = 0.0;
+                    lump.pose.orientation.w = 1.0;
+                    lump.bounding_cylinder.diameter = diam;
+                    lump.bounding_cylinder.height = z_diam;
+                    lump.category="unknown";
+                    lump.id= (*sceneObject_db).id;
+
+                    is_lump_in_db = true;
+                    response.dynamic_objects_updated.push_back(lump);
+
+                    for (int i = 0; i < response.dynamic_objects_removed.size(); ++i)
+                    {
+                        if (response.dynamic_objects_removed[i].id == sceneObject_db->id)
+                        {
+                            response.dynamic_objects_removed.erase(response.dynamic_objects_removed.begin() + i);
+                            break;
+                        }
+                    }
+                    ROS_INFO("TUW: Lump at pose (x,y,z) = (%f, %f, %f) got updated in DB", pose_x, pose_y, pose_z);
+                    break;
                 }
             }
 
@@ -186,7 +177,6 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
                 lump.pose.orientation.z = 0.0;
                 lump.pose.orientation.w = 1.0;
                 lump.bounding_cylinder.diameter = diam;
-                //lump.bounding_cylinder.diameter = y_diam;
                 lump.bounding_cylinder.height = z_diam;
                 lump.category="unknown";
                 lump.id=get_unique_object_id();
@@ -221,20 +211,16 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
                 zyl_marker.color.g = 1.0;
                 zyl_marker.color.b = 1.0;
                 zyl_marker.color.a = 0.6;
-
                 markerPublisher.publish(zyl_marker);
-
                 vis_marker_ids.push_back(zyl_marker.id);
-
             }
-
         }
 
         ROS_INFO("TUW: Added %zu lumps", response.dynamic_objects_added.size());
         ROS_INFO("TUW: Updated %zu lumps", response.dynamic_objects_updated.size());
         ROS_INFO("TUW: Removed %zu lumps", response.dynamic_objects_removed.size());
 
-        statistics_file << t_differencing << ";" << t_comp2D << ";" << t_cluster << ";" << overallTime.getTime() << ";" << currentMap->size() << ";" << clusters.size() << "\n"; 
+        statistics_file << t_differencing << ";" << t_comp2D << ";" << t_cluster << ";" << overallTime.getTime() << ";" << currentMap->size() << ";" << clusters.size() << "\n";
         statistics_file.flush();
 
         return true;
@@ -256,19 +242,20 @@ float RemoveBackground::doIntersect(double c1_posx, double c1_posy, double c1_ra
         return intersectionPerc;
     }
 
-    //c1 is completely covered by c2
-    if (distance + c1_rad <= c2_rad) {
+    //one of the circles covers the other circle completely
+    if (distance <= std::abs(c1_rad - c2_rad)) {
         intersectionPerc = 1.0;
         return intersectionPerc;
     }
 
     double overlappingArea;
     overlappingArea = c1_rad*c1_rad * acos((c1_rad*c1_rad - c2_rad*c2_rad + distance2) / (2*distance*c1_rad)) +
-                      c2_rad*c2_rad * acos((c2_rad*c2_rad - c1_rad*c1_rad + distance2) / (2*distance*c2_rad)) -
-                      0.5 * std::sqrt((-distance+c1_rad+c2_rad) * (distance + c1_rad-c2_rad) * (distance-c1_rad+c2_rad) * (distance+c1_rad+c2_rad));
+            c2_rad*c2_rad * acos((c2_rad*c2_rad - c1_rad*c1_rad + distance2) / (2*distance*c2_rad)) -
+            0.5 * std::sqrt((-distance+c1_rad+c2_rad) * (distance + c1_rad-c2_rad) * (distance-c1_rad+c2_rad) * (distance+c1_rad+c2_rad));
 
     double areaC1 = c1_rad*c1_rad * M_PI;
-    intersectionPerc = overlappingArea / areaC1;
+    double areaC2 = c2_rad*c2_rad * M_PI;
+    intersectionPerc = std::max(overlappingArea / areaC1, overlappingArea/areaC2);
 
     return intersectionPerc;
 
@@ -287,40 +274,22 @@ void RemoveBackground::initialize(int argc, char **argv) {
         ROS_WARN("The static octomap is empty! You probably try to use the default octomap.");
     }
 
-    //insert some objects for testing purposes with corridor_test_edited.bt
-    //    squirrel_object_perception_msgs::ObjectToDB test_object;
-
-    //    test_object.id = "id1";
-    //    test_object.category = "cat1";
-    //    //test_object.cloud = ;
-    //    test_object.pose.header.frame_id = "/map";
-    //    test_object.pose.header.stamp = ros::Time();
-    //    test_object.pose.pose.orientation.x = 0.0;
-    //    test_object.pose.pose.orientation.y = 0.0;
-    //    test_object.pose.pose.orientation.z = 0.0;
-    //    test_object.pose.pose.orientation.w = 1.0;
-    //    test_object.pose.pose.position.x = 11.1375;
-    //    test_object.pose.pose.position.y = 5.1625;
-    //    test_object.pose.pose.position.z = 0.125;
-
-    //    message_store.insert(test_object);
-
-    //    squirrel_object_perception_msgs::LumpToDB test_lump;
-    //    test_lump.stamped_dynamic_object.header.frame_id = "/map";
-    //    test_lump.stamped_dynamic_object.header.stamp = ros::Time();
-    //    test_lump.stamped_dynamic_object.dynamic_object.pose.position.x = 2.01;
-    //    test_lump.stamped_dynamic_object.dynamic_object.pose.position.y = 4.41;
-    //    test_lump.stamped_dynamic_object.dynamic_object.pose.position.z = 0.07;
-    //    test_lump.stamped_dynamic_object.dynamic_object.pose.orientation.x = 0.0;
-    //    test_lump.stamped_dynamic_object.dynamic_object.pose.orientation.y = 0.0;
-    //    test_lump.stamped_dynamic_object.dynamic_object.pose.orientation.z = 0.0;
-    //    test_lump.stamped_dynamic_object.dynamic_object.pose.orientation.w = 1.0;
-    //    test_lump.stamped_dynamic_object.dynamic_object.x_dim.data = 0;
-    //    test_lump.stamped_dynamic_object.dynamic_object.y_dim.data = 0;
-    //    test_lump.stamped_dynamic_object.dynamic_object.z_dim.data = 0;
-    //    test_lump.is_examined.data = false;
-
-    //    message_store.insert(test_lump);
+    //insert some objects for testing purposes
+//    squirrel_object_perception_msgs::SceneObject test_lump;
+//    test_lump.header.frame_id = "/map";
+//    test_lump.header.stamp = ros::Time();
+//    test_lump.id = "test_lump";
+//    test_lump.category = "unknown";
+//    test_lump.pose.position.x = 1.5;
+//    test_lump.pose.position.y = 1;
+//    test_lump.pose.position.z = 0.00;
+//    test_lump.pose.orientation.x = 0.0;
+//    test_lump.pose.orientation.y = 0.0;
+//    test_lump.pose.orientation.z = 0.0;
+//    test_lump.pose.orientation.w = 1.0;
+//    test_lump.bounding_cylinder.diameter = 0.8;
+//    test_lump.bounding_cylinder.height = 2;
+//    message_store.insert(test_lump);
 
     statistics_file.open("find_objects_statistic.txt", std::ofstream::out | std::ofstream::trunc);
     statistics_file << "Time for subtraction; Time for comparing cloud against 2D grid; Time to cluster and filter; overall time; number of nodes in current octomap; Number of clusters\n";
@@ -598,28 +567,28 @@ bool RemoveBackground::checkWaypoint (squirrel_object_perception_msgs::CheckWayp
         max.z() = 0-0.00001;
 
 
-//        visualization_msgs::Marker marker;
-//        marker.header.frame_id = "/map";
-//        marker.header.stamp = ros::Time::now();
-//        marker.ns = "bb";
-//        marker.id = 0;
-//        marker.type = visualization_msgs::Marker::CUBE;
-//        marker.action = visualization_msgs::Marker::ADD;
-//        marker.pose.position.x = min.x() + (max.x()-min.x())/2;
-//        marker.pose.position.y = min.y() + (max.y()-min.y())/2;;
-//        marker.pose.position.z = 0;
-//        marker.pose.orientation.x = 0.0;
-//        marker.pose.orientation.y = 0.0;
-//        marker.pose.orientation.z = 0.0;
-//        marker.pose.orientation.w = 1.0;
-//        marker.scale.x = max.x()-min.x();
-//        marker.scale.y = max.y()-min.y();
-//        marker.scale.z = 0.5;
-//        marker.color.r = 1.0f;
-//        marker.color.g = 0.0f;
-//        marker.color.b = 0.0f;
-//        marker.color.a = 0.5f;
-//        marker_pub.publish(marker);
+        //        visualization_msgs::Marker marker;
+        //        marker.header.frame_id = "/map";
+        //        marker.header.stamp = ros::Time::now();
+        //        marker.ns = "bb";
+        //        marker.id = 0;
+        //        marker.type = visualization_msgs::Marker::CUBE;
+        //        marker.action = visualization_msgs::Marker::ADD;
+        //        marker.pose.position.x = min.x() + (max.x()-min.x())/2;
+        //        marker.pose.position.y = min.y() + (max.y()-min.y())/2;;
+        //        marker.pose.position.z = 0;
+        //        marker.pose.orientation.x = 0.0;
+        //        marker.pose.orientation.y = 0.0;
+        //        marker.pose.orientation.z = 0.0;
+        //        marker.pose.orientation.w = 1.0;
+        //        marker.scale.x = max.x()-min.x();
+        //        marker.scale.y = max.y()-min.y();
+        //        marker.scale.z = 0.5;
+        //        marker.color.r = 1.0f;
+        //        marker.color.g = 0.0f;
+        //        marker.color.b = 0.0f;
+        //        marker.color.a = 0.5f;
+        //        marker_pub.publish(marker);
 
         int countMissingNodes = 0;
         int countTriangleNodes = 0;
@@ -652,7 +621,7 @@ bool RemoveBackground::checkWaypoint (squirrel_object_perception_msgs::CheckWayp
                         countMissingNodes+=1;
                         //ROS_INFO ("Unknown node in bounding box");
                     }
-                   /* else if(!currentMap->isNodeOccupied(node)) { //this case should not occure
+                    /* else if(!currentMap->isNodeOccupied(node)) { //this case should not occure
                         std::cout << "Node is not occupied" << std::endl;
                         //                    std::cout << "Waypoint should be used. It is not fully covered by the octomap! Position: ("
                         //                              << node_coordinates.x() << "," << node_coordinates.y() << "," << node_coordinates.z() << ")" << std::endl;
