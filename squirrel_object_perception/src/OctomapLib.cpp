@@ -135,22 +135,57 @@ OcTree OctomapLib::subtractOctomap(const OcTree *minuendMap, OcTree subtrahendMa
 
 
 //this method can be used when the occupied nodes of the static octomap are stored in a KeySet
-OcTree OctomapLib::compareOctomapToStatic(const OcTree *staticMap, OcTree currentOctomap) {
-    for (OcTree::leaf_iterator it = currentOctomap.begin_leafs(), end=currentOctomap.end_leafs(); it!=end; ++it) {
+//A bounding box can be specified. Values that are outside of the octomap, are replaced by the octomap's dimension
+OcTree OctomapLib::compareOctomapToStatic(const OcTree *staticMap, OcTree currentOctomap, octomap::point3d min, octomap::point3d max) {
+
+    double minX, minY, minZ, maxX, maxY, maxZ;
+    currentOctomap.getMetricMin(minX, minY, minZ);
+    currentOctomap.getMetricMax(maxX, maxY, maxZ);
+
+    if (min.x() < minX) {
+        min.x() = minX;
+    }
+    if (min.y() < minY) {
+        min.y() = minY;
+    }
+    if (min.z() < minZ) {
+        min.z() = minZ;
+    }
+    if (max.x() > maxX) {
+        max.x() = maxX;
+    }
+    if (max.y() > maxY) {
+        max.y() = maxY;
+    }
+    if (max.z() > maxZ) {
+        max.z() = maxZ;
+    }
+
+    std::cout << min.x() <<"; " << min.y() << "; " << min.z() << std::endl;
+    std::cout << max.x() <<"; " << max.y() << "; " << max.z() << std::endl;
+
+    OcTree subtractedMap(leaf_size);
+
+    //iterate over the current octomap and set the nodes ina new octomap to occupied when they are not in the static one
+    for(octomap::OcTree::leaf_bbx_iterator it = currentOctomap.begin_leafs_bbx(min, max); it != currentOctomap.end_leafs_bbx(); it ++) {
         if(currentOctomap.isNodeOccupied(*it)) {
             KeySet::iterator key_it = static_keys.find(it.getKey());
             if (key_it != static_keys.end()) { //voxel is occupied in static map as well
-                it->setLogOdds(logodds(currentOctomap.getClampingThresMin()));
-            } else { //check if node is unknown in the static map. this case should not happen too often as most of the occupied voxels are in the static map.
+                //it->setLogOdds(logodds(currentOctomap.getClampingThresMin()));
+            }
+            else { //check if node is unknown in the static map. this case should not happen too often as most of the occupied voxels are in the static map.
                 OcTreeNode* node = staticMap->search(it.getCoordinate());
                 if(!node) {
-                    it->setLogOdds(logodds(currentOctomap.getClampingThresMin()));
+                    //it->setLogOdds(logodds(currentOctomap.getClampingThresMin()));
+                } else {
+                    subtractedMap.setNodeValue(it.getKey(), logodds(currentOctomap.getClampingThresMax()));
                 }
             }
         }
     }
-    currentOctomap.updateInnerOccupancy();
-    return currentOctomap;
+    //currentOctomap.updateInnerOccupancy();
+    //return currentOctomap;
+    return subtractedMap;
 }
 
 void OctomapLib::initStaticKeys(OcTree *staticMap) {

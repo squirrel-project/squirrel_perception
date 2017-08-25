@@ -31,13 +31,36 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
             zyl_marker.id = *it;
             zyl_marker.ns = "cluster_marker";
             zyl_marker.action = visualization_msgs::Marker::DELETE;
-            markerPublisher.publish(zyl_marker);
+            markerPublisherDynObjects.publish(zyl_marker);
         }
         //    zyl_marker.action = 3; //DELETEALL
         //    markerPublisher.publish(zyl_marker);
         vis_marker_ids.clear();
 
-        octomap::OcTree subtractedMapVar = subtractOctomaps();
+        octomap::point3d min, max;
+        if (request.min.x == 0 && request.min.y == 0 && request.min.z == 0 && request.max.x == 0 && request.max.y == 0 && request.max.z == 0) {
+            //default values --> use whole octomap
+            ROS_INFO("Use the whole octomap for the subtraction step");
+            double minX, minY, minZ, maxX, maxY, maxZ;
+            currentMap->getMetricMin(minX, minY, minZ);
+            currentMap->getMetricMax(maxX, maxY, maxZ);
+            min.x() = minX;
+            min.y() = minY;
+            min.z() = minZ;
+            max.x() = maxX;
+            max.y() = maxY;
+            max.z() = maxZ;
+        } else {
+            min.x() = request.min.x;
+            min.y() = request.min.y;
+            min.z() = request.min.z;
+            max.x() = request.max.x;
+            max.y() = request.max.y;
+            max.z() = request.max.z;
+        }
+
+        octomap::OcTree subtractedMapVar = subtractOctomaps(min, max);
+        visualizeBB(min, max);
         if (octomap_lib.getNumberOccupiedLeafNodes(&subtractedMapVar) == 0) {
             ROS_INFO("TUW: Static and current octomap are the same");
             return true;
@@ -211,7 +234,7 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
                 zyl_marker.color.g = 1.0;
                 zyl_marker.color.b = 1.0;
                 zyl_marker.color.a = 0.6;
-                markerPublisher.publish(zyl_marker);
+                markerPublisherDynObjects.publish(zyl_marker);
                 vis_marker_ids.push_back(zyl_marker.id);
             }
         }
@@ -264,8 +287,9 @@ float RemoveBackground::doIntersect(double c1_posx, double c1_posy, double c1_ra
 void RemoveBackground::initialize(int argc, char **argv) {
 
     n_->getParam("static_octomap_path", staticOctomapPath_);
-    markerPublisher = n_->advertise<visualization_msgs::Marker>("vis_marker_dynamic_objects", 0);
-    marker_pub = this->n_->advertise<visualization_msgs::Marker>("bb_triangle", 1);
+    markerPublisherDynObjects = n_->advertise<visualization_msgs::Marker>("vis_marker_dynamic_objects", 0);
+    markerPubBBTriangle = this->n_->advertise<visualization_msgs::Marker>("bb_triangle", 1);
+    markerPubBB = this->n_->advertise<visualization_msgs::Marker>("bb_octomap_comp", 1);
 
     setStaticOctomap(staticOctomapPath_);
     octomap_lib.initStaticKeys(staticMap);
@@ -326,10 +350,10 @@ void RemoveBackground::setCurrentOctomap(octomap::OcTree *currentMap) {
     this->currentMap = currentMap;
 }
 
-octomap::OcTree RemoveBackground::subtractOctomaps() {
+octomap::OcTree RemoveBackground::subtractOctomaps(octomap::point3d min, octomap::point3d max) {
     cout << "Start subtracting..." << endl;
     {pcl::ScopeTime time("Subtracting ");
-        octomap::OcTree result = octomap_lib.compareOctomapToStatic(staticMap, *currentMap);
+        octomap::OcTree result = octomap_lib.compareOctomapToStatic(staticMap, *currentMap, min, max);
         t_differencing = time.getTime();
         cout << "Finished subtracting" << endl;
         return result;
@@ -588,7 +612,7 @@ bool RemoveBackground::checkWaypoint (squirrel_object_perception_msgs::CheckWayp
         //        marker.color.g = 0.0f;
         //        marker.color.b = 0.0f;
         //        marker.color.a = 0.5f;
-        //        marker_pub.publish(marker);
+        //        markerPubBBTriangle.publish(marker);
 
         int countMissingNodes = 0;
         int countTriangleNodes = 0;
@@ -654,4 +678,31 @@ bool RemoveBackground::checkWaypoint (squirrel_object_perception_msgs::CheckWayp
         response.explore_waypoint.data = false;
         return true;
     }
+}
+
+void RemoveBackground::visualizeBB(octomap::point3d min, octomap::point3d max) {
+    //std::cout << min.x() <<"; " << min.y() << "; " << min.z() << std::endl;
+    //std::cout << max.x() <<"; " << max.y() << "; " << max.z() << std::endl;
+    visualization_msgs::Marker marker;
+    marker.header.frame_id = "map";
+    marker.header.stamp = ros::Time();
+    marker.ns = "BBoctomap";
+    marker.id = 0;
+    marker.type = visualization_msgs::Marker::CUBE;
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.pose.position.x = min.x() + (max.x() - min.x())/2;
+    marker.pose.position.y = min.y() + (max.y() - min.y())/2;;
+    marker.pose.position.z = min.z() + (max.z() - min.z())/2;;
+    marker.pose.orientation.x = 0.0;
+    marker.pose.orientation.y = 0.0;
+    marker.pose.orientation.z = 0.0;
+    marker.pose.orientation.w = 1.0;
+    marker.scale.x = (max.x() - min.x());
+    marker.scale.y = (max.y() - min.y());
+    marker.scale.z = (max.z() - min.z());
+    marker.color.a = 0.4; // Don't forget to set the alpha!
+    marker.color.r = 0.0;
+    marker.color.g = 1.0;
+    marker.color.b = 0.0;
+    markerPubBB.publish(marker);
 }

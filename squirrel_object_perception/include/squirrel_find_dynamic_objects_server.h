@@ -49,8 +49,9 @@ private:
     ros::ServiceServer Remover_;
     ros::ServiceServer checkWaypointServer;
     ros::NodeHandle *n_;
-    ros::Publisher markerPublisher;
-    ros::Publisher marker_pub;
+    ros::Publisher markerPublisherDynObjects;
+    ros::Publisher markerPubBBTriangle;
+    ros::Publisher markerPubBB;
 
     octomap::OcTree *staticMap;
     octomap::OcTree *currentMap;
@@ -62,6 +63,7 @@ private:
     bool removeBackground (squirrel_object_perception_msgs::FindDynamicObjects::Request &req, squirrel_object_perception_msgs::FindDynamicObjects::Response & response);
     bool checkWaypoint (squirrel_object_perception_msgs::CheckWaypoint::Request & request, squirrel_object_perception_msgs::CheckWaypoint::Response & response);
     float doIntersect(double c1_posx, double c1_posy, double c1_rad, double c2_posx, double c2_posy, double c2_rad);
+    void visualizeBB(octomap::point3d min, octomap::point3d max);
 
     mongodb_store::MessageStoreProxy message_store;
 
@@ -95,7 +97,7 @@ public:
     void mapToMat(const nav_msgs::OccupancyGridConstPtr& grid_map, cv::Mat &mat);
     void compareCloudToMap(pcl::PointCloud<PointT>::Ptr &cloud, const nav_msgs::OccupancyGridConstPtr& grid_map);
     std::vector<pcl::PointCloud<PointT>::Ptr> removeClusters(pcl::PointCloud<PointT>::Ptr &cloud);
-    octomap::OcTree subtractOctomaps();
+    octomap::OcTree subtractOctomaps(octomap::point3d min, octomap::point3d max);
     pcl::PointCloud<PointT>::Ptr compareOctomapToGrid(octomap::OcTree *octomap, const nav_msgs::OccupancyGridConstPtr& grid_map);
 };
 
