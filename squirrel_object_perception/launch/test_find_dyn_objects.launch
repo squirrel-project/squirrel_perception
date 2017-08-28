@@ -7,9 +7,9 @@
 
   <!--- Run mapserver -->
 
-  <include file="$(find squirrel_navigation)/launch/map_server.launch">
-    <arg name="map_file" value="$(arg map_file)" />
-  </include>
+ <!--- Run mapserver -->
+  <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)"/>
+
 
   <node name="squirrel_find_dynamic_objects"
         pkg="squirrel_object_perception"
