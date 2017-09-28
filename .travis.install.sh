@@ -10,7 +10,7 @@ sh -c 'echo "deb http://lcas.lincoln.ac.uk/repos/release trusty main" > /etc/apt
 wget http://lcas.lincoln.ac.uk/repos/public.key -O - | apt-key add -
 apt-get update
 
-sh -c 'echo "deb https://rwiki.acin.tuwien.ac.at/apt/v4r-release trusty main" > /etc/apt/sources.list.d/rwiki_server.list'
+sh -c 'echo "deb http://rwiki.acin.tuwien.ac.at/apt/v4r-release trusty main" > /etc/apt/sources.list.d/rwiki_server.list'
 apt-key adv --keyserver hkp://pgp.mit.edu:80 --recv-key 943EB54F
 #wget https://rwiki.acin.tuwien.ac.at/apt/Public.key -O - | apt-key add -
 apt-get update
