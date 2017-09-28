@@ -7,7 +7,7 @@ wget http://lcas.lincoln.ac.uk/repos/public.key -O - | apt-key add -
 apt-get update
 
 sh -c 'echo "deb http://rwiki.acin.tuwien.ac.at/apt/v4r-release trusty main" > /etc/apt/sources.list.d/rwiki_server.list'
-apt-key adv --keyserver hkp://pgp.mit.edu:80 --recv-key 943EB54F
+wget http://rwiki.acin.tuwien.ac.at/apt/Public.key -O - | apt-key add -
 apt-get update
 
 mkdir -p /etc/ros/rosdep/mapping/
