@@ -24,13 +24,13 @@ int SegmentationPopoutNode::PersistentObject::cnt = 0;
 SegmentationPopoutNode::SegmentationPopoutNode()
 {
   n_ = 0;
-  segmenter_ = 0;
+  // segmenter_ = 0;
   cloud_.reset(new pcl::PointCloud<PointT>());
 }
 
 SegmentationPopoutNode::~SegmentationPopoutNode()
 {
-  delete segmenter_;
+  // delete segmenter_;
   delete n_;
 }
 
@@ -46,9 +46,11 @@ void SegmentationPopoutNode::initialize(int argc, char ** argv)
     SegmentOnce_ = n_->advertiseService ("/squirrel_segmentation_incremental_once", &SegmentationPopoutNode::returnNextResult, this);
     ROS_INFO("Ready to get service calls...");
 
-    v4r::DominantPlaneSegmenterParameter params;
-    //params.seg_type_ = 1;
-    segmenter_ = new v4r::DominantPlaneSegmenter<PointT>(params);
+    // v4r::DominantPlaneSegmenterParameter params;
+    // params.seg_type_ = 1;
+    // segmenter_ = new v4r::DominantPlaneSegmenter<PointT>(params);
+    std::vector<std::string> arguments(argv+1, argv+argc);
+    segmenter_.initialize(arguments);
 }
 
 bool SegmentationPopoutNode::segment(squirrel_object_perception_msgs::SegmentInit::Request & req, squirrel_object_perception_msgs::SegmentInit::Response & response)
@@ -60,18 +62,19 @@ bool SegmentationPopoutNode::segment(squirrel_object_perception_msgs::SegmentIni
 
   pcl::PointCloud<PointT>::Ptr inCloud(new pcl::PointCloud<PointT>());
   pcl::fromROSMsg (req.cloud, *inCloud);
-  std::vector<pcl::PointIndices> cluster_indices;
+  //std::vector<pcl::PointIndices> cluster_indices;
+  std::vector<std::vector<int> > cluster_indices;
   std::vector<pcl::PointCloud<PointT>::Ptr> clusters;
 
   cloud_ = inCloud->makeShared();
-  segmenter_->setInputCloud(cloud_);
-  segmenter_->segment();
-  segmenter_->getSegmentIndices(cluster_indices);
+  //segmenter_->setInputCloud(cloud_);
+  segmenter_.segment(cloud_);
+  cluster_indices = segmenter_.getClusters();
 
-  for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
+  for (std::vector<std::vector<int> >::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
   {
     pcl::PointCloud<PointT>::Ptr cloud_cluster (new pcl::PointCloud<PointT>);
-    for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); ++pit)
+    for (std::vector<int>::const_iterator pit = it->begin (); pit != it->end (); ++pit)
         cloud_cluster->points.push_back (cloud_->points[*pit]);
     cloud_cluster->header.frame_id="/kinect_depth_optical_frame";
     cloud_cluster->width = cloud_cluster->points.size ();
@@ -111,8 +114,8 @@ bool SegmentationPopoutNode::segment(squirrel_object_perception_msgs::SegmentIni
       results.push_back(SegmentationResult());
       transformBase2Kinect(clusters[i]);
       geometry_msgs::PoseStamped poseKinect = base_link2kinect(centroid[0], centroid[1], centroid[2]);
-      for(size_t k = 0; k < cluster_indices[i].indices.size(); k++) {
-        results.back().indices.data.push_back(cluster_indices[i].indices[k]);
+      for(size_t k = 0; k < cluster_indices[i].size(); k++) {
+        results.back().indices.data.push_back(cluster_indices[i][k]);
       }
       results.back().distanceFromRobot = centroid[0];
       results.back().pose = poseKinect;

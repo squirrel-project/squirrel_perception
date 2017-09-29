@@ -127,7 +127,7 @@ Recognizer2dROS::initialize (int argc, char ** argv)
       v4r::IMKRecognizer::Parameter param;
       param.pnp_param.eta_ransac = 0.01;
       param.pnp_param.max_rand_trials = 10000;
-      param.pnp_param.inl_dist = 2;
+      param.pnp_param.inl_dist_px = 2;
       //param.pnp_param.inl_dist_z = 0.02;
       param.vc_param.cluster_dist = 40;
 

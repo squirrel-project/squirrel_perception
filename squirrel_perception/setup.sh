@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 FILE="/etc/ros/rosdep/sources.list.d/31-squirrel_perception.list"
-REPO="http://153.97.4.193/building/ubuntu/"
+REPO="https://rwiki.acin.tuwien.ac.at/apt/v4r-release"
 REPO_STRANDS="http://lcas.lincoln.ac.uk/repos/release"
 APTSOURCES="/etc/apt/sources.list"
 
@@ -38,7 +38,7 @@ check_file () {
 }
 
 add_repo () {
-  curl -s http://153.97.4.193/building/public.key | sudo apt-key add -
+  sudo apt-key adv --keyserver hkp://pgp.mit.edu:80 --recv-key 943EB54F
   curl -s http://lcas.lincoln.ac.uk/repos/public.key | sudo apt-key add -
   sudo apt-add-repository $REPO
   sudo apt-add-repository $REPO_STRANDS
