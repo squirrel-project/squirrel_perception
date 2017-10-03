@@ -77,8 +77,8 @@ bool AttentionController::lookAtPosition(robotino_msgs::LookAtPosition::Request 
 {
   jointMutex_.lock();
   std_msgs::Float64 panMsg, tiltMsg;
-  panMsg.data = atan2(req.target.y, req.target.x);
-  tiltMsg.data = -atan2(0.4, req.target.x); 
+  panMsg.data = atan2(req.target.pose.position.y, req.target.pose.position.x);
+  tiltMsg.data = -atan2(0.4, req.target.pose.position.x); 
   ROS_INFO("pan/tilt relative move move (deg): %.f %.f / (rad): %.3f %.3f ", panMsg.data*180./M_PI, tiltMsg.data*180./M_PI, panMsg.data, tiltMsg.data);
   if(std::isfinite(panMsg.data) && std::isfinite(tiltMsg.data))
   {

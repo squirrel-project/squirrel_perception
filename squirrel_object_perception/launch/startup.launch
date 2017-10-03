@@ -16,6 +16,13 @@
 	<param name="recognizer_topic" value="$(arg recognizer2d_topic)" />
   </node>
 
+  <node name="squirrel_recognize_objects"
+        pkg="squirrel_object_perception"
+        type="squirrel_recognize_objects"
+        required="true" output="screen">
+	<param name="recognizer_topic" value="$(arg recognizer_topic)" />
+  </node>
+
 
   <node name="squirrel_find_dynamic_objects"
         pkg="squirrel_object_perception"

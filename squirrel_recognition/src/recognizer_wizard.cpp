@@ -5,8 +5,9 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <std_msgs/String.h>
 #include <geometry_msgs/Transform.h>
-
+#include <geometry_msgs/PoseStamped.h>
 #include <v4r/io/filesystem.h>
+#include <tf/transform_listener.h>
 
 #include <squirrel_object_perception_msgs/Recognize.h>
 #include <squirrel_object_perception_msgs/Recognize2d.h>
@@ -129,9 +130,39 @@ public:
                     std_msgs::String input_id;
                     input_id.data = models_[class_number];
                     res.ids.push_back(input_id);
-                    geometry_msgs::Transform empty_transform;
-                    res.transforms.push_back(empty_transform);
+
+                    tf::TransformListener tf_listener;
+                    geometry_msgs::PoseStamped before, after;
+                    before.header.frame_id = "/hand_palm_link";
+                    before.pose.position.x = 0;
+                    before.pose.position.y = 0;
+                    before.pose.position.z = 0;
+                    before.pose.orientation.x = 0;
+                    before.pose.orientation.y = 0;
+                    before.pose.orientation.z = 0;
+                    before.pose.orientation.w = 1;
+                    try
+                    {
+                        tf_listener.waitForTransform("/hand_palm_link", "/kinect_rgb_optical_frame", ros::Time::now(), ros::Duration(1.0));
+                        tf_listener.transformPose("/kinect_rgb_optical_frame", before, after);
+                       }
+                    catch (tf::TransformException& ex)
+                    {
+                        ROS_ERROR("%s: %s", ros::this_node::getName().c_str(), ex.what());
+                    }
+
+                    geometry_msgs::Transform hand;
+                    hand.translation.x = after.pose.position.x;
+                    hand.translation.y = after.pose.position.y;
+                    hand.translation.z = after.pose.position.z;
+                    hand.rotation.x = 0;
+                    hand.rotation.y = 0;
+                    hand.rotation.z = 0;
+                    hand.rotation.w = 1;
+                    res.transforms.push_back(hand);
                     res.confidences.push_back(1.0);
+
+                    std::cout << hand.translation << std::endl;
 
                     break;
                 }

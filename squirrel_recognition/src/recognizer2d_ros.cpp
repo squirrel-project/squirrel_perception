@@ -107,8 +107,12 @@ Recognizer2dROS::recognize2dROS(squirrel_object_perception_msgs::Recognize2d::Re
         response.transforms.push_back(tt);
     }
 
-    sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", im_draw).toImageMsg();
-    image_pub_.publish(msg);
+    cv_bridge::CvImage out_msg;
+    out_msg.header.frame_id = "/kinect_rgb_optical_frame";
+    out_msg.header.stamp = ros::Time::now();
+    out_msg.encoding = sensor_msgs::image_encodings::BGR8;
+    out_msg.image = im_draw;
+    image_pub_.publish(out_msg.toImageMsg());
 
     return true;
 }
@@ -120,28 +124,25 @@ Recognizer2dROS::initialize (int argc, char ** argv)
     n_.reset( new ros::NodeHandle ( "~" ) );
 
     // init recognizer
-#ifdef USE_SIFT_GPU
-    v4r::IMKRecognizer::Parameter param;
-    /*param.cb_param.nnr = 0.92;
-    param.cb_param.thr_desc_rnn = 0.3;
-    param.cb_param.max_dist = 0.4;*/
-    param.cb_param.nnr = 1.000001;
-    param.cb_param.thr_desc_rnn = 0.25;
-    param.cb_param.max_dist = FLT_MAX;
-    param.pnp_param.eta_ransac = 0.01;
-    param.pnp_param.max_rand_trials = 10000;
-    param.pnp_param.inl_dist = 4;
-    param.vc_param.cluster_dist = 40;
-    v4r::FeatureDetector::Ptr detector(new v4r::FeatureDetector_KD_SIFTGPU());
-    std::cout << "GPU SIFT" << std::endl;
-#else
-    v4r::KeypointObjectRecognizer::Parameter param;
-    param.cb_param.nnr = .92;
-    param.cb_param.thr_desc_rnn = 250.;
-    param.cb_param.max_dist = 500;
-    v4r::FeatureDetector::Ptr detector(new v4r::FeatureDetector_KD_CVSIFT());
-    std::cout << "CV SIFT" << std::endl;
-#endif
+      v4r::IMKRecognizer::Parameter param;
+      param.pnp_param.eta_ransac = 0.01;
+      param.pnp_param.max_rand_trials = 10000;
+      param.pnp_param.inl_dist_px = 2;
+      //param.pnp_param.inl_dist_z = 0.02;
+      param.vc_param.cluster_dist = 40;
+
+      #ifdef USE_SIFT_GPU
+      param.cb_param.nnr = 1.000001;
+      param.cb_param.thr_desc_rnn = 0.25;
+      param.cb_param.max_dist = FLT_MAX;
+      v4r::FeatureDetector::Ptr detector(new v4r::FeatureDetector_KD_SIFTGPU());
+      #else
+      v4r::KeypointObjectRecognizer::Parameter param;
+      param.cb_param.nnr = 1.000001;
+      param.cb_param.thr_desc_rnn = 250.;
+      param.cb_param.max_dist = FLT_MAX;
+      v4r::FeatureDetector::Ptr detector(new v4r::FeatureDetector_KD_CVSIFT());
+      #endif
 
     boost::shared_ptr<sensor_msgs::CameraInfo const> camera_info;
     camera_info = ros::topic::waitForMessage<sensor_msgs::CameraInfo>("/kinect/rgb/camera_info", *n_, ros::Duration(10));
@@ -158,7 +159,7 @@ Recognizer2dROS::initialize (int argc, char ** argv)
 
     setup(argc, argv);
 
-    imkRecognizer_.reset(new v4r::IMKRecognizer(param, detector, detector));
+    imkRecognizer_ = boost::make_shared<v4r::IMKRecognizer>(param, detector, detector);
     imkRecognizer_->setCameraParameter(intrinsic, dist_coeffs); //get those parameters from the camera topic
     imkRecognizer_->setDataDirectory(base_dir); //that is the directory with all the models
     if (!codebook_filename.empty())
