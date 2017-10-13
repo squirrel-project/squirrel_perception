@@ -1,7 +1,7 @@
 # SQUIRREL_PERCEPTION
 v4r:
   ubuntu: v4r
-classifier_srv_definitions:
-  ubuntu: ros-indigo-classifier-srv-definitions
-object_classifier:
-  ubuntu: ros-indigo-object-classifier
+v4r_object_classification_msgs:
+  ubuntu: ros-indigo-v4r-object-classification-msgs
+v4r_object_classification:
+  ubuntu: ros-indigo-v4r-object-classification 
