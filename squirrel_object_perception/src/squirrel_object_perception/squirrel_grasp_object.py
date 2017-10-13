@@ -54,8 +54,8 @@ class SquirrelGraspObjectImpl:
             rospy.loginfo("No moveit group available")
             self._group = None
 
-        self._tilt_pub = rospy.Publisher('/tilt_controller/command', Float64, queue_size=10)
-        self._pan_pub = rospy.Publisher('/pan_controller/command', Float64, queue_size=10)
+        self._tilt_pub = rospy.Publisher('/neck_tilt_controller/command', Float64, queue_size=10)
+        self._pan_pub = rospy.Publisher('/neck_pan_controller/command', Float64, queue_size=10)
         pass
 
     def configure(self):

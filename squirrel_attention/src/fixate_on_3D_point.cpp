@@ -18,16 +18,8 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "fixate_on_3D_point_node");
   ros::NodeHandle nh;
 
-  ros::ServiceClient pan_speed_client =
-      nh.serviceClient<dynamixel_controllers::SetSpeed>("/pan_controller/set_speed", true);
-  ros::ServiceClient tilt_speed_client =
-      nh.serviceClient<dynamixel_controllers::SetSpeed>("/tilt_controller/set_speed", true);
-  ros::ServiceClient pan_client =
-      nh.serviceClient<dynamixel_controllers::SetRelativePosition>("/pan_controller/set_relative_position", true);
-  ros::ServiceClient tilt_client =
-      nh.serviceClient<dynamixel_controllers::SetRelativePosition>("/tilt_controller/set_relative_position", true);
-  ros::Publisher pan_pub = nh.advertise<std_msgs::Float64>("/pan_controller/relative_command", 0, false);
-  ros::Publisher tilt_pub = nh.advertise<std_msgs::Float64>("/tilt_controller/relative_command", 0, false);
+  ros::Publisher pan_pub = nh.advertise<std_msgs::Float64>("/neck_pan_controller/rel_command", 0, false);
+  ros::Publisher tilt_pub = nh.advertise<std_msgs::Float64>("/neck_tilt_controller/rel_command", 0, false);
 
   tf::TransformListener listener;
   geometry_msgs::PointStamped point, pan, tilt;
@@ -37,27 +29,6 @@ int main(int argc, char** argv)
   point.point.x = 1.0;
   point.point.y = 1.0;
   point.point.z = 0.0;
-
-  // only set the speed once (hopefully nobody else changes it)
-  dynamixel_controllers::SetSpeed srv;
-  srv.request.speed = 5.0;
-
-  if (pan_speed_client.call(srv))
-  {
-    ROS_DEBUG("Service /pan_controller/set_speed called succesfully");
-  }
-  else
-  {
-    ROS_ERROR("Failed to call service /pan_controller/set_speed");
-  }
-  if (tilt_speed_client.call(srv))
-  {
-    ROS_DEBUG("Service /tilt_controller/set_speed called succesfully");
-  }
-  else
-  {
-    ROS_ERROR("Failed to call service /tilt_controller/set_speed");
-  }
 
   ros::Rate r(25); // 25 hz
   while (nh.ok())
@@ -100,44 +71,6 @@ int main(int argc, char** argv)
     {
         ROS_INFO("rel_tilt: %f", rel_tilt);
     }
-    /*
-    dynamixel_controllers::SetRelativePosition srv;
-    srv.request.position = rel_pan;
-
-    double start;
-    start = ros::Time::now().toSec();
-    if (fabs(rel_pan) > 0.001 && pan_client.call(srv))
-    {
-      ROS_DEBUG("Service /pan_controller/set_relative_position called succesfully");
-    }
-    else
-    {
-      ROS_ERROR("rel_pan: %f", fabs(rel_pan));
-      ROS_ERROR("Failed to call service /pan_controller/set_relative_position");
-    }
-    double end;
-    end = ros::Time::now().toSec();
-    ROS_INFO("Service call took %f seconds", end - start);
-    start = ros::Time::now().toSec();
-
-    // Reuse the srv variable
-    srv.request.position = rel_tilt;
-    if (fabs(rel_tilt) > 0.001 && tilt_client.call(srv))
-    {
-      ROS_DEBUG("Service /tilt_controller/set_relative_position called succesfully");
-    }
-    else
-    {
-      ROS_ERROR("rel_tilt: %f", fabs(rel_tilt));
-      ROS_ERROR("Failed to call service /tilt_controller/set_relative_position");
-    }
-    end = ros::Time::now().toSec();
-    ROS_INFO("Service call took %f seconds", end - start);
-
-    // ROS_DEBUG("Need to move pan by %f relative degree", rad2deg(rel_pan));
-    // ROS_DEBUG("Need to move tilt by %f relative degree", rad2deg(rel_tilt));
-    // ROS_DEBUG("--------------------------------------------------");
-    */
     ros::spinOnce();
     r.sleep();
   }

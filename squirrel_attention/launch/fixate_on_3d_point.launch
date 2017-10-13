@@ -4,10 +4,8 @@
         type="fixate_on_3D_point_node"
         required="true" output="screen">
 
-        <remap from="/pan_topic" to="/pan_controller/relative_command"/>
-        <remap from="/tilt_topic" to="/tilt_controller/relative_command"/>
-        <remap from="/pan_service" to="/pan_controller/set_relative_position"/>
-        <remap from="/tilt_service" to="/tilt_controller/set_relative_position"/>
+        <remap from="/pan_topic" to="/neck_pan_controller/rel_command"/>
+        <remap from="/tilt_topic" to="/neck_tilt_controller/rel_command"/>
 
   </node>
 

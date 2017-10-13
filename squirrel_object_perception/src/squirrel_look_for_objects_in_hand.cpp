@@ -229,19 +229,12 @@ protected:
 
     bool moveCameraToDefault() {
         //move back to default position
-        ros::ServiceClient tilt_client = nh_.serviceClient<std_srvs::Empty>("/tilt_controller/resetPosition");
+        ros::ServiceClient tilt_client = nh_.serviceClient<std_srvs::Empty>("/squirrel_view_controller/reset_positions");
 
         std_srvs::Empty e;
         if (!tilt_client.call(e))
         {
-            ROS_ERROR("Failed to move camera back to default tilt position");
-            return false;
-        }
-
-        ros::ServiceClient pan_client = nh_.serviceClient<std_srvs::Empty>("/pan_controller/resetPosition");
-        if(!pan_client.call(e))
-        {
-            ROS_ERROR("Failed to move camera back to default pan position");
+            ROS_ERROR("Failed to move camera back to default pan/tilt position");
             return false;
         }
         return true;
