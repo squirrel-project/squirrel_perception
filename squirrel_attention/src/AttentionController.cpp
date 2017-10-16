@@ -18,8 +18,8 @@
 AttentionController::AttentionController()
 {
   // nh_.param("some", var_, defVal);
-  panPub_ = nh_.advertise<std_msgs::Float64>("/pan_controller/command", 2);
-  tiltPub_ = nh_.advertise<std_msgs::Float64>("/tilt_controller/command", 2);
+  panPub_ = nh_.advertise<std_msgs::Float64>("/neck_pan_controller/command", 2);
+  tiltPub_ = nh_.advertise<std_msgs::Float64>("/neck_tilt_controller/command", 2);
 
   lookImageSrv_ = nh_.advertiseService("/attention/look_at_image_position", &AttentionController::lookAtImagePosition, this);
   lookSrv_ = nh_.advertiseService("/attention/look_at_position", &AttentionController::lookAtPosition, this);

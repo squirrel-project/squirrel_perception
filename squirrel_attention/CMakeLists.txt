@@ -121,6 +121,8 @@ add_executable(attention_fusion src/AttentionFusion.cpp)
 add_dependencies(attention_fusion robotino_msgs_generate_messages_cpp)
 add_dependencies(attention_controller robotino_msgs_generate_messages_cpp)
 add_dependencies(attention_motion robotino_msgs_generate_messages_cpp)
+add_executable(fixate_on_3D_point src/fixate_on_3D_point.cpp)
+
 #add_executable(squirrel_attention_test src/test.cpp)
 
 ## Add cmake target dependencies of the executable/library
@@ -156,9 +158,10 @@ target_link_libraries(attention_controller ${catkin_LIBRARIES})
 target_link_libraries(attention_motion ${catkin_LIBRARIES})
 target_link_libraries(attention_fusion ${catkin_LIBRARIES})
 
+target_link_libraries(fixate_on_3D_point ${catkin_LIBRARIES})
+
 #target_link_libraries(squirrel_attention_test ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${STRANDSV4R_LIBS})
 #add_dependencies(squirrel_attention_test v4r)
-
 
 #############
 ## Install ##
