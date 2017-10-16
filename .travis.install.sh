@@ -2,8 +2,9 @@ set -e
 set -v
 
 echo "BEFORE INSTALL IS RUNNING"
-sh -c 'echo "deb http://153.97.4.193/building/ubuntu trusty main" > /etc/apt/sources.list.d/squirrel_server.list'
-wget http://153.97.4.193/building/public.key -O - | apt-key add -
+apt-get install apt-transport-https
+sh -c 'echo "deb [arch=amd64] https://rwiki.acin.tuwien.ac.at/apt/v4r-release trusty main" > /etc/apt/sources.list.d/squirrel_server.list'
+wget -qO - https://rwiki.acin.tuwien.ac.at/apt/v4r-release/Public.key | sudo apt-key add -
 apt-get update
 
 mkdir -p /etc/ros/rosdep/mapping/
