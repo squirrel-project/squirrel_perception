@@ -519,9 +519,15 @@ std::vector<pcl::PointCloud<PointT>::Ptr> RemoveBackground::removeClusters(pcl::
             if (min_p.z > octomap_lib.leaf_size + octomap_lib.leaf_size/2 + 0.0001|| max_p.z >= 0.5) {// || max_p.z <= 2* octomap_lib.leaf_size) { //max_p.z <= 0.05 should not be needed when camera is calibrated well
                 //cout << "bad cluster" << endl;
             } else {
-                *cloud_filtered += *cloud_cluster;
-                clusters.push_back(cloud_cluster);
-            }
+                double x_diam = double(max_p.x - min_p.x + octomap_lib.leaf_size);
+                double y_diam = double(max_p.y - min_p.y + octomap_lib.leaf_size);
+                double diam = std::sqrt(std::pow(x_diam,2) + std::pow(y_diam,2));
+                
+                if (diam < 0.6) {
+                    *cloud_filtered += *cloud_cluster;
+                    clusters.push_back(cloud_cluster);
+                }
+            }   
         }
         cloud = cloud_filtered;
         cout << "Finished clustering and removing..." << endl;
@@ -658,9 +664,9 @@ bool RemoveBackground::checkWaypoint (squirrel_object_perception_msgs::CheckWayp
                 }
             }
         }
-        ROS_INFO("Number of elements in BB: %d", countBB);
+        //ROS_INFO("Number of elements in BB: %d", countBB);
 
-        ROS_INFO("Number of missing nodes %d, number of filled nodes %d", countMissingNodes, countTriangleNodes);
+        //ROS_INFO("Number of missing nodes %d, number of filled nodes %d", countMissingNodes, countTriangleNodes);
         if (countMissingNodes == 0) {
             response.explore_waypoint.data = false;
             ROS_INFO("View cone is fully covered!");
