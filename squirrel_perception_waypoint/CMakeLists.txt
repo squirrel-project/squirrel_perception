@@ -118,4 +118,5 @@ catkin_package(
 include_directories(include ${catkin_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS})
 
 add_executable(squirrel_perception_waypoints_server src/squirrel_create_examine_waypoint.cpp)
+add_dependencies(squirrel_perception_waypoints_server squirrel_waypoint_msgs_generate_messages_cpp)
 target_link_libraries(squirrel_perception_waypoints_server ${catkin_LIBRARIES} ${OCTOMAP_LIBRARIES})
