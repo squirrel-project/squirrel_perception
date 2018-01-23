@@ -1,10 +1,9 @@
 #include <ros/ros.h>
 #include <actionlib/server/simple_action_server.h>
-#include <squirrel_object_perception_msgs/RecognizeObjectsAction.h>
+#include <squirrel_object_perception_msgs/LookForObjectsAction.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/Image.h>
 #include <std_srvs/Empty.h>
-#include <squirrel_object_perception_msgs/Recognize.h>
 #include <squirrel_planning_knowledge_msgs/UpdateObjectService.h>
 #include <squirrel_planning_knowledge_msgs/AddObjectService.h>
 #include <squirrel_object_perception_msgs/SceneObject.h>
@@ -24,8 +23,10 @@
 #include "mongodb_store/message_store.h"
 #include <squirrel_object_perception_msgs/SegmentInit.h>
 #include <squirrel_object_perception_msgs/SegmentOnce.h>
+#include <squirrel_object_perception_msgs/BBox.h>
+#include <v4r_object_recognition_msgs/recognize.h>
 
-#define DEFAULT_RECOGNIZER_TOPIC_ "/squirrel_recognizer/squirrel_recognize_objects"
+#define DEFAULT_RECOGNIZER_TOPIC_ "/recognition_service/recognize"
 
 
 class Object
@@ -45,11 +46,11 @@ protected:
     ros::NodeHandle nh_;
     tf::TransformListener tf_listener;
     // NodeHandle instance must be created before this line. Otherwise strange error may occur.
-    actionlib::SimpleActionServer<squirrel_object_perception_msgs::RecognizeObjectsAction> as_;
+    actionlib::SimpleActionServer<squirrel_object_perception_msgs::LookForObjectsAction> as_;
     std::string action_name_;
     // create messages that are used to published feedback/result
-    squirrel_object_perception_msgs::RecognizeObjectsFeedback feedback_;
-    squirrel_object_perception_msgs::RecognizeObjectsResult result_;
+    squirrel_object_perception_msgs::LookForObjectsFeedback feedback_;
+    squirrel_object_perception_msgs::LookForObjectsResult result_;
     // create needed variables
     sensor_msgs::PointCloud2 scene;
     bool success;
@@ -80,9 +81,10 @@ protected:
         if (!ros::service::waitForService(recognizer_topic_, ros::Duration(5.0)))
             return false;
         squirrel_object_perception_msgs::SceneObject object;
-        ros::ServiceClient client = nh_.serviceClient<squirrel_object_perception_msgs::Recognize>(recognizer_topic_);
-        squirrel_object_perception_msgs::Recognize srv;
+        ros::ServiceClient client = nh_.serviceClient<v4r_object_recognition_msgs::recognize>(recognizer_topic_);
+        v4r_object_recognition_msgs::recognize srv;
         srv.request.cloud = scene;
+        std::cout << "***********************************Scene Frame: " << scene.header.frame_id << " *******************************" << std::endl;
         if (client.call(srv))
         {
             ROS_INFO("Called service %s: ", recognizer_topic_.c_str());
@@ -91,6 +93,7 @@ protected:
                     object.header.frame_id = "/map";
                     object.header.stamp = ros::Time::now();
                     object.category = srv.response.ids.at(i).data;
+                    object.category = "battery";
                     object.cloud = srv.response.models_cloud.at(i);
                     object.cloud.header.frame_id = srv.request.cloud.header.frame_id;
                     transformPointCloud(object.cloud, object.cloud.header.frame_id, "/map");
@@ -128,7 +131,8 @@ protected:
                     }
                     else {
                         //transform bounding box into bounding cylinder
-                        squirrel_object_perception_msgs::BBox bbox = srv.response.bbox.at(i);
+                        squirrel_object_perception_msgs::BBox bbox;
+			bbox.point = srv.response.bbox.at(i).points;
                         transform_bbox(bbox, "/kinect_depth_optical_frame", "/map");
                         double max_z = std::numeric_limits<float>::min();
                         for (int i = 0; i < bbox.point.size(); i++) {
@@ -370,31 +374,25 @@ protected:
         srv.request.target.pose.orientation.w = 1.0;
 
         if(client.call(srv)) {
-            ROS_INFO("Moved camera to hand");
+            ROS_INFO("Moved camera to new position");
             return true;
         } else {
-            ROS_INFO("Did NOT move camera to hand");
+            ROS_INFO("Did NOT move camera to new position");
             return false;
         }
     }
 
     bool moveCameraToDefault() {
         //move back to default position
-        ros::ServiceClient tilt_client = nh_.serviceClient<std_srvs::Empty>("/tilt_controller/resetPosition");
+        ros::ServiceClient resetCamera_client = nh_.serviceClient<std_srvs::Empty>("/squirrel_view_controller/reset_positions");
 
         std_srvs::Empty e;
-        if (!tilt_client.call(e))
+        if (!resetCamera_client.call(e))
         {
             ROS_ERROR("Failed to move camera back to default tilt position");
             return false;
         }
 
-        ros::ServiceClient pan_client = nh_.serviceClient<std_srvs::Empty>("/pan_controller/resetPosition");
-        if(!pan_client.call(e))
-        {
-            ROS_ERROR("Failed to move camera back to default pan position");
-            return false;
-        }
         return true;
     }
 
@@ -424,7 +422,7 @@ public:
     {
     }
 
-    void executeCB(const squirrel_object_perception_msgs::RecognizeObjectsGoalConstPtr &goal)
+    void executeCB(const squirrel_object_perception_msgs::LookForObjectsGoalConstPtr &goal)
     {
         called_cam_service = false;
         result_.objects_added.clear();
@@ -461,7 +459,7 @@ public:
 
 
         ROS_INFO("%s: Received data", action_name_.c_str());
-        if (goal->look_for_object == squirrel_object_perception_msgs::RecognizeObjectsGoal::CHECK) {
+        if (goal->look_for_object == squirrel_object_perception_msgs::LookForObjectsGoal::CHECK) {
             //get lump size from DB and filter cloud for segmentation to cut off unnecessary parts
             ROS_INFO("Checking out a lump");
 
