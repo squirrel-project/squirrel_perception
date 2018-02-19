@@ -4,6 +4,7 @@ using namespace std;
 
 RemoveBackground::RemoveBackground() : n_(new ros::NodeHandle("~")), message_store(*n_){
     RemoveBackground::id_cnt_ = 0;
+    RemoveBackground::max_lump_diam = 0.6;
 }
 
 RemoveBackground::~RemoveBackground() {
@@ -287,6 +288,9 @@ float RemoveBackground::doIntersect(double c1_posx, double c1_posy, double c1_ra
 void RemoveBackground::initialize(int argc, char **argv) {
 
     n_->getParam("static_octomap_path", staticOctomapPath_);
+    if (n_->hasParam("max_lump_diameter")) {
+        n_->getParam("max_lump_diameter", max_lump_diam);
+    }
     markerPublisherDynObjects = n_->advertise<visualization_msgs::Marker>("vis_marker_dynamic_objects", 0);
     markerPubBBTriangle = this->n_->advertise<visualization_msgs::Marker>("bb_triangle", 1);
     markerPubBB = this->n_->advertise<visualization_msgs::Marker>("bb_octomap_comp", 1);
@@ -522,8 +526,7 @@ std::vector<pcl::PointCloud<PointT>::Ptr> RemoveBackground::removeClusters(pcl::
                 double x_diam = double(max_p.x - min_p.x + octomap_lib.leaf_size);
                 double y_diam = double(max_p.y - min_p.y + octomap_lib.leaf_size);
                 double diam = std::sqrt(std::pow(x_diam,2) + std::pow(y_diam,2));
-                
-                if (diam < 0.6) {
+                if (diam <= max_lump_diam) {
                     *cloud_filtered += *cloud_cluster;
                     clusters.push_back(cloud_cluster);
                 }
