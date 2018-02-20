@@ -5,3 +5,7 @@ v4r_object_classification_msgs:
   ubuntu: ros-indigo-v4r-object-classification-msgs
 v4r_object_classification:
   ubuntu: ros-indigo-v4r-object-classification 
+v4r_object_recognition_msgs:
+  ubuntu: ros-indigo-v4r-object-recognition-msgs
+v4r_object_recognition:
+  ubuntu: ros-indigo-v4r-object-recognition 
