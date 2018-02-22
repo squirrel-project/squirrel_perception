@@ -1,7 +1,13 @@
+<?xml version="1.0"?>
 <launch> 
   <node name="squirrel_perception_waypoints_server"
         pkg="squirrel_perception_waypoint"
         type="squirrel_perception_waypoints_server" 
-        required="true">
+        required="true"
+	output="screen">
+	<param name="nr_waypoints" value="5" type="int" />
+	<param name="distance_to_lump" value="0.50" type="double" />
+	<param name="static_octomap_path" value="$(find squirrel_object_perception)/data/octomaps/default_octomap.bt" />
   </node>
 </launch>
+
