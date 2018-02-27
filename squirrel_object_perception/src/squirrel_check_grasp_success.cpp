@@ -75,24 +75,27 @@ bool CheckGraspSuccess::useOctomap(squirrel_object_perception_msgs::CheckGraspSu
                     return true;
                 } else if(request.object.bounding_cylinder.diameter == 0) { //check for same pose
                     double dist = computeDist(so.pose, request.object.pose);
-                    if (dist > max_pose_dist) {
+                    if (dist < max_pose_dist) {
+                        ROS_INFO("Found removed lump with a distance of %f. Therefore grasping DID succeed!", dist);
                         response.success = true;
+                        return true;
                     } else {
                         response.success = false;
-                        return true;
                     }
                 } else {   //check for bounding box intersection
                     double dist = computeDist(so.pose, request.object.pose);
                     double intersectionPerc = doIntersect(dist, so.bounding_cylinder.diameter, request.object.bounding_cylinder.diameter);
-                    if (intersectionPerc > max_overlap) {
+                    if (intersectionPerc < max_overlap) {
+                        ROS_INFO("Found removed lump with a bounding cylinder intersection of %f. Therefore grasping DID succeed!", intersectionPerc);
                         response.success = true;
+                        return true;
                     } else {
                         response.success = false;
-                        return true;
                     }
                 }
             }
         }
+        ROS_INFO("Did NOT find a removed lump that corresponds to the given object. Therefore grasping did NOT succeed!");
         return true;
     }
 
@@ -106,6 +109,7 @@ bool CheckGraspSuccess::useOctomap(squirrel_object_perception_msgs::CheckGraspSu
                 if (dist > max_pose_dist) {
                     response.success = true;
                 } else {
+                    ROS_INFO("Found added lump with a distance of %f. Therefore grasping DID NOT succeed!", dist);
                     response.success = false;
                     return true;
                 }
@@ -115,11 +119,13 @@ bool CheckGraspSuccess::useOctomap(squirrel_object_perception_msgs::CheckGraspSu
                 if (intersectionPerc > max_overlap) {
                     response.success = true;
                 } else {
+                    ROS_INFO("Found added lump with a bounding cylinder intersection of %f. Therefore grasping DID NOT succeed!", intersectionPerc);
                     response.success = false;
                     return true;
                 }
             }
         }
+        ROS_INFO("Did NOT find an added lump that corresponds to the given object. Therefore grasping DID succeed!");
         return true;
     }
 }
@@ -189,15 +195,16 @@ bool CheckGraspSuccess::useSegmentation(squirrel_object_perception_msgs::CheckGr
             ROS_ERROR("%s: %s", ros::this_node::getName().c_str(), ex.what());
         }
 
-        //check now the the positions
+        //check now the positions
         double dist = computeDist(segm_result.poses[0].pose, request.object.pose);
         if (dist < max_pose_dist) {
+            ROS_INFO("Found segmentation cluster with a distance of %f. Therefore grasping did NOT succeed!", dist);
             response.success = false;
             return true;
         }
     }
     //this means not a single object was segmented or the segmented objects were not close
-    ROS_INFO("Could not segment an object.");
+    ROS_INFO("Could not find an object close by.");
     response.success = true;
     return true;
 }
@@ -243,6 +250,7 @@ bool CheckGraspSuccess::useRecognizer(squirrel_object_perception_msgs::CheckGras
                     if (dist > max_pose_dist) {
                         response.success = true;
                     } else {
+                        ROS_INFO("Recognized object with a distance of %f. Therefore grasping did NOT succeed!", dist);
                         response.success = false;
                         return true;
                     }
@@ -252,6 +260,7 @@ bool CheckGraspSuccess::useRecognizer(squirrel_object_perception_msgs::CheckGras
                     if (intersectionPerc > max_overlap) {
                         response.success = true;
                     } else {
+                        ROS_INFO("Recognized object with a bounding cylinder intersection of %f. Therefore grasping did NOT succeed!", intersectionPerc);
                         response.success = false;
                         return true;
                     }
@@ -259,6 +268,7 @@ bool CheckGraspSuccess::useRecognizer(squirrel_object_perception_msgs::CheckGras
             }
         }
     }
+    ROS_INFO("Did not recognize any object that is close by. Therefore grasping succeeded!");
     return true;
 }
 
