@@ -12,7 +12,7 @@ FindLumpsViaWaypointsAction::FindLumpsViaWaypointsAction(ros::NodeHandle &nh, st
 
     if(nh_.getParam ( "tilt_angle", tilt_angle)) {
     } else {
-        tilt_angle = 0.7; //default value if param is not set
+        tilt_angle = -0.7; //default value if param is not set
     }
     ROS_INFO("Set camera tilt angle to %f", tilt_angle);
 }
@@ -27,12 +27,14 @@ void FindLumpsViaWaypointsAction::executeCB(const squirrel_object_perception_msg
     feedback_.percent_completed = 0;
 
     //Tilt camera
-    ros::ServiceClient tilt_client = nh_.serviceClient<squirrel_view_controller_msgs::LookAtPanTilt>("");
+    ros::ServiceClient tilt_client = nh_.serviceClient<squirrel_view_controller_msgs::LookAtPanTilt>("/squirrel_view_controller/move_pan_tilt");
     squirrel_view_controller_msgs::LookAtPanTilt tilt_srv;
     tilt_srv.request.pan = 0.0;
     tilt_srv.request.tilt = tilt_angle;
     tilt_srv.request.reason = "look for objects";
-
+    if (tilt_client.call(tilt_srv)) {
+        ROS_INFO("Moved camera to %f.", tilt_angle); 
+    }
     //Define MoveBaseClient
     actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> mb_client("move_base", true);
     move_base_msgs::MoveBaseGoal mb_goal;
@@ -119,6 +121,7 @@ void FindLumpsViaWaypointsAction::executeCB(const squirrel_object_perception_msg
     }
     if(success) {
         ROS_INFO("%s: Succeeded", action_name_.c_str());
+        result_.result_status = "Succeeded! Found " + boost::lexical_cast<std::string>(result_.lumps_found.size()) + " lumps.";
         as_.setSucceeded(result_);
     }
 }
