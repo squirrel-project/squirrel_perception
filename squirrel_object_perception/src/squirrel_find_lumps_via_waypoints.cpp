@@ -45,6 +45,10 @@ void FindLumpsViaWaypointsAction::executeCB(const squirrel_object_perception_msg
     //Define octomap comparison service
     ros::ServiceClient find_lumps_client = nh_.serviceClient<squirrel_object_perception_msgs::FindDynamicObjects>("/squirrel_find_dynamic_objects");
     squirrel_object_perception_msgs::FindDynamicObjects find_lumps_srv;
+    geometry_msgs::Point min, max;
+    min.x = min.y = min.z = max.x = max.y = max.z = 0;
+    find_lumps_srv.request.max = max;
+    find_lumps_srv.request.min = min;
 
     if (goal->return_after_first_lump) {
         if (find_lumps_client.call(find_lumps_srv)) {
