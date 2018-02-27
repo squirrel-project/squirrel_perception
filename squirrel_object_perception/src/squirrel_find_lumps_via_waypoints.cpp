@@ -123,6 +123,14 @@ void FindLumpsViaWaypointsAction::executeCB(const squirrel_object_perception_msg
         ROS_INFO("%s: Succeeded", action_name_.c_str());
         result_.result_status = "Succeeded! Found " + boost::lexical_cast<std::string>(result_.lumps_found.size()) + " lumps.";
         as_.setSucceeded(result_);
+    } else {
+        if(result_.lumps_found.size() == 0) {
+            ROS_INFO("Did not find any lumps!");
+            result_.result_status = "Did not find any lumps.";
+        } else {
+            result_.result_status = "Something went wrong!?";
+        }
+        as_.setAborted(result_);
     }
 }
 
