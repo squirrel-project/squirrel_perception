@@ -60,6 +60,10 @@ bool CheckGraspSuccess::useOctomap(squirrel_object_perception_msgs::CheckGraspSu
 
     ros::ServiceClient find_lumps_client = nh_.serviceClient<squirrel_object_perception_msgs::FindDynamicObjects>("/squirrel_find_dynamic_objects");
     squirrel_object_perception_msgs::FindDynamicObjects fdSrv;
+    geometry_msgs::Point min, max;
+    min.x = min.y = min.z = max.x = max.y = max.z = 0;
+    fdSrv.request.max = max;
+    fdSrv.request.min = min;
     if (!find_lumps_client.call(fdSrv)) {
         ROS_ERROR("Could not call service squirrel_find_dynamic_objects");
         return false;
