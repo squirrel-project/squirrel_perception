@@ -119,6 +119,7 @@ void FindLumpsViaWaypointsAction::executeCB(const squirrel_object_perception_msg
     }
     if(success) {
         ROS_INFO("%s: Succeeded", action_name_.c_str());
+        result_.result_status = "Succeeded! Found " + boost::lexical_cast<std::string>(result_.lumps_found.size()) + " lumps";
         as_.setSucceeded(result_);
     }
 }
