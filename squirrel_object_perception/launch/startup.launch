@@ -1,5 +1,5 @@
 <launch>
-  <arg name="recognizer_topic" default="/squirrel_wizard_recognize"/> <!--"/squirrel_recognize_objects"/--> 
+  <arg name="recognizer_topic" default="/recognition_service/recognize"/>       <!-- "/squirrel_wizard_recognize"/--> 
   <arg name="recognizer2d_topic" default="/squirrel_wizard_recognize2d"/> <!--"/squirrel_recognize_objects_2d"/--> 
   
   <node name="squirrel_look_for_objects"
@@ -28,7 +28,7 @@
         pkg="squirrel_object_perception"
         type="squirrel_find_dynamic_objects"
         required="true" output="screen">
-	<param name="static_octomap_path" value="$(find squirrel_object_perception)/data/octomaps/default_octomap.bt" />
+	<param name="static_octomap_path" value="$(find squirrel_object_perception)/data/octomaps/kenny_room_dilated.bt" />
   </node>
 
   <!-- node name="squirrel_haf_grasping"

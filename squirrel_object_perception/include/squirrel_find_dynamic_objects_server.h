@@ -59,6 +59,7 @@ private:
     OctomapLib octomap_lib;
 
     std::string staticOctomapPath_;
+    double max_lump_diam;
 
     bool removeBackground (squirrel_object_perception_msgs::FindDynamicObjects::Request &req, squirrel_object_perception_msgs::FindDynamicObjects::Response & response);
     bool checkWaypoint (squirrel_object_perception_msgs::CheckWaypoint::Request & request, squirrel_object_perception_msgs::CheckWaypoint::Response & response);
