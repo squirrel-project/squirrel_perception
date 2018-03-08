@@ -40,6 +40,9 @@ include_directories(include
 )
 
 ## Declare a cpp executable
+#add_executable(test_squirrel_recognizer src/test_recognizer.cpp ${incs})
+#add_dependencies(test_squirrel_recognizer squirrel_object_perception_msgs_generate_messages_cpp)
+
 add_executable(squirrel_recognizer2d src/recognizer2d_ros.cpp ${incs})
 add_dependencies(squirrel_recognizer2d squirrel_object_perception_msgs_generate_messages_cpp)
 add_executable(test_squirrel_recognizer2d src/test_recognizer2d.cpp ${incs})
@@ -54,6 +57,12 @@ add_dependencies(test_squirrel_recognizer_wizard squirrel_object_perception_msgs
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
+#target_link_libraries(test_squirrel_recognizer
+#   ${catkin_LIBRARIES}
+#   ${PCL_LIBRARIES}
+#   ${OpenCV_LIBS}
+#   ${V4R_LIBS}
+#)
 
 target_link_libraries(squirrel_recognizer2d
    ${catkin_LIBRARIES}

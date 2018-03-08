@@ -23,6 +23,7 @@ find_package(catkin REQUIRED COMPONENTS
         tf
         tf2
         visualization_msgs
+	v4r_object_recognition_msgs
 )
 find_package(PCL 1.7 REQUIRED)
 find_package(octomap REQUIRED)
@@ -63,6 +64,7 @@ catkin_package(
         tf
         tf2
         visualization_msgs
+	v4r_object_recognition_msgs
 )
 
 include_directories(include)
