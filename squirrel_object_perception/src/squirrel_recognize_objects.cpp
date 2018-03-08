@@ -93,11 +93,12 @@ protected:
                     object.header.frame_id = "/map";
                     object.header.stamp = ros::Time::now();
                     object.category = srv.response.ids.at(i).data;
-                    object.category = "battery";
                     object.cloud = srv.response.models_cloud.at(i);
                     object.cloud.header.frame_id = srv.request.cloud.header.frame_id;
                     transformPointCloud(object.cloud, object.cloud.header.frame_id, "/map");
                     std::cout << "Category: " << object.category << std::endl;
+                    //std::cout << "Confidence: " << srv.response.confidence.at(i) << std::endl;
+                    std::cout << "Confidence.size() " << srv.response.confidence.size() << std::endl;
                     object.pose = transform(srv.response.centroid.at(i).x, srv.response.centroid.at(i).y, srv.response.centroid.at(i).z,
                                             srv.request.cloud.header.frame_id, "/map").pose;
 
@@ -160,11 +161,10 @@ protected:
                     }
                     result_.objects_added.push_back(object);
                 }
-                return true;
             } else {
                 std::cout << "could not recognize an object!" << std::endl;
-                return false;
             }
+            return true;
         }
         else
         {
@@ -536,7 +536,7 @@ public:
         }
 
         success = do_recognition();
-        moveCameraToDefault();
+        /* TP moveCameraToDefault(); */
 
         if(success)
         {
