@@ -7,7 +7,7 @@
 	output="screen">
 	<param name="nr_waypoints" value="5" type="int" />
 	<param name="distance_to_lump" value="0.50" type="double" />
-	<param name="static_octomap_path" value="$(find squirrel_object_perception)/data/octomaps/default_octomap.bt" />
+	<param name="static_octomap_path" value="$(find squirrel_object_perception)/data/octomaps/kenny_room_dilated.bt" />
   </node>
 </launch>
 

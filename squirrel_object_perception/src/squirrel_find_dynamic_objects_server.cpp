@@ -106,6 +106,11 @@ bool RemoveBackground::removeBackground (squirrel_object_perception_msgs::FindDy
         //    for (std::size_t i = 0; i < sceneObjects_results.size(); ++i)
         //           objects_remove[i] = boost::make_shared<squirrel_object_perception_msgs::SceneObject>(*sceneObjects_results[i]);
 
+        if (sceneObjects_results.size() > 0) {
+                response.database_empty = false;
+        } else {
+            response.database_empty = true;
+        }
         for (std::size_t i = 0; i < sceneObjects_results.size(); ++i) {
             response.dynamic_objects_removed.push_back(*sceneObjects_results[i]);
         }

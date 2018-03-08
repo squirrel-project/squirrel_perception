@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="hostname" default="localhost" />
+
+  <node name="squirrel_find_lumps_via_waypoints"
+        pkg="squirrel_object_perception"
+        type="squirrel_find_lumps_via_waypoints"
+        required="true" output="screen">
+  </node>
+
+</launch>
