@@ -79,6 +79,7 @@ add_executable(squirrel_recognize_objects src/squirrel_recognize_objects.cpp)
 add_executable(track_robot src/RobotTracker.cpp)
 add_executable(squirrel_find_lumps_via_waypoints src/squirrel_find_lumps_via_waypoints.cpp)
 add_executable(squirrel_check_grasp_success src/squirrel_check_grasp_success.cpp)
+add_executable(squirrel_post_process_static_octomap src/post_process_static_octomap.cpp src/OctomapLib.cpp)
 
 #add_dependencies(squirrel_look_for_objects squirrel_look_for_objects_gencfg)
 add_dependencies(squirrel_look_for_objects ${squirrel_object_perception_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
@@ -89,6 +90,8 @@ add_dependencies(squirrel_recognize_objects ${squirrel_object_perception_EXPORTE
 add_dependencies(track_robot ${squirrel_object_perception_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(squirrel_find_lumps_via_waypoints ${squirrel_object_perception_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(squirrel_check_grasp_success ${squirrel_object_perception_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(squirrel_post_process_static_octomap ${squirrel_object_perception_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 
 target_link_libraries(squirrel_call_haf_grasping
   ${catkin_LIBRARIES}
@@ -124,6 +127,10 @@ target_link_libraries(squirrel_check_grasp_success
   ${catkin_LIBRARIES}
   ${OpenCV_LIBS}
   ${PCL_LIBRARIES}
+  ${OCTOMAP_LIBRARIES})
+
+target_link_libraries(squirrel_post_process_static_octomap
+  ${catkin_LIBRARIES}
   ${OCTOMAP_LIBRARIES})
 
 #target_link_libraries(squirrel_dilate_octomap ${catkin_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} ${OCTOMAP_LIBRARIES})
