@@ -299,6 +299,34 @@ void OctomapLib::fillFloor(OcTree *octomap, octomap::point3d min, octomap::point
     }
 }
 
+//Removes the floor (voexels with height = leaf_size and no occupied voxel above)
+void OctomapLib::removeFloor(OcTree *octomap) {
+    double leaf_size = octomap->getNodeSize(this->tree_depth);
+    double minX, minY, minZ, maxX, maxY, maxZ;
+    octomap->getMetricMin(minX, minY, minZ);
+    octomap->getMetricMax(maxX, maxY, maxZ);
+
+    point3d min, max;
+    min.x() = minX; min.y() = minY; min.z() = 0;
+    max.x() = maxX; max.y() = maxY; max.z() = leaf_size/2;
+    for(octomap::OcTree::leaf_bbx_iterator it = octomap->begin_leafs_bbx(min, max); it != octomap->end_leafs_bbx(); it ++) {
+        if(octomap->isNodeOccupied(*it)) {
+            OcTreeKey key = it.getKey();
+            OcTreeKey key_above = key;
+            key_above[2] += 1;
+            OcTreeNode* node_above = octomap->search(key_above);
+            if (node_above==NULL) {
+                (*it).setLogOdds(logodds(octomap->getClampingThresMin()));
+            } else {
+                //check if node above is also occupied
+                if (!octomap->isNodeOccupied(node_above)) {
+                    (*it).setLogOdds(logodds(octomap->getClampingThresMin()));
+                }
+            }
+        }
+    }
+}
+
 void OctomapLib::getOctomapDimension(OcTree *octomap, unsigned int &width, unsigned int &height, unsigned int &depth) {
     double minX, minY, minZ, maxX, maxY, maxZ;
     octomap->getMetricMin(minX, minY, minZ);
