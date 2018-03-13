@@ -1,6 +1,7 @@
 #include "squirrel_fuse_lumps_static_octomap.h"
 
 FuseLumpsIntoOctomap::FuseLumpsIntoOctomap(ros::NodeHandle* nodehandle):n_(*nodehandle) {
+    fused_map = NULL;
     octomap_is_binary = false;
 }
 
@@ -9,7 +10,6 @@ FuseLumpsIntoOctomap::~FuseLumpsIntoOctomap() {
 }
 
 void FuseLumpsIntoOctomap::initialize(int argc, char **argv) {
-    std::cout << "init: " << std::endl;
     create_octomap_with_lumps_srv = n_.advertiseService("/squirrel_create_octomap_with_lumps", &FuseLumpsIntoOctomap::createOctomapWithLumpsCB, this);
     receive_octomap_with_lumps_srv = n_.advertiseService("/squirrel_receive_octomap_with_lumps", &FuseLumpsIntoOctomap::receiveOctomapWithLumpsCB, this);
 
@@ -20,7 +20,7 @@ void FuseLumpsIntoOctomap::initialize(int argc, char **argv) {
 
 bool FuseLumpsIntoOctomap::createOctomapWithLumpsCB (squirrel_object_perception_msgs::CreateOctomapWithLumpsRequest &request, squirrel_object_perception_msgs::CreateOctomapWithLumpsResponse &response) {
     std::string octomap_path;
-    n_.getParam("octomap_path", octomap_path);
+    n_.getParam("static_octomap_path", octomap_path);
 
     std::cout << "static octomap path: " << octomap_path << std::endl;
 
@@ -31,6 +31,8 @@ bool FuseLumpsIntoOctomap::createOctomapWithLumpsCB (squirrel_object_perception_
     if (fused_map->getNumLeafNodes() == 0) {
         ROS_WARN("The static octomap is empty! You probably try to use the default octomap.");
     }
+
+    fused_map->expand();
 
     double leaf_size = fused_map->getNodeSize(16);
 
@@ -51,27 +53,36 @@ bool FuseLumpsIntoOctomap::createOctomapWithLumpsCB (squirrel_object_perception_
         }
 
         int nr_voxels_radius = ceil(diam/leaf_size) / 2;
-
-        //we ignore the height in favor of grasping and just mark one layer of voxels as occupied
         double z = leaf_size + leaf_size/2;
-        for (double ix = pose_stamped.pose.position.x - nr_voxels_radius*leaf_size; ix <= pose_stamped.pose.position.x - nr_voxels_radius*leaf_size; ix += leaf_size) {
-            for (double iy = pose_stamped.pose.position.y - nr_voxels_radius*leaf_size; iy <= pose_stamped.pose.position.y - nr_voxels_radius*leaf_size; iy += leaf_size) {
-                octomap::OcTreeNode* node = fused_map->search(ix, iy, z);
-                if (node==NULL) {
-                    fused_map->setNodeValue(ix,iy,z,octomap::logodds(fused_map->getClampingThresMax()));
-                } else if (!fused_map->isNodeOccupied(node)) {
-                    node->setLogOdds(octomap::logodds(fused_map->getClampingThresMax()));
-                }
+
+        octomap::point3d min, max;
+        min.x() = pose_stamped.pose.position.x - nr_voxels_radius*leaf_size;
+        max.x() = pose_stamped.pose.position.x + nr_voxels_radius*leaf_size;
+        min.y() = pose_stamped.pose.position.y - nr_voxels_radius*leaf_size;
+        max.y() = pose_stamped.pose.position.y + nr_voxels_radius*leaf_size;
+        min.z() = z;
+        max.z() = z;
+        
+        for(octomap::OcTree::leaf_bbx_iterator it = fused_map->begin_leafs_bbx(min, max); it != fused_map->end_leafs_bbx(); it ++) {
+            octomap::OcTreeKey key = it.getKey();
+            octomap::OcTreeNode* node = fused_map->search(key);
+            if (node==NULL) {
+                std::cout << "(" << it.getCoordinate().x() << "," << it.getCoordinate().y() << ") Check node" << std::endl;
+                fused_map->setNodeValue(key,octomap::logodds(fused_map->getClampingThresMax()));
+            } else if (!fused_map->isNodeOccupied(node)) {
+                std::cout << "(" << it.getCoordinate().x() << "," << it.getCoordinate().y() << ") Check node" << std::endl;
+                (*it).setLogOdds(octomap::logodds(fused_map->getClampingThresMax()));
             }
         }
     }
-
     return true;
 }
 
 bool FuseLumpsIntoOctomap::receiveOctomapWithLumpsCB (squirrel_object_perception_msgs::ReceiveOctomapWithLumpsRequest &request, squirrel_object_perception_msgs::ReceiveOctomapWithLumpsResponse &response) {
-    if (fused_map->getNumLeafNodes() > 0) {
+    if (fused_map != NULL && fused_map->getNumLeafNodes() > 0) {
         octomap_msgs::Octomap map_msg;
+        map_msg.header.stamp = ros::Time::now();
+        map_msg.header.frame_id = "/map";
         if (octomap_is_binary) {
             octomap_msgs::binaryMapToMsg(*fused_map, map_msg);
         } else {
