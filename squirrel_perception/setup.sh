@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 FILE="/etc/ros/rosdep/sources.list.d/31-squirrel_perception.list"
-REPO="https://rwiki.acin.tuwien.ac.at/apt/v4r-release"
-REPO_STRANDS="http://lcas.lincoln.ac.uk/repos/release"
+REPO="deb [arch=amd64] https://rwiki.acin.tuwien.ac.at/apt/v4r-release trusty main"
 APTSOURCES="/etc/apt/sources.list"
 
 generate_path () {
@@ -39,9 +38,7 @@ check_file () {
 
 add_repo () {
   sudo apt-key adv --keyserver hkp://pgp.mit.edu:80 --recv-key 943EB54F
-  curl -s http://lcas.lincoln.ac.uk/repos/public.key | sudo apt-key add -
-  sudo apt-add-repository $REPO
-  sudo apt-add-repository $REPO_STRANDS
+  echo $REPO | sudo tee -a $APTSOURCES
   sudo apt-get update
 }
 

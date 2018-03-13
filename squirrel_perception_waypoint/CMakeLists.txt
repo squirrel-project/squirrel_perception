@@ -5,8 +5,8 @@ SET(CMAKE_BUILD_TYPE Release)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp rospy squirrel_waypoint_msgs tf2)
-
+find_package(catkin REQUIRED COMPONENTS octomap_msgs roscpp rospy squirrel_waypoint_msgs tf2)
+find_package(octomap REQUIRED)
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -81,7 +81,7 @@ find_package(catkin REQUIRED COMPONENTS roscpp rospy squirrel_waypoint_msgs tf2)
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES squirrel_perception_waypoint
-  CATKIN_DEPENDS squirrel_waypoint_msgs tf2
+  CATKIN_DEPENDS octomap_msgs squirrel_waypoint_msgs tf2
 #  DEPENDS system_lib
 )
 
@@ -115,57 +115,8 @@ catkin_package(
 #   ${catkin_LIBRARIES}
 # )
 
-include_directories(include ${catkin_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS} ${OCTOMAP_INCLUDE_DIRS})
 
 add_executable(squirrel_perception_waypoints_server src/squirrel_create_examine_waypoint.cpp)
 add_dependencies(squirrel_perception_waypoints_server squirrel_waypoint_msgs_generate_messages_cpp)
-
-target_link_libraries(squirrel_perception_waypoints_server ${catkin_LIBRARIES})
-
-#############
-## Install ##
-#############
-
-# all install targets should use catkin DESTINATION variables
-# See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
-
-## Mark executable scripts (Python etc.) for installation
-## in contrast to setup.py, you can choose the destination
-# install(PROGRAMS
-#   scripts/my_python_script
-#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
-
-## Mark executables and/or libraries for installation
-# install(TARGETS squirrel_perception_waypoint squirrel_perception_waypoint_node
-#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
-
-## Mark cpp header files for installation
-# install(DIRECTORY include/${PROJECT_NAME}/
-#   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-#   FILES_MATCHING PATTERN "*.h"
-#   PATTERN ".svn" EXCLUDE
-# )
-
-## Mark other files for installation (e.g. launch and bag files, etc.)
-# install(FILES
-#   # myfile1
-#   # myfile2
-#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-# )
-
-#############
-## Testing ##
-#############
-
-## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_squirrel_perception_waypoint.cpp)
-# if(TARGET ${PROJECT_NAME}-test)
-#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
-# endif()
-
-## Add folders to be run by python nosetests
-# catkin_add_nosetests(test)
+target_link_libraries(squirrel_perception_waypoints_server ${catkin_LIBRARIES} ${OCTOMAP_LIBRARIES})
