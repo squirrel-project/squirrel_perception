@@ -12,5 +12,5 @@ env:
 install:
   - git clone --depth=1 https://github.com/ros-industrial/industrial_ci.git .ci_config
 script:
-  - while true; do echo "travis waiting...."; sleep 500; done &
+  - while true; do echo "travis waiting...."; sleep 100; done &
   - .ci_config/travis.sh 
