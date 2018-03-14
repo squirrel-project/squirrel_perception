@@ -12,7 +12,7 @@
 #include <tf/transform_listener.h>
 
 #include <squirrel_object_perception_msgs/CreateOctomapWithLumps.h>
-#include <squirrel_object_perception_msgs/ReceiveOctomapWithLumps.h>
+#include <octomap_msgs/GetOctomap.h>
 
 
 class FuseLumpsIntoOctomap {
@@ -42,7 +42,7 @@ public:
 
     void initialize (int argc, char ** argv);
     bool createOctomapWithLumpsCB (squirrel_object_perception_msgs::CreateOctomapWithLumpsRequest &request, squirrel_object_perception_msgs::CreateOctomapWithLumpsResponse &response);
-    bool receiveOctomapWithLumpsCB (squirrel_object_perception_msgs::ReceiveOctomapWithLumpsRequest &request, squirrel_object_perception_msgs::ReceiveOctomapWithLumpsResponse &response);
+    bool receiveOctomapWithLumpsCB (octomap_msgs::GetOctomapRequest &request, octomap_msgs::GetOctomapResponse &response);
 };
 
 
