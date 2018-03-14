@@ -19,10 +19,9 @@ void FuseLumpsIntoOctomap::initialize(int argc, char **argv) {
 }
 
 bool FuseLumpsIntoOctomap::createOctomapWithLumpsCB (squirrel_object_perception_msgs::CreateOctomapWithLumpsRequest &request, squirrel_object_perception_msgs::CreateOctomapWithLumpsResponse &response) {
+    ROS_INFO("Create octomap with lumps was called");
     std::string octomap_path;
     n_.getParam("static_octomap_path", octomap_path);
-
-    std::cout << "static octomap path: " << octomap_path << std::endl;
 
     if (ends_with(octomap_path, "bt")) {
         octomap_is_binary = true;
@@ -67,10 +66,8 @@ bool FuseLumpsIntoOctomap::createOctomapWithLumpsCB (squirrel_object_perception_
             octomap::OcTreeKey key = it.getKey();
             octomap::OcTreeNode* node = fused_map->search(key);
             if (node==NULL) {
-                std::cout << "(" << it.getCoordinate().x() << "," << it.getCoordinate().y() << ") Check node" << std::endl;
                 fused_map->setNodeValue(key,octomap::logodds(fused_map->getClampingThresMax()));
             } else if (!fused_map->isNodeOccupied(node)) {
-                std::cout << "(" << it.getCoordinate().x() << "," << it.getCoordinate().y() << ") Check node" << std::endl;
                 (*it).setLogOdds(octomap::logodds(fused_map->getClampingThresMax()));
             }
         }
@@ -79,21 +76,26 @@ bool FuseLumpsIntoOctomap::createOctomapWithLumpsCB (squirrel_object_perception_
 }
 
 bool FuseLumpsIntoOctomap::receiveOctomapWithLumpsCB (squirrel_object_perception_msgs::ReceiveOctomapWithLumpsRequest &request, squirrel_object_perception_msgs::ReceiveOctomapWithLumpsResponse &response) {
-    if (fused_map != NULL && fused_map->getNumLeafNodes() > 0) {
-        octomap_msgs::Octomap map_msg;
-        map_msg.header.stamp = ros::Time::now();
-        map_msg.header.frame_id = "/map";
-        if (octomap_is_binary) {
-            octomap_msgs::binaryMapToMsg(*fused_map, map_msg);
-        } else {
-            octomap_msgs::fullMapToMsg(*fused_map, map_msg);
-        }
-        response.fusedOctomap = map_msg;
-        octomap_pub.publish(map_msg);
-        return true;
+    if (fused_map == NULL || fused_map->getNumLeafNodes() == 0) {
+        ROS_WARN("The octomap is empty. Please call the service CreateOctomapWithLumpsResponse first! Now only the static octomap gets returned.");
+        squirrel_object_perception_msgs::CreateOctomapWithLumpsRequest request;
+        squirrel_object_perception_msgs::CreateOctomapWithLumpsResponse response;
+        createOctomapWithLumpsCB(request, response);
+        if (fused_map == NULL || fused_map->getNumLeafNodes() == 0) {
+            ROS_ERROR("Can not get the static octomap.");
+        }   
     }
-    ROS_ERROR("The octomap is empty. Please call the service CreateOctomapWithLumpsResponse first!");
-    return false;
+    octomap_msgs::Octomap map_msg;
+    map_msg.header.stamp = ros::Time::now();
+    map_msg.header.frame_id = "/map";
+    if (octomap_is_binary) {
+        octomap_msgs::binaryMapToMsg(*fused_map, map_msg);
+    } else {
+        octomap_msgs::fullMapToMsg(*fused_map, map_msg);
+    }
+    response.fusedOctomap = map_msg;
+    octomap_pub.publish(map_msg);
+    return true;
 }
 
 int main (int argc, char ** argv)
