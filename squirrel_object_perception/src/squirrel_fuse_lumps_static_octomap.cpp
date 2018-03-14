@@ -75,7 +75,7 @@ bool FuseLumpsIntoOctomap::createOctomapWithLumpsCB (squirrel_object_perception_
     return true;
 }
 
-bool FuseLumpsIntoOctomap::receiveOctomapWithLumpsCB (squirrel_object_perception_msgs::ReceiveOctomapWithLumpsRequest &request, squirrel_object_perception_msgs::ReceiveOctomapWithLumpsResponse &response) {
+bool FuseLumpsIntoOctomap::receiveOctomapWithLumpsCB (octomap_msgs::GetOctomapRequest &request, octomap_msgs::GetOctomapResponse &response) {
     if (fused_map == NULL || fused_map->getNumLeafNodes() == 0) {
         ROS_WARN("The octomap is empty. Please call the service CreateOctomapWithLumpsResponse first! Now only the static octomap gets returned.");
         squirrel_object_perception_msgs::CreateOctomapWithLumpsRequest request;
@@ -93,7 +93,7 @@ bool FuseLumpsIntoOctomap::receiveOctomapWithLumpsCB (squirrel_object_perception
     } else {
         octomap_msgs::fullMapToMsg(*fused_map, map_msg);
     }
-    response.fusedOctomap = map_msg;
+    response.map = map_msg;
     octomap_pub.publish(map_msg);
     return true;
 }
