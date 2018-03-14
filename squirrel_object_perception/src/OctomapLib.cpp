@@ -316,7 +316,7 @@ void OctomapLib::removeFloor(OcTree *octomap) {
             key_above[2] += 1;
             OcTreeNode* node_above = octomap->search(key_above);
             if (node_above==NULL) {
-                (*it).setLogOdds(logodds(octomap->getClampingThresMin()));
+                octomap->setNodeValue(key, logodds(octomap->getClampingThresMin()));
             } else {
                 //check if node above is also occupied
                 if (!octomap->isNodeOccupied(node_above)) {
