@@ -8,7 +8,7 @@ env:
     - ROS_DISTRO="indigo"
     - UPSTREAM_WORKSPACE=file
     - BEFORE_SCRIPT=./.travis.install.sh
-
+    - ROS_PARALLEL_JOBS=-j4
 install:
   - git clone --depth=1 https://github.com/ros-industrial/industrial_ci.git .ci_config
 script:
